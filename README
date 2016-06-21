@@ -1,0 +1,29 @@
+This is the Beehive Monitoring System (BMS)
+designed and created by Evangelos Rokas (c) 2015,2016
+
+The BMS is a Arduino-compatible project that monitors the health
+of beehives and sends data to an internet server.
+
+Various modules have been used for the creation of the project.
+
+EAGLE Schematic Capture System was used to design the schematics and create
+the PCB files.
+
+SeeedStudio website was used to fabricate the initial Rev1 PCBs which were
+used to make the prototypes for the BMS.
+
+Arduino Enviroment was used in initial stages in order to settle everything.
+
+Linux operating system was used in the actual project development.
+
+Arduino-Makefile is a project utilizing Arduino Enviroment in order to do
+production development under Linux.  Arduino-Makefile project is a work of
+others: This makefile was originally created by [Martin Oldfield]
+(http://mjo.tc/atelier/2009/02/arduino-cli.html) and he maintained it till
+v0.10.2.  From May 2013, it is maintained by [Sudar Muthu]
+(http://hardwarefun.com/tutorials/compiling-arduino-sketches-using-makefile)
+and [Simon John] (https://github.com/sej7278) with the help of [40+
+contributors](https://github.com/sudar/Arduino-Makefile/graphs/contributors).
+
+I2CDev library has been used in order to communicate with the various
+modules of the project.

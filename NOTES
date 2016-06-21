@@ -1,0 +1,48 @@
+Beehive Monitoring System
+
+There are 8 distinct modules in the initial prototype PCB.
+
+1. Temperature and Humidity Sensor (HTU21D)
+2. Real-Time Clock (DS3231) with EEPROM
+3. ADXL345 accelerometer breakout board
+4. Neo-6M U-blox GPS receiver
+5. SIM800L GPS/GPRS Modules
+6. Onboard Serial EEPROM 512Kbits (64KByte)
+7. SDCard module (obsolete, since on board EEPROM is used)
+8. HX711 weight sensor
+
+The purpose(s) of the project are:
+1. To monitor the health of a beehive (logging of temperature and humidity
+and in next phase to also log the weight of the beeghive),
+
+2. To wirelessly transmit logged parameters to an internet server via GPRS
+connection,
+
+3. To act as a security alarm, sensing when the beehive is moved so its
+position is logged with the GPS module and coordinates are transmitted in
+the web so the beehive can be traced.
+
+4. Further more each BMS module can wirelessly communicate with other
+modules via RF-link, so data can be gathered from modules that do not have
+GSM/GPRS module (because of cost of the module).
+
+
+Logged parameters are:
+
+1. Battery voltage
+2. CPU Temperature
+3. Date
+4. Time
+5. Beehive Temperature
+6. Beehive Humidity
+7. Beehive Weight
+8. Beehive Attitude (AccelX, AccelY, AccelZ)
+9. GPS Coordinates (Longitude, Latitude)
+10. GSM Network signal level
+
+
+Modules are powered on and off via a special bit-banging sequence of a
+ATmega328P pin which controls a P-Channel MOSFET transistor.
+
+Also a 3.3V LDO voltage regulator is used to provide with 3.3V the various
+components.
