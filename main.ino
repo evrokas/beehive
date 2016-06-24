@@ -61,7 +61,7 @@ void setup()
 
 	powerPeripherals( (unsigned char)0, 0 );	/* disable all peripherals */
 	Serial.begin( 9600 );
-	Dln("Hello world. Sleep cycling begins!");
+	Dln("\n\n\nHello world. Sleep cycling begins!");
 	
 
 #if 0

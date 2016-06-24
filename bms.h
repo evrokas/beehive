@@ -93,8 +93,8 @@ unsigned short int EEMEM MaxNetCycle = CYCLES_NET_COUNT;
 
 
 /* this is the VCC correction variable used in readVcc() */
-#define VCC_CORRECTION  		0.9854
-#define InternalReferenceVoltage	1062
+#define VCC_CORRECTION  		1	//0.9854
+#define InternalReferenceVoltage	(1062.0)
 
 
 #endif	/* __BMS_H__ */
