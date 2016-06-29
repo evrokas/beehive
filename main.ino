@@ -29,8 +29,13 @@ unsigned short int maxSleepCycle;
 unsigned short int maxLogCycle;
 unsigned short int maxNetCycle;
 
+unsigned short int curMinLogCycle;
+unsigned short int maxMinLogCycle;
+unsigned short int lastMinLogCycle;
+
 HTU21D dht;
 
+char tmp[56], tmp2[16];
 
 
 /* sleep mcu for 8 seconds */
@@ -52,8 +57,10 @@ void setup()
 
 	maxLogCycle = CYCLES_LOG_COUNT;
 	maxNetCycle = CYCLES_NET_COUNT;
-	maxSleepCycle = CYCLES_SLEEP_COUNT;
-  
+	maxSleepCycle = maxLogCycle;	//CYCLES_SLEEP_COUNT;
+
+	maxMinLogCycle = DAILY_LOG_PERIOD;
+      
 	setupPeripheralsControl();
 	dht.initialize();
 	
@@ -62,7 +69,11 @@ void setup()
 	powerPeripherals( (unsigned char)0, 0 );	/* disable all peripherals */
 	Serial.begin( 9600 );
 	Dln("\n\n\nHello world. Sleep cycling begins!");
-	
+	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
+    Dln(tmp);
+
+    sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
+    Dln(tmp);
 
 #if 0
 	/* run this code only to setup date and time */
@@ -105,52 +116,75 @@ void mySleep()
 }
 
 
-char tmp[56], tmp2[16];
 
 void loop()
 {
   datetime_t dt;
   float f1, f2;
   unsigned long f3a, f3b;
+
+
+
+    powerPeripherals(1,1);
+    getTime(&dt);
+    powerPeripherals(0,0);
+    
+    lastMinLogCycle = getMinutes(&dt);
+    curMinLogCycle = lastMinLogCycle;
   
+
   
   	while(1) {
   		mySleep();
 	
   		curSleepCycle++;
+  		D("curSleepCycle ");Dln(curSleepCycle);
 
 		if(curSleepCycle >= maxSleepCycle) {
-			curSleepCycle=0;
+		    /* do not reset curSleepCycle yet, since PERIOD might not
+		     * have been reached yet, do it inside the inner loop */
 	
+		    D("curSleepCycle >= maxSleepCycle ");Dln(curSleepCycle);
 			f3a = readVcc();
 			powerPeripherals(1, 1);
-
 			getTime(&dt);
-			f1 = dht.getTemperature();
-			f2 = dht.getHumidity();
-			
-  			powerPeripherals(0, 0);
-			f3b = readVcc();
-			
-			/* date */
-			convertDate2Str(tmp, &dt);
-			Serial.print(tmp); Serial.print(",");
-			
-			/* time */
-			convertTime2Str(tmp, &dt);
-			Serial.print(tmp); Serial.print(",");
-			
-			/* power voltage */
-			Serial.print(f3a); Serial.print(",");
-			
-			Serial.print(f3b); Serial.print(",");
-			
-			/* temperature */
-			Serial.print(f1); Serial.print(",");
-			
-			Serial.print(f2); Serial.print("\n");
+            powerPeripherals(0, 0);
 
-			Serial.flush();
+			curMinLogCycle = getMinutes(&dt);
+			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
+
+			    D("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+			    D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+			    lastMinLogCycle = curMinLogCycle;
+
+			    curSleepCycle = 0;	/* reset sleep cycle */
+			  
+			    powerPeripherals(1,1);
+    			f1 = dht.getTemperature();
+    			f2 = dht.getHumidity();
+    			f3b = readVcc();
+  	    		powerPeripherals(0, 0);
+			
+		    	/* date */
+		    	convertDate2Str(tmp, &dt);
+		    	Serial.print(tmp); Serial.print(",");
+			
+		    	/* time */
+		    	convertTime2Str(tmp, &dt);
+		    	Serial.print(tmp); Serial.print(",");
+			
+		    	/* power voltage */
+		    	Serial.print(f3a); Serial.print(",");
+			
+		    	Serial.print(f3b); Serial.print(",");
+			
+		    	/* temperature */
+		    	Serial.print(f1); Serial.print(",");
+			
+		    	Serial.print(f2); Serial.print("\n");
+
+		    	Serial.flush();
+            }
 		}
 	}
 }

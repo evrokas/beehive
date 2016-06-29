@@ -38,6 +38,9 @@ void readTime(byte *second, byte *minute, byte *hour, byte *dayOfWeek, byte *day
 /* get seconds of the day from the start of the month */
 unsigned long getSeconds();
 
+/* get minutes of the day from the start of the month */
+unsigned long getMinutes(datetime_t *dt);
+
 /* print current date and time to serial output */
 void displayTime();	
 

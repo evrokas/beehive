@@ -84,6 +84,16 @@ unsigned long getSeconds()
   return (secs);
 }
 
+unsigned long getMinutes(datetime_t *dt)
+{
+  unsigned long mins;
+
+  mins = dt->minute + dt->hour * 60 + dt->dayOfMonth * 1440;
+  return (mins);
+}
+
+
+
 void getTime(datetime_t *dt)
 {
   readTime(&dt->second, &dt->minute, &dt->hour, &dt->dayOfWeek, &dt->dayOfMonth, &dt->month, &dt->year);
