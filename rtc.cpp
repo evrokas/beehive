@@ -152,8 +152,16 @@ void displayTime()
 
 void convertTime2Str(char *str, datetime_t *dt)
 {
+/*
   sprintf(str, "%02d-%02d-%02d %02d:%02d:%02d", 
     dt->dayOfMonth, dt->month, dt->year,
     dt->hour, dt->minute, dt->second
   );
+*/
+  sprintf(str, "%02d:%02d:%02d", dt->hour, dt->minute, dt->second);
+}
+
+void convertDate2Str(char *str, datetime_t *dt)
+{
+  sprintf(str, "%02d-%02d-%02d", dt->dayOfMonth, dt->month, dt->year);
 }

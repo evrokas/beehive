@@ -44,6 +44,7 @@ void displayTime();
 void getTime(datetime_t *dt);
 
 void convertTime2Str(char *str, datetime_t *dt);
+void convertDate2Str(char *str, datetime_t *dt);
 
 #ifdef __cplusplus
 }

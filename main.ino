@@ -105,7 +105,7 @@ void mySleep()
 }
 
 
-char tmp[56];
+char tmp[56], tmp2[16];
 
 void loop()
 {
@@ -122,21 +122,34 @@ void loop()
 		if(curSleepCycle >= maxSleepCycle) {
 			curSleepCycle=0;
 	
+			f3a = readVcc();
 			powerPeripherals(1, 1);
+
 			getTime(&dt);
 			f1 = dht.getTemperature();
 			f2 = dht.getHumidity();
-			f3a = readVcc();
 			
   			powerPeripherals(0, 0);
-
-			convertTime2Str(tmp, &dt);
 			f3b = readVcc();
-			Serial.print("Time: "); Serial.println(tmp);
-			Serial.print("Temp: "); Serial.print(f1);
-			Serial.print("  Hum: "); Serial.println(f2);
-			Serial.print("Vcc1: "); Serial.print(f3a);
-			Serial.print("  Vcc2: "); Serial.println(f3b);
+			
+			/* date */
+			convertDate2Str(tmp, &dt);
+			Serial.print(tmp); Serial.print(",");
+			
+			/* time */
+			convertTime2Str(tmp, &dt);
+			Serial.print(tmp); Serial.print(",");
+			
+			/* power voltage */
+			Serial.print(f3a); Serial.print(",");
+			
+			Serial.print(f3b); Serial.print(",");
+			
+			/* temperature */
+			Serial.print(f1); Serial.print(",");
+			
+			Serial.print(f2); Serial.print("\n");
+
 			Serial.flush();
 		}
 	}
