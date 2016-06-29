@@ -165,6 +165,7 @@ void loop()
     			f3b = readVcc();
   	    		powerPeripherals(0, 0);
 			
+                Serial.print(">>,");
 		    	/* date */
 		    	convertDate2Str(tmp, &dt);
 		    	Serial.print(tmp); Serial.print(",");
