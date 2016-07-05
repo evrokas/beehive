@@ -30,6 +30,17 @@ byte bcdToDec(byte val)
   return( (val/16*10) + (val%16) );
 }
 
+
+void rtc_init()
+{
+  Wire.begin();
+}
+
+void rtc_done()
+{
+}
+
+
 /*
 void setup()
 {
@@ -84,7 +95,7 @@ unsigned long getSeconds()
   return (secs);
 }
 
-unsigned long getMinutes(datetime_t *dt)
+unsigned long rtc_getMinutes(datetime_t *dt)
 {
   unsigned long mins;
 
@@ -94,7 +105,7 @@ unsigned long getMinutes(datetime_t *dt)
 
 
 
-void getTime(datetime_t *dt)
+void rtc_getTime(datetime_t *dt)
 {
   readTime(&dt->second, &dt->minute, &dt->hour, &dt->dayOfWeek, &dt->dayOfMonth, &dt->month, &dt->year);
 }

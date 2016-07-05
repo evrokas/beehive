@@ -15,11 +15,9 @@
 #include "bms.h"
 #include "utils.h"
 #include "rtc.h"
+#include "accel.h"
+#include "thermal.h"
 #include "LowPower.h"
-
-#include "I2Cdev.h"
-#include "HTU21D.h"
-
 
 unsigned short int curSleepCycle;
 unsigned short int curLogCycle;
@@ -33,7 +31,10 @@ unsigned short int curMinLogCycle;
 unsigned short int maxMinLogCycle;
 unsigned short int lastMinLogCycle;
 
-HTU21D dht;
+unsigned short int curMinNetCycle;
+unsigned short int maxMinNetCycle;
+unsigned short int lastMinNetCycle;
+
 
 char tmp[56], tmp2[16];
 
@@ -55,15 +56,18 @@ void setup()
 	curNetCycle = 0;
 	curSleepCycle = 0;
 
-	maxLogCycle = CYCLES_LOG_COUNT;
-	maxNetCycle = CYCLES_NET_COUNT;
-	maxSleepCycle = maxLogCycle;	//CYCLES_SLEEP_COUNT;
+	maxSleepCycle = maxLogCycle;
 
+	maxLogCycle = CYCLES_LOG_COUNT;
 	maxMinLogCycle = DAILY_LOG_PERIOD;
+
+	maxNetCycle = CYCLES_NET_COUNT;
+	maxMinNetCycle = DAILY_NET_PERIOD;
+
       
 	setupPeripheralsControl();
-	dht.initialize();
-	
+	therm_init();
+	rtc_init();
 
 
 	powerPeripherals(0,0);	/* disable all peripherals */
@@ -101,12 +105,12 @@ void loop()
 
 	/* get initial time */
     powerPeripherals(1,1);
-    getTime(&dt);
+    rtc_getTime(&dt);
     powerPeripherals(0,0);
     
-    lastMinLogCycle = getMinutes(&dt);
+    lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
     curMinLogCycle = lastMinLogCycle;
-
+    curMinNetCycle = lastMinNetCycle;
 
 	/* enter endless loop */
   	while(1) {
@@ -130,10 +134,10 @@ void loop()
 
 			f3a = readVcc();
 			powerPeripherals(1, 1);
-			getTime(&dt);
+			rtc_getTime(&dt);
             powerPeripherals(0, 0);
 
-			curMinLogCycle = getMinutes(&dt);
+			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
 
 #ifdef DEBUG_SLEEP_CYCLE
@@ -146,8 +150,8 @@ void loop()
 			    curSleepCycle = 0;	/* reset sleep cycle */
 			  
 			    powerPeripherals(1,1);
-    			f1 = dht.getTemperature();
-    			f2 = dht.getHumidity();
+    			f1 = therm_getTemperature();
+    			f2 = therm_getHumidity();
     			f3b = readVcc();
   	    		powerPeripherals(0, 0);
 			
@@ -173,6 +177,28 @@ void loop()
 
 		    	Serial.flush();
             }
+            
+			if(curMinNetCycle - lastMinNetCycle >= maxMinNetCycle) {
+#ifdef DEBUG_SLEEP_CYCLE
+			    D("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
+			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
+#endif
+
+			    lastMinNetCycle = curMinNetCycle;
+
+			    curSleepCycle = 0;	/* reset sleep cycle */
+			    
+			    /* 
+			     * put
+			     * code
+			     * for 
+			     * GSM/GPRS 
+			     * network 
+			     * connection
+			     */
+			    
+
+			}
 		}
 	}
 }

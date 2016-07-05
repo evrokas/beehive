@@ -1,6 +1,6 @@
 BOARD_TAG = bb8
 
-ROOT_DIR	= ..
+ROOT_DIR	= ../..
 
 USER_LIB_PATH=$(ROOT_DIR)/libraries
 

@@ -29,22 +29,17 @@ typedef struct {
   byte year;
 } datetime_t;
 
-/* set the time to the RTC */
-void setTime(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte yr);
+void rtc_init();
+void rtc_done();
 
-/* read time from the RTC */
-void readTime(byte *second, byte *minute, byte *hour, byte *dayOfWeek, byte *dayOfMonth, byte *month, byte *yr);
-
-/* get seconds of the day from the start of the month */
-unsigned long getSeconds();
+void rtc_getTime(datetime_t *dt);
 
 /* get minutes of the day from the start of the month */
-unsigned long getMinutes(datetime_t *dt);
+unsigned long rtc_getMinutes(datetime_t *dt);
 
 /* print current date and time to serial output */
 void displayTime();	
 
-void getTime(datetime_t *dt);
 
 void convertTime2Str(char *str, datetime_t *dt);
 void convertDate2Str(char *str, datetime_t *dt);
