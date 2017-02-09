@@ -27,3 +27,20 @@ contributors](https://github.com/sudar/Arduino-Makefile/graphs/contributors).
 
 I2CDev library has been used in order to communicate with the various
 modules of the project.
+
+
+
+9/2/2017 Evangelos Rokas <evrokas@gmail.com>
+This is the come back of the Beehive Monitoring System Project.
+Basically, after half a year hibernation, I decided to come back to
+the project in order to help my father with beekeeping.
+
+RTC				is working
+TEMPERATURE/HUMIDIty sensor	is working
+ACCELERATOR sensor		is working (movement alert should be implemented)
+GPS receiver			is working (software integration is needed to be written)
+GSM/GPRS module			is partially working, working on the power of the module which
+				is causing restarts even on normal voltage range(!)
+
+After working prototype is ready, a new schematic will be created and new
+PCBs will be ordered.
