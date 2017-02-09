@@ -1,2 +1,15 @@
-Evangelos Rokas (evrokas@gmail.com)
+2017-02-09	Evangelos Rokas <evrokas@gmail.com>
+
+* added ChangeLog in git repository
+* added Makefile.top in git repository
+* Makefile: added header preample, created Makefile.top and moved there some
+  variables common to the project and the subprojects
+* bms.h: added define SPEED_RATIO in order to simplify testing
+* eeprom/Makefile: added include directive to Makefile.top
+* main.ino: setup() moved initialization of maxSleepCycle 3 lines later
+  added some debug ifdef/endifs in setup() and loop(),
+  IMPORTANT: added Wire.begin() just before rtc_getTime()
+
+2017-02-09	Evangelos Rokas <evrokas@gmail.com>
+
 * Initial ChangeLog entry (9/2/2017)

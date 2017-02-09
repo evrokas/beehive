@@ -23,8 +23,11 @@ EEMEM	unsigned char tst2[] = {101, 102, 103, 104, 105,
 
 void setup()
 {
+	Serial.begin(9600);
 }
 
 void loop()
 {
+	Serial.write( tst[0] );
+	Serial.write( tst2[3] );
 }

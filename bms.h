@@ -70,11 +70,18 @@
 #define SLEEP_CYCLE	8
 
 /* number of sleep cycles to test for time */
-//#define CYCLES_SLEEP_COUNT	2
-#define CYCLES_SLEEP_COUNT	7
+#define CYCLES_SLEEP_COUNT	2
+//#define CYCLES_SLEEP_COUNT	7
+
+
+/* SPEED_RATIO */
+ 
+//#define SPEED_RATIO	24		/* cycles 15 */
+//#define SPEED_RATIO	48		/* cycles 7 */
+#define SPEED_RATIO	96		/* cycles 3 */
 
 /* daily data logging frequency */
-#define DAILY_LOG_FREQ	(6*5 * 24)	// 5 times/hour, every 12 minutes
+#define DAILY_LOG_FREQ	(6*5 * (SPEED_RATIO))	// 5 times/hour, every 12 minutes
 
 /* daily network communication frequency */
 #define DAILY_NET_FREQ	(12)		// 12 times per day, every 2 hours

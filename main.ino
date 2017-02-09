@@ -56,7 +56,6 @@ void setup()
 	curNetCycle = 0;
 	curSleepCycle = 0;
 
-	maxSleepCycle = maxLogCycle;
 
 	maxLogCycle = CYCLES_LOG_COUNT;
 	maxMinLogCycle = DAILY_LOG_PERIOD;
@@ -64,6 +63,7 @@ void setup()
 	maxNetCycle = CYCLES_NET_COUNT;
 	maxMinNetCycle = DAILY_NET_PERIOD;
 
+	maxSleepCycle = maxLogCycle;
       
 	setupPeripheralsControl();
 	therm_init();
@@ -102,6 +102,7 @@ void loop()
   float f1, f2;
   unsigned long f3a, f3b;
 
+#define DEBUG_SLEEP_CYCLE	1
 
 	/* get initial time */
     powerPeripherals(1,1);
@@ -112,13 +113,19 @@ void loop()
     curMinLogCycle = lastMinLogCycle;
     curMinNetCycle = lastMinNetCycle;
 
+#ifdef DEBUG_SLEEP_CYCLE
+	D("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+	D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+#endif
+
+
+
 	/* enter endless loop */
   	while(1) {
   		mySleep();
 	
   		curSleepCycle++;
 
-#define DEBUG_SLEEP_CYCLE	1
 		
 #ifdef DEBUG_SLEEP_CYCLE
   		D("curSleepCycle ");Dln(curSleepCycle);
@@ -134,8 +141,18 @@ void loop()
 
 			f3a = readVcc();
 			powerPeripherals(1, 1);
+
+#ifdef DEBUG_SLEEP_CYCLE
+			D("after rtc_getTime()");
+#endif
+			Wire.begin();
 			rtc_getTime(&dt);
+
+#ifdef DEBUG_SLEEP_CYCLE
+			D("after rtc_getTime()");
+#endif
             powerPeripherals(0, 0);
+
 
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
@@ -173,7 +190,7 @@ void loop()
 		    	/* temperature */
 		    	Serial.print(f1); Serial.print(",");
 			
-		    	Serial.print(f2); Serial.print("\n");
+		    	Serial.print(f2); Serial.print("\n\r");
 
 		    	Serial.flush();
             }
