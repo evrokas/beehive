@@ -18,6 +18,7 @@
 #include "accel.h"
 #include "thermal.h"
 #include "LowPower.h"
+#include "gsm.h"
 
 unsigned short int curSleepCycle;
 unsigned short int curLogCycle;
@@ -79,6 +80,13 @@ void setup()
     sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
     Dln(tmp);
 
+
+
+#if	HAVE_GSM_GPRS == 1
+	gsm_init();
+#endif
+
+
 #if 0
 	/* run this code only to setup date and time */
 	powerPeripherals( 1, 1 );
@@ -95,6 +103,7 @@ void mySleep()
 }
 
 
+char tmpb[16];
 
 void loop()
 {
@@ -136,7 +145,7 @@ void loop()
 		     * have been reached yet, do it inside the inner loop */
 	
 #ifdef DEBUG_SLEEP_CYCLE
-			D("curSleepCycle >= maxSleepCycle ");Dln(curSleepCycle);
+			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
 #endif			
 
 			f3a = readVcc();
@@ -204,6 +213,9 @@ void loop()
 			    lastMinNetCycle = curMinNetCycle;
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
+
+				gsm_sendrecvcmd("ATI\n", tmpb);
+				Dln(tmpb);
 			    
 			    /* 
 			     * put

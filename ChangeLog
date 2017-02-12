@@ -1,9 +1,11 @@
-2017-02-10	Evangelos Rokas <evrokas@gmail.com>
+2017-02-12	Evangelos Rokas <evrokas@gmail.com>
+* started adding F() function to place strings in FLASH memory
+* added gsm.cpp and gsm.h, to start implementing GSM/GPRS functionality
 
+2017-02-10	Evangelos Rokas <evrokas@gmail.com>
 * README: added info for project reactivation
 
 2017-02-09	Evangelos Rokas <evrokas@gmail.com>
-
 * added ChangeLog in git repository
 * added Makefile.top in git repository
 * Makefile: added header preample, created Makefile.top and moved there some
@@ -15,5 +17,4 @@
   IMPORTANT: added Wire.begin() just before rtc_getTime()
 
 2017-02-09	Evangelos Rokas <evrokas@gmail.com>
-
 * Initial ChangeLog entry (9/2/2017)

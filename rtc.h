@@ -13,6 +13,8 @@
 #ifndef __RTC_H__
 #define __RTC_H__
 
+#include <WString.h>
+
 #define RTC_I2C_ADDRESS 0x68
 
 #ifdef __cplusplus

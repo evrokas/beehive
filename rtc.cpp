@@ -144,28 +144,28 @@ void displayTime()
   Serial.print(month, DEC);
   Serial.print("/");
   Serial.print(year, DEC);
-  Serial.print(" Day of week: ");
+  Serial.print(F(" Day of week: "));
   switch(dayOfWeek){
   case 1:
-    Serial.println("Sunday");
+    Serial.println(F("Sunday"));
     break;
   case 2:
-    Serial.println("Monday");
+    Serial.println(F("Monday"));
     break;
   case 3:
-    Serial.println("Tuesday");
+    Serial.println(F("Tuesday"));
     break;
   case 4:
-    Serial.println("Wednesday");
+    Serial.println(F("Wednesday"));
     break;
   case 5:
-    Serial.println("Thursday");
+    Serial.println(F("Thursday"));
     break;
   case 6:
-    Serial.println("Friday");
+    Serial.println(F("Friday"));
     break;
   case 7:
-    Serial.println("Saturday");
+    Serial.println(F("Saturday"));
     break;
   }
 }
