@@ -1,3 +1,6 @@
+2017-02-14	Evangelos Rokas <evrokas@gmail.com>
+* renamed main.ino to main.cpp
+
 2017-02-12	Evangelos Rokas <evrokas@gmail.com>
 * started adding F() function to place strings in FLASH memory
 * added gsm.cpp and gsm.h, to start implementing GSM/GPRS functionality
