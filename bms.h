@@ -19,8 +19,8 @@
 
 /* setup defines */
 
-//#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
-#define LP_SLEEP_MODE	SLEEP_8S		/* 8 seconds sleep */
+#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
+//#define LP_SLEEP_MODE	SLEEP_8S		/* 8 seconds sleep */
 
 /* set to 1 if project has Ublox Neo6M GPS receiver */
 #define	HAVE_GPS	1
@@ -85,7 +85,7 @@
 #define DAILY_LOG_FREQ	(6*5 * (SPEED_RATIO))	// 5 times/hour, every 12 minutes
 
 /* daily network communication frequency */
-#define DAILY_NET_FREQ	(6*4 * (SPEED_RATIO))    //(12)		// 12 times per day, every 2 hours
+#define DAILY_NET_FREQ	(6*4 * (/*SPEED_RATIO*/1))    //(12)		// 12 times per day, every 2 hours
 
 
 /* daily data logging period */

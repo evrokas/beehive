@@ -33,4 +33,14 @@ void accel_init()
 	if(!accel.testConnection()) {
 		Dln("Could not connect to acceleration sensor device.");
 	}
+
+	accel.setRate( ADXL345_RATE_100 );
+	accel.setRange( ADXL345_RANGE_2G );
+}
+
+void accel_getxyz(int16_t *x, int16_t *y, int16_t *z)
+{
+/*        void getAcceleration(int16_t* x, int16_t* y, int16_t* z);*/
+
+	accel.getAcceleration(x, y, z);
 }

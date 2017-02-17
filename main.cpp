@@ -69,7 +69,7 @@ void setup()
 	setupPeripheralsControl();
 	therm_init();
 	rtc_init();
-
+	accel_init();
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	Serial.begin( 9600 );
@@ -100,10 +100,12 @@ void mySleep()
 {
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
+	Wire.begin();
 }
 
 
 char tmpb[16];
+int16_t ax, ay, az;
 
 void loop()
 {
@@ -140,6 +142,19 @@ void loop()
   		D("curSleepCycle ");Dln(curSleepCycle);
 #endif
 
+
+#if 1
+#ifdef DEBUG_ACCEL
+		D("reading accelerator values ... ");
+		powerPeripherals(1,1);
+		rtc_getTime(&dt);
+		accel_getxyz(&ax, &ay, &az);
+		powerPeripherals(0,0);
+		D(ax);D("\t");D(ay);D("\t");Dln(az);
+#endif
+#endif
+
+
 		if(curSleepCycle >= maxSleepCycle) {
 		    /* do not reset curSleepCycle yet, since PERIOD might not
 		     * have been reached yet, do it inside the inner loop */
@@ -151,15 +166,18 @@ void loop()
 			f3a = readVcc();
 			powerPeripherals(1, 1);
 
-#ifdef DEBUG_SLEEP_CYCLE
-			D("after rtc_getTime()");
-#endif
-			Wire.begin();
 			rtc_getTime(&dt);
 
-#ifdef DEBUG_SLEEP_CYCLE
-			D("after rtc_getTime()");
+#if 0
+#ifdef DEBUG_ACCEL
+		D("reading accelerator values ... ");
+//		powerPeripherals(1,1);
+		accel_getxyz(&ax, &ay, &az);
+//		powerPeripherals(0,0);
+		D(ax);D("\t");D(ay);D("\t");Dln(az);
 #endif
+#endif
+
             powerPeripherals(0, 0);
 
 
@@ -167,7 +185,7 @@ void loop()
 			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
 
 #ifdef DEBUG_SLEEP_CYCLE
-			    D("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+			    D( F("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
 			    D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
 #endif
 
@@ -230,27 +248,4 @@ void loop()
 			}
 		}
 	}
-}
-
-void doActions(char doLog, char doNet)
-{
-	/* do nothing if not log and not net */
-	if(!doLog && !doNet)return;
-
-	/* check if we should power peripherals on */
-	if(doLog || doNet)
-		powerPeripherals( (unsigned char)1, 2 );
-
-	if(doLog) {
-		/* so read the sensors and log data */
-	}
-  
-	if(doNet) {
-		/* we must setup network communication and send data to the server */
-	}
-  
-
-	/* shutdown peripherals */
-	if(doLog || doNet)
-		powerPeripherals( (unsigned char)0, 2 );
 }

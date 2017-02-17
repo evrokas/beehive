@@ -17,7 +17,12 @@
 #define ACCEL_ADXL345	1
 
 
+extern "C" {
 
+void accel_init();
+void accel_getxyz(int16_t *x, int16_t *y, int16_t *z);
+
+};
 
 
 #endif	/* __ACCEL_H__ */

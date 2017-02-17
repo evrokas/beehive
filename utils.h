@@ -24,6 +24,7 @@
 #define __sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
+#define DEBUG_ACCEL	1
 
 #define DEBUG_PRINT	1
 
