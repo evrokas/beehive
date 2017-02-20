@@ -9,7 +9,8 @@ ROOT_DIR	= ..
 include Makefile.top
 
 
-USER_LIB_PATH=$(ROOT_DIR)/beehive_libs
+#USER_LIB_PATH=$(ROOT_DIR)/beehive_libs
+USER_LIB_PATH=$(ROOT_DIR)/beehive_external_libs
 
 
 MONITOR_PORT = /dev/ttyUSB0

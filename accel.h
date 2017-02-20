@@ -21,6 +21,9 @@ extern "C" {
 
 void accel_init();
 void accel_getxyz(int16_t *x, int16_t *y, int16_t *z);
+void accel_calculaterollpitch(int16_t x, int16_t y, int16_t z, float *roll, float *pitch);
+
+char accel_getactivitysource();
 
 };
 
