@@ -4,7 +4,8 @@ ROOT_DIR	= ../..
 
 include ../Makefile.top
 
-USER_LIB_PATH=$(ROOT_DIR)/beehive_external_libs ./
+USER_LIB_PATH=$(ROOT_DIR)/beehive_external_libs
+#,$(ROOT_DIR)/beehive_external_libs/TinyGsm
 
 
 MONITOR_PORT = /dev/ttyUSB0

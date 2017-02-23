@@ -1,1 +1,0 @@
-../../beehive_external_libs/TinyGsm/TinyGsmCommon.h

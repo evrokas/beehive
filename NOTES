@@ -29,6 +29,7 @@ GSM/GPRS module (because of cost of the module).
 
 Logged parameters are:
 
+0. NodeId
 1. Battery voltage
 2. CPU Temperature
 3. Date
@@ -46,3 +47,10 @@ ATmega328P pin which controls a P-Channel MOSFET transistor.
 
 Also a 3.3V LDO voltage regulator is used to provide with 3.3V the various
 components.
+
+
+
+57 nibbles
+64 nibbles --> 32 bytes for record
+
+add 4 more nibbles (57-->61) for nodeId value

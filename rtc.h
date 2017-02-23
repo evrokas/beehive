@@ -42,6 +42,7 @@ unsigned long rtc_getMinutes(datetime_t *dt);
 /* print current date and time to serial output */
 void displayTime();	
 
+void setTime(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte yr);
 
 void convertTime2Str(char *str, datetime_t *dt);
 void convertDate2Str(char *str, datetime_t *dt);

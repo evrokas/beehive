@@ -6,16 +6,14 @@
 #include <Wire.h>
 #include <SoftwareSerial.h>
 
-
-#define TINY_GSM_MODEM_SIM800
-#include "TinyGsmClient.h"
+//#include <Sim800l.h>
 
 #include "bms.h"
 #include "utils.h"
 
 SoftwareSerial	gsm(9,10);
 
-TinyGsm gsmi( gsm );
+//TinyGsm gsmi( gsm );
 
 unsigned long mil1, mil2;
 
@@ -39,8 +37,6 @@ void setup()
 
   Serial.println("\n\nTinyGSM example.");
   mil1 = millis();
-  
-  gsmi.restart();
 }
 
 

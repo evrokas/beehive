@@ -75,6 +75,10 @@
 //#define CYCLES_SLEEP_COUNT	7
 
 
+#define VALUE_TO_STRING(x)	#x
+#define VALUE(x)		VALUE_TO_STRING(x)
+#define VAR_NAME_VALUE(var)	#var "=" VALUE(var)
+
 /* SPEED_RATIO */
  
 //#define SPEED_RATIO	24		/* cycles 15 */
@@ -85,8 +89,9 @@
 #define DAILY_LOG_FREQ	(6*5 * (SPEED_RATIO))	// 5 times/hour, every 12 minutes
 
 /* daily network communication frequency */
-#define DAILY_NET_FREQ	(6*4 * (/*SPEED_RATIO*/1))    //(12)		// 12 times per day, every 2 hours
+#define DAILY_NET_FREQ	(6*5 * (SPEED_RATIO))    //(12)		// 12 times per day, every 2 hours
 
+#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )
 
 /* daily data logging period */
 #define DAILY_LOG_PERIOD	(1440 / DAILY_LOG_FREQ)

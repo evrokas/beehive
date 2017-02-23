@@ -11,6 +11,7 @@
  */
 
 #include <Arduino.h>
+#include <Wire.h>
 
 #include "bms.h"
 #include "utils.h"
@@ -52,7 +53,17 @@ void setup()
 {
 	Dinit;
 
-  
+/*
+ * Noticed that some times reading the ADXL345 without first enabling
+ * peripherals, returns trash from the ADXL345 IC.
+ * Probably, the RTC I am using has internal pullups which are used also for
+ * accessing ADXL345 under normal conditions.  One solution found was to
+ * initialize Wire interface (I2C) and set minimum speed (must read the
+ * manual), then we just expect, the board to work without pull-up
+ * resistors.
+ *
+ */
+ 
 	curLogCycle = 0;
 	curNetCycle = 0;
 	curSleepCycle = 0;
@@ -90,8 +101,11 @@ void setup()
 #if 0
 	/* run this code only to setup date and time */
 	powerPeripherals( 1, 1 );
-	setTime(0, 29, 2, 0, 21, 6, 16);
+	setTime(00, 37, 1, 5, 23, 2, 17);
 	powerPeripherals( 0, 0 );
+
+	/* stop program execution */
+	while(true);
 #endif
 }
 
@@ -101,6 +115,12 @@ void mySleep()
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
 	Wire.begin();
+
+#if 0
+	Wire.beginTransmission(RTC_I2C_ADDRESS);
+	Wire.write(0); // set DS3231 register pointer to 00h
+	Wire.endTransmission();
+#endif
 }
 
 
@@ -147,6 +167,7 @@ void loop()
 #ifdef DEBUG_ACCEL
 		D("reading accelerator values ... ");
 		powerPeripherals(1,1);
+//		delay(10);
 		rtc_getTime(&dt);
 		accel_getxyz(&ax, &ay, &az);
 		powerPeripherals(0,0);
@@ -178,7 +199,8 @@ void loop()
 #endif
 #endif
 
-            powerPeripherals(0, 0);
+		/* do not power off peripherals, since they might be needed, by next check */
+//            powerPeripherals(0, 0);
 
 
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
@@ -193,7 +215,7 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 			  
-			    powerPeripherals(1,1);
+//			    powerPeripherals(1,1);
     			f1 = therm_getTemperature();
     			f2 = therm_getHumidity();
     			f3b = readVcc();
@@ -220,7 +242,9 @@ void loop()
 		    	Serial.print(f2); Serial.print("\n\r");
 
 		    	Serial.flush();
-            }
+            } else {
+            	powerPeripherals(0,0);
+			}
             
 			if(curMinNetCycle - lastMinNetCycle >= maxMinNetCycle) {
 #ifdef DEBUG_SLEEP_CYCLE
@@ -232,8 +256,8 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 
-				gsm_sendrecvcmd("ATI\n", tmpb);
-				Dln(tmpb);
+//				gsm_sendrecvcmd("ATI\n", tmpb);
+//				Dln(tmpb);
 			    
 			    /* 
 			     * put
