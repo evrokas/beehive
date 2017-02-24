@@ -78,6 +78,10 @@ void setup()
 	maxSleepCycle = maxLogCycle;
       
 	setupPeripheralsControl();
+
+//	TWBR = 152;		/* switch to 25KHz I2C interface */
+
+
 	therm_init();
 	rtc_init();
 	accel_init();
@@ -101,10 +105,11 @@ void setup()
 #if 0
 	/* run this code only to setup date and time */
 	powerPeripherals( 1, 1 );
-	setTime(00, 37, 1, 5, 23, 2, 17);
+	setTime(24, 2, 17, 6, 11, 38, 00 );
 	powerPeripherals( 0, 0 );
 
 	/* stop program execution */
+	Serial.println("Now you must comment out RTC writing code, and reload program to board.\n");
 	while(true);
 #endif
 }
@@ -115,6 +120,7 @@ void mySleep()
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
 	Wire.begin();
+//	TWBR = 152;		/* switch to 25KHz I2C interface */
 
 #if 0
 	Wire.beginTransmission(RTC_I2C_ADDRESS);
@@ -256,9 +262,11 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 
+#if 0
 			    gsm_activateBearerProfile("myq", "", "");
 			    http_getRequest("https://52.7.7.190", "/update?api_key=7EE6FEDU182QNN2U&1=60&2=100" );
 			    gsm_deactivateBearerProfile();
+#endif
 
 //				gsm_sendrecvcmd("ATI\n", tmpb);
 //				Dln(tmpb);
