@@ -1,14 +1,14 @@
-4 ####	nodeId	Node Id number
-3 ###	mcuTemp	Internal MCU Temperature
-4 ####	batVolt	Battery voltage
-4 ####	temp	External temperature
-4 ####	humid	External humidity
-6 ######	rtcdate	RTC date (00:00:00)
-6 ######	rtctime	RTC time (01-01-11)
-2 ##	gsmsig	GSM signal quality
-4 ####	gsmvolt	GSM module voltage
-8 ########	gpslon	GPS longitude
-8 ########	gpslat	GPS latitude
+4 ####		nodeId	Node Id number
+3 ###		mcuTemp	Internal MCU Temperature
+4 ####		batVolt	Battery voltage
+4 ####		bhTemp	External temperature
+4 ####		bhHumid	External humidity
+6 ######	rtcDate	RTC date (00:00:00)
+6 ######	rtcTime	RTC time (01-01-11)
+2 ##		gsmSig	GSM signal quality
+4 ####		gsmVolt	GSM module voltage
+9 #########	gpsLon	GPS longitude
+9 #########	gpsLat	GPS latitude
 
-4 #####	weight	Beehive weight (as measured from HX711)
+5 #####		bhvWeight	Beehive weight (as measured from HX711)
 	sound	128x8bits packets 256-point FFT

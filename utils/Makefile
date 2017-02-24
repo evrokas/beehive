@@ -24,7 +24,11 @@ BINARY	= scp
 
 all: $(BINARY)
 
+$(OFILES): $(CFILES)
+
 $(BINARY): $(OFILES)
+	$(CC) $(CFLAGS) -o $@ $(OFILES) $(LFLAGS)
 
 
-claen
+clean:
+	rm -fv $(BINARY) $(OFILES)

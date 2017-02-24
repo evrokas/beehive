@@ -13,9 +13,15 @@
 #ifndef __BMS_H__
 #define __BMS_H__
 
+
+#if !defined( LINUX_NATIVE_APP )
+
 #include <Arduino.h>
 #include <avr/eeprom.h>
 #include <WString.h>
+
+#endif
+
 
 /* setup defines */
 
@@ -37,6 +43,8 @@
 /* set to 1 if project has nRF24L01 RF module */
 #define HAVE_RF		1
 
+/* set to 1 if project has HX711 weight sensor module */
+#define HAVE_WEIGHT_SENSOR	0
 
 
 /* pin which is used to power peripherals on/off */
