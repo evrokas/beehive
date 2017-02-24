@@ -256,6 +256,10 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 
+			    gsm_activateBearerProfile("myq", "", "");
+			    http_getRequest("https://52.7.7.190", "/update?api_key=7EE6FEDU182QNN2U&1=60&2=100" );
+			    gsm_deactivateBearerProfile();
+
 //				gsm_sendrecvcmd("ATI\n", tmpb);
 //				Dln(tmpb);
 			    
