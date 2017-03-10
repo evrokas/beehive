@@ -47,8 +47,11 @@ void twi_enable_pullups()
 
 void setupPeripheralsControl()
 {
-	DDRC |= B00000001;
-	PORTC &= B11111110;
+	DDRC |=		B00000001;
+	PORTC &=	B11111110;
+
+	DDRB |=		B11000000;
+	PORTB &=	B00111111;
 }
 
 
@@ -82,13 +85,15 @@ void powerPeripherals(unsigned char onoff, unsigned char mdel)
 	delay( mdel );	/* delay for specified number of msecs */
 }
 
-void powerGPRSGPS(unsigned char onoff, unsigned char mdel)
+void powerGPRSGPS(unsigned char onoff)
 {
 	switch(onoff) {
-		case 0: { 	/* power off */
-			}; break;
-		case 1: {	/* power on */
-			}; break;
+		case 0:  	/* power off */
+			PORTB |= B1100000;
+			break;
+		case 1: 	/* power on */
+			PORTB &= B00111111;
+			break;
 	}
 }
 

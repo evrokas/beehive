@@ -28,6 +28,8 @@ void setup()
   // and leave them on
   powerPeripherals( 1,1 );
 
+//  powerGPRSGPS(1);
+
   Serial.begin( 9600 );
 
   gsm.begin( 19200 );
@@ -40,13 +42,33 @@ void setup()
 }
 
 
-static bool dump1 = false;
-static bool dump2 = false;
+unsigned char gsmon=0;
+unsigned char peron=0;
 
 void loop()
 {
+  char c;
   if(Serial.available()) {
-    gsm.write( Serial.read() );
+    c=Serial.read();
+    if(c == '!') {
+		if(gsmon == 1)gsmon = 0;
+		else gsmon = 1;
+		
+		powerGPRSGPS( gsmon );
+		Serial.print("Turning GSM/GPRS on ");
+		Serial.println( gsmon );
+	}
+
+	if(c == '@') {
+		if(peron == 1)peron = 0;
+		else peron = 1;
+		
+		powerPeripherals( peron, peron );
+		Serial.print("Turnin Peripherals on ");
+		Serial.println( peron );
+	}
+	
+    gsm.write( c );	//Serial.read() );
   }
   
   if(gsm.available() ) {

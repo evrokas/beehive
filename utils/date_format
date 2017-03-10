@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+#author: Evangelos Rokas <evrokas@gmail.com
+#
+
+#17 064 1299
+#year day_of_year	minute_of_day
+
+date  +'%y %j %H %M %S' | gawk '{ print $1,$2, $3*60+$4}' -

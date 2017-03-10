@@ -87,6 +87,9 @@ void setupPeripheralsControl(void);
 /* function to power on/off peripherals */
 void powerPeripherals(unsigned char onoff, unsigned char mdel);
 
+/* function to power on/off GSM/GPRS and GPS modules */
+void powerGPRSGPS(unsigned char onoff);
+
 /* function to power RTC on/off */
 void powerRTC(unsigned char onoff, unsigned char mdel);
 

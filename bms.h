@@ -99,7 +99,7 @@
 /* daily network communication frequency */
 #define DAILY_NET_FREQ	(6*5 * (SPEED_RATIO))    //(12)		// 12 times per day, every 2 hours
 
-#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )
+//#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )
 
 /* daily data logging period */
 #define DAILY_LOG_PERIOD	(1440 / DAILY_LOG_FREQ)

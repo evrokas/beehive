@@ -105,7 +105,7 @@ void setup()
 #if 0
 	/* run this code only to setup date and time */
 	powerPeripherals( 1, 1 );
-	setTime(24, 2, 17, 6, 11, 38, 00 );
+	setTime(0,45, 16, 4, 1, 3, 17 );
 	powerPeripherals( 0, 0 );
 
 	/* stop program execution */

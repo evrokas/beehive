@@ -17,37 +17,107 @@
 #include <stdint.h>
 #include "bms.h"
 
+
+// add debugging info
+#define	RECORD_DEBUG	1
+
+// add variables for statistics in record
+#define RECORD_STATS	1
+
+
+// define the follwing if we have the weight sensor and want to log beehive weight
+#define	HAVE_WEIGHT_SENSOR	1
+
+
+
 #define	p_nodeId	0
-#define p_mcuTemp	4
-#define p_batVolt	7
-#define p_bhvTemp	11
-#define p_bhvHumid	15
-#define p_rtcDate	19
-#define p_rtcTime	25
-#define p_gsmSig	31
-#define p_gsmVolt	33
-#define p_gpsLong	37
-#define p_gpsLat	46
-#define p_bhvWeight	55	
+#define p_mcuTemp	1
+#define p_batVolt	2
+#define p_bhvTemp	3
+#define p_bhvHumid	4
+#define p_rtcDateTime	5
+#define p_gsmSig	6
+#define p_gsmVolt	7
+#define p_gpsLong	8
+#define p_gpsLat	9
+#define p_bhvWeight	10
+
+#if RECORD_STATS == 1
+
+	#define p_EntryWritten	11	// many times a record is written
+
+#endif	/* RECORD_STATS */
+
 
 
 typedef struct {
 	uint8_t	nibbleStart, nibbleStop;
 } nibblepos_t;
 
+#if 0
 nibblepos_t	block[] = {
 	{ 0, 3},		// nodeId
-	{ 4, 6},		// mcuTemp
-	{ 7,10},		// batVolt
-	{11,14},		// bhvTemp
-	{15,18},		// bhvHumid
-	{19,24},		// rtcDate
-	{25,30},		// rtcTime
-	{31,32},		// gsmSig
-	{33,36},		// gsmVolt
-	{37,45},		// gpsLong
-	{46,54},		// gpsLat
-	{55,59},		// bhvWeight
+	{ 4, 5},		// mcuTemp
+	{ 6, 9},		// batVolt
+	{10,11},		// bhvTemp
+	{12,13},		// bhvHumid
+	{14,20},		// rtcDateTime
+	{21,22},		// gsmSig
+	{23,26},		// gsmVolt
+	{27,35},		// gpsLong
+	{36,44},		// gpsLat
+	{45,50},		// bhvWeight
+};
+#endif
+
+#define SECTOR_HEADER_SIZE	4
+#define SECTOR_PAYLOAD_SIZE	28
+
+
+#define SECTOR_TYPE_COUNT	4
+
+#define SECTOR_DATA		0
+#define SECTOR_CONFIG	1
+#define SECTOR_unused	2
+#define SECTOR_BAD		3
+/* if more sector types are needed, then we can extend st? bits */
+
+
+typedef struct {
+	uint8_t header[SECTOR_HEADER_SIZE];		// 2 bits of sector type, 13 bits of head pointer, 13 bits of tail pointer (sum: 28bits) */
+/*	+[3]-+----+----+----+----+----+----+----+
+ *  |st1 |st0 |    |    |    |    |tl12|tl11|
+ *	+----+----+----+----+----+----+----+----+
+ *	+[2]-+----+----+----+----+----+----+----+
+ *  |tl10|tl9 |tl8 |tl7 |tl6 |tl5 |tl4 |tl3 |
+ *	+----+----+----+----+----+----+----+----+
+ *	+[1]-+----+----+----+----+----+----+----+
+ *  |tl2 |tl1 |tl0 |hd12|hd11|hd10|hd9 |hd8 |
+ *	+----+----+----+----+----+----+----+----+
+ *	+[0]-+----+----+----+----+----+----+----+
+ *  |hd7 |hd6 |hd5 |hd4 |hd3 |hd2 |hd1 |hd0 |
+ *	+----+----+----+----+----+----+----+----+
+ */
+
+ uint8_t payload[SECTOR_PAYLOAD_SIZE];
+} SECTOR;
+
+
+typedef struct {
+	uint16_t rdCount;
+	uint16_t wrCount;
+} STATS;
+
+
+#define DECODE_HEAD(xx)	((xx[0]&0xff)|(((uint16_t)(xx[1]&0x1f))<<8))
+#define DECODE_TAIL(xx)	((xx[1]>>5)|(((uint16_t)xx[2])<<3)|((uint16_t)(xx[3]&0x03)<<11))
+#define DECODE_TYPE(xx)	(xx[3]>>6)
+
+#define ENCODE_HEAD(xx,head)	(xx[0]=(head&0xff));(xx[1]=(xx[1]&0xe0)|((head&0x1f00)>>8))
+#define ENCODE_TAIL(xx,tail)	(xx[1]=(xx[1]&0x1f)|((tail&0x07)<<5));(xx[2]=(tail>>3&0xff));(xx[3]=(xx[3]&0xc0)|((tail>>11)&0x03))
+#define ENCODE_TYPE(xx,type)	(xx[3]=(xx[3]&0x3f)|((type&0x3)<<6));
+
+
 
 typedef struct {
 	uint16_t	nodeId;
@@ -55,10 +125,7 @@ typedef struct {
 	uint16_t	batVolt;
 	uint16_t	bhvTemp;
 	uint16_t	bhvHumid;
-	uint8_t		rtcDate[3];		/* 3 bytes, 6 nibbles, first 2 nibbles is day,
-								 * next 2 nibbles is month, last 2 nibbles is year	*/
-	uint8_t		rtcTime[3];		/* 3 bytes, 6 nibbles, first 2 nibbles is hours,
-								 * next 2 nibbles is minutes, last 2 nibbles is seconds */
+	uint8_t		rtcDateTime[4];
 	uint8_t		gsmSig;
 	uint16_t	gsmVolt;
 
@@ -66,10 +133,60 @@ typedef struct {
 								 * longitude, last 9 nibbles is latitude */
 
 #if HAVE_WEIGHT_SENSOR == 1
-	uint8_t		bhWeight[5];
+	uint8_t		bhWeight[3];
 #endif
+
 } datablock_t;
+
+
+typedef struct {
+	uint16_t HEAD;
+	uint16_t TAIL;
+} RING;
+
+
+
+
+
+#if 0
+void encodeStr2BCD(char *aval, uint8_t nstart, uint8_t nlen, uint8_t *abcd)
+{
+  uint8_t nb;
+
+  	nb = nstart / 2;
+
+	aval += nb
+
+	if(odd(nstart)	
 	
+	
+	abcd = val % 10;
+	nlen--;
+	
+	while(nlen>0) {
+		abcd++;
+		val /= 10;
+		(*abcd) += val % 10;
+	}
+}
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void filesystem_init();
+void filesystem_done();
+void __fs_readSector(uint16_t, void *);
+void __fs_writeSector(uint16_t, void *);
+
+void fs_writeSector(SECTOR *);
+
+void dumpStats();
+	
+#ifdef __cplusplus
+};
+#endif
 
 
 #endif	/* __DATA_H__ */
