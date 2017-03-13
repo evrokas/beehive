@@ -1,3 +1,9 @@
+2017-03-13	Evangelos Rokas <evrokas@gmail.com>
+* Makefile.top: added AVRDUDE_ARG_PROGRAMMER option in order to select
+                correct programmer. There are two boards defined in boards.txt
+								bb8 and bb8isp. bb8 uses stk500v1 protocol and bb8isp uses
+                arduinoisp protocol for avrdude upload
+
 2017-02-14	Evangelos Rokas <evrokas@gmail.com>
 * renamed main.ino to main.cpp
 
