@@ -16,7 +16,9 @@
 #define GSM_TX	10
 #define GSM_RX	9
 
-#define GSM_DEFAULT_BAUDRATE	19200
+#ifndef GSM_SERIAL_BAUD
+#define GSM_SERIAL_BAUDRATE	9600
+#endif
 
 
 extern "C" {

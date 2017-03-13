@@ -17,6 +17,32 @@ SoftwareSerial	gsm(9,10);
 
 unsigned long mil1, mil2;
 
+
+void sapbr_init()
+{
+	gsm.write("AT+CIPSHUT\n");
+	gsm.write("AT+CIPMUX=0\n");
+	gsm.write("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
+	gsm.write("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
+	gsm.write("AT+SAPBR=3,1,\"USER\",\"\"\n");
+	gsm.write("AT+SAPBR=3,1,\"PWD\",\"\"\n");
+	gsm.write("AT+SAPBR=1,1\n");
+	gsm.write("AT+SAPBR=2,1\n");
+}
+
+void http_send()
+{
+	gsm.write("AT+HTTPINIT\n");
+	gsm.write("AT+HTTPPARA=\"CID\",1\n");
+	gsm.write("AT+HTTPPARA=\"URL\",\"http://46.176.29.74:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345\"\n");
+	gsm.write("AT+HTTPACTION=0\n");
+	gsm.write("AT+HTTPREAD\n");
+}
+
+
+
+
+
 void setup()
 {
   setupPeripheralsControl();
@@ -32,8 +58,8 @@ void setup()
 
   Serial.begin( 9600 );
 
-  gsm.begin( 19200 );
-  delay( 3000 );
+  gsm.begin( 9600 );
+  delay( 1000 );
   
 //  gps.listen();
 
@@ -50,25 +76,33 @@ void loop()
   char c;
   if(Serial.available()) {
     c=Serial.read();
-    if(c == '!') {
-		if(gsmon == 1)gsmon = 0;
-		else gsmon = 1;
+    switch( c ) {
+    	case '!': 
+    		if(gsmon == 1)gsmon = 0;
+    		else gsmon = 1;
 		
-		powerGPRSGPS( gsmon );
-		Serial.print("Turning GSM/GPRS on ");
-		Serial.println( gsmon );
-	}
-
-	if(c == '@') {
-		if(peron == 1)peron = 0;
-		else peron = 1;
+    		powerGPRSGPS( gsmon );
+    		Serial.print("GSM/GPRS ... ");
+			Serial.println( gsmon?"on":"off" );
+    		break;
+		case '@':
+			if(peron == 1)peron = 0;
+			else peron = 1;
 		
-		powerPeripherals( peron, peron );
-		Serial.print("Turnin Peripherals on ");
-		Serial.println( peron );
+			powerPeripherals( peron, peron );
+			Serial.print("Peripherals ... ");
+			Serial.println( peron?"on":"off" );
+			break;
+		case '#':
+			sapbr_init();
+			break;
+		case '$':
+			http_send();
+			break;
+		default:
+			delay(10);
+			gsm.write( c );	//Serial.read() );
 	}
-	
-    gsm.write( c );	//Serial.read() );
   }
   
   if(gsm.available() ) {

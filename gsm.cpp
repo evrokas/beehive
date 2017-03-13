@@ -47,7 +47,7 @@ uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 
 void gsm_init()
 {
-    gsmserial.begin( GSM_DEFAULT_BAUDRATE );
+    gsmserial.begin( GSM_SERIAL_BAUDRATE );
 }
 
 bool gsm_sendrecvcmd(char *cmd, char *expstr)
