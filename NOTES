@@ -11,6 +11,19 @@ There are 8 distinct modules in the initial prototype PCB.
 7. SDCard module (obsolete, since on board EEPROM is used)
 8. HX711 weight sensor
 
+NOTE: (13/3/17) Since there are going to be 2 kinds of nodes (Level 0 and
+Level 1+0) 
+
+Level 0 node collects data, stores them and pushes them to Level 1+0 node. 
+(This uses a low-range RF module)
+
+Level 1+0 node collects data and stores them, also pulls data from other
+Level 0 nodes and pushes ALL data to the Internet Server.  (This uses both a
+low-range RF module *and* a GSM/GPRS module)
+
+
+
+
 The purpose(s) of the project are:
 1. To monitor the health of a beehive (logging of temperature and humidity
 and in next phase to also log the weight of the beeghive),
