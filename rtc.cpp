@@ -30,7 +30,6 @@ byte bcdToDec(byte val)
   return( (val/16*10) + (val%16) );
 }
 
-
 void rtc_init()
 {
   Wire.begin();

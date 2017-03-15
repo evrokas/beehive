@@ -199,3 +199,55 @@ uint16_t http_getRequest(char *url, char *args)
 	return (result);
 }
 
+bool gsm_moduleInfo()
+{
+  char _tempbuf[ TEMP_BUF_LEN ];
+
+  	memset( _tempbuf, 0, TEMP_BUF_LEN );
+  	gsmserial.print( F("ATI\r\n") );
+  	gsm_readSerial(_tempbuf, TEMP_BUF_LEN, 2 );
+  	Serial.print("GSM response: <"); Serial.print( _tempbuf ); Serial.println(">");
+  	
+  	_tempbuf[12] = '\0';
+  	Serial.print(">>"); Serial.print(_tempbuf+6); Serial.println("<<");
+  	
+  	if(!strncmp( _tempbuf+6, "SIM800", 6 ))return true;
+  	else return false;
+}
+
+uint16_t gsm_getBattery()
+{
+	char _tempbuf[ TEMP_BUF_LEN ];
+
+		memset(_tempbuf, 0, TEMP_BUF_LEN );
+		gsmserial.print( F("AT+CBC\r\n") );
+		gsm_readSerial(_tempbuf, TEMP_BUF_LEN, 2 );
+  	Serial.print("GSM response: <"); Serial.print( _tempbuf ); Serial.println(">");
+
+	return 0;
+}
+
+
+bool gsm_available()
+{
+	return (gsmserial.available());
+}
+
+
+char gsm_read()
+{
+	return (gsmserial.read());
+}
+
+
+void gsm_write(char c)
+{
+	gsmserial.write(c);
+}
+
+void gsm_flushinput()
+{
+	while( gsmserial.available() )
+		gsmserial.read();
+}
+

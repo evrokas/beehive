@@ -35,6 +35,15 @@ extern "C" {
     
     uint16_t http_getRequest(char *url, char *args);
 
+    bool gsm_moduleInfo();
+	uint16_t gsm_getBattery();
+	    
+    bool gsm_available();
+    char gsm_read();
+    void gsm_write(char c);
+    
+    void gsm_flushinput();
+    
 };
 
 

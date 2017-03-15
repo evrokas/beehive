@@ -32,7 +32,7 @@
 #define	HAVE_GPS	1
 
 /* set to 1 if project has SIM800L GSM/GPRS module */
-#define HAVE_GSM_GPRS	0
+#define HAVE_GSM_GPRS	1
 
 /* set to 1 if project has temperature/humidity sensor */
 #define HAVE_THSENSOR	1

@@ -75,6 +75,13 @@ void setup()
 	maxNetCycle = CYCLES_NET_COUNT;
 	maxMinNetCycle = DAILY_NET_PERIOD;
 
+#if 0
+	/* hardwire log cycles for debugging purposes */
+	maxMinLogCycle = 2;
+	maxMinNetCycle = 4;
+#endif
+
+
 	maxSleepCycle = maxLogCycle;
       
 	setupPeripheralsControl();
@@ -95,10 +102,13 @@ void setup()
     sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
     Dln(tmp);
 
+    sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
+    Dln(tmp);
 
 
 #if	HAVE_GSM_GPRS == 1
 	gsm_init();
+	powerGPRSGPS( 0 );
 #endif
 
 
@@ -132,6 +142,8 @@ void mySleep()
 
 char tmpb[16];
 int16_t ax, ay, az;
+int poweredGSM=0;
+
 
 void loop()
 {
@@ -169,7 +181,7 @@ void loop()
 #endif
 
 
-#if 1
+#if 0
 #ifdef DEBUG_ACCEL
 		D("reading accelerator values ... ");
 		powerPeripherals(1,1);
@@ -195,19 +207,8 @@ void loop()
 
 			rtc_getTime(&dt);
 
-#if 0
-#ifdef DEBUG_ACCEL
-		D("reading accelerator values ... ");
-//		powerPeripherals(1,1);
-		accel_getxyz(&ax, &ay, &az);
-//		powerPeripherals(0,0);
-		D(ax);D("\t");D(ay);D("\t");Dln(az);
-#endif
-#endif
-
-		/* do not power off peripherals, since they might be needed, by next check */
-//            powerPeripherals(0, 0);
-
+			/* do not power off peripherals, since they might be needed, by next check */
+//          powerPeripherals(0, 0);
 
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
@@ -258,15 +259,58 @@ void loop()
 			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
 #endif
 
-			    lastMinNetCycle = curMinNetCycle;
+				if( poweredGSM > 5 ) {
+					Dln("GSM was not ready after 5 tries. Skip session");
+					
+					/* module is not ready after 5 cycles, so there might be a problem,
+					 * skip network communication this time */
+					poweredGSM = 0;
+					powerGPRSGPS( 0 );
 
-			    curSleepCycle = 0;	/* reset sleep cycle */
+					lastMinNetCycle = curMinNetCycle;
+					curSleepCycle = 0;	/* reset sleep cycle */
+
+					continue;
+				}
+				
+				if(!poweredGSM) {
+					poweredGSM++;
+					D("GSM is not ready on try ... "); Dln( poweredGSM );
+					
+					/* only apply power on the first time */
+					if(poweredGSM == 1)
+						powerGPRSGPS( 1 );
+					continue;
+				}
+
+				gsm_flushinput();
+				
+				poweredGSM++;
+				if( !gsm_moduleInfo() ) {
+					D("GSM module is not ready yet! try ... "); Dln( poweredGSM );
+					/* module is not yet ready, skip this cycle */
+					continue;
+				}
+				
+				Dln("GSM module is ready!");
+				/* so module is ready */
+
+				Dln("Doing network stuff");
 
 #if 0
-			    gsm_activateBearerProfile("myq", "", "");
+			    gsm_activateBearerProfile("internet.cyta.gr", "", "");
 			    http_getRequest("https://52.7.7.190", "/update?api_key=7EE6FEDU182QNN2U&1=60&2=100" );
 			    gsm_deactivateBearerProfile();
 #endif
+
+				gsm_flushinput();
+				gsm_getBattery();
+				
+				powerGPRSGPS( 0 );
+				poweredGSM = 0;
+				
+			    lastMinNetCycle = curMinNetCycle;
+			    curSleepCycle = 0;	/* reset sleep cycle */
 
 //				gsm_sendrecvcmd("ATI\n", tmpb);
 //				Dln(tmpb);
@@ -281,7 +325,9 @@ void loop()
 			     */
 			    
 
-			}
-		}
-	}
+			}	/* in net cycle  */
+		
+		}	/* Sleep Cycle */
+	
+	}	/* main while loop  */
 }

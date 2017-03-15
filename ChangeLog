@@ -1,3 +1,12 @@
+2017-03-15	Evangelos Rokas <evrokas@gmail.com>
+* data.h: mcuTemp is deprecated, commented out, changed deginition of gpsLat,gpsLon
+					to float and rtcDateTime to uint32_t (unix time)
+* data.cpp: added gsm_moduleInfo(), gsm_getBattery() and gms_flushinput()
+					functions
+* gsm/main.cpp: some changes
+* main.cpp: added code to perform network communications and handle basic
+					module synchronization error
+
 2017-03-14	Evangelos Rokas <evrokas@gmail.com>
 * Makefile: added conditional define in CPPFLAGS, -DGSM_SERIAL_BAUDRATE
 * gsm.h: make use of GSM_SERIAL_BAUDRATE and init it if not initialized on commandline

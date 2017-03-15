@@ -2,6 +2,8 @@
  * GSM/GPRS module testing
  */
 
+#include <stdlib.h>
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
@@ -17,26 +19,47 @@ SoftwareSerial	gsm(9,10);
 
 unsigned long mil1, mil2;
 
+void write_gsm(char *str)
+{
+	while( *str != '\0') {
+		gsm.write( *str );
+		str++;
+		delay(10);
+	}
+}
+
 
 void sapbr_init()
 {
-	gsm.write("AT+CIPSHUT\n");
-	gsm.write("AT+CIPMUX=0\n");
-	gsm.write("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
-	gsm.write("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
-	gsm.write("AT+SAPBR=3,1,\"USER\",\"\"\n");
-	gsm.write("AT+SAPBR=3,1,\"PWD\",\"\"\n");
-	gsm.write("AT+SAPBR=1,1\n");
-	gsm.write("AT+SAPBR=2,1\n");
+	write_gsm("AT+CIPSHUT\n");
+	write_gsm("AT+CIPMUX=0\n");
+	write_gsm("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
+	write_gsm("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
+	write_gsm("AT+SAPBR=3,1,\"USER\",\"\"\n");
+	write_gsm("AT+SAPBR=3,1,\"PWD\",\"\"\n");
+	write_gsm("AT+SAPBR=1,1\n");
+	write_gsm("AT+SAPBR=2,1\n");
 }
+
+
+/*
+http://46.176.29.74:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567
+
+http://46.176.29.74:8088/data.php?action=add&1=abcdefgh&2=1088&3=3.998&4=31.345&5=45.432&6=13-03-17_16:53&7=45&8=4.023&9=12.345232&10=45.123433&11=45.567
+
+if we change &[values] to &[number 1-11]
+
+mcuTemp is deprecate therefore it is removed.
+
+*/
 
 void http_send()
 {
-	gsm.write("AT+HTTPINIT\n");
-	gsm.write("AT+HTTPPARA=\"CID\",1\n");
-	gsm.write("AT+HTTPPARA=\"URL\",\"http://46.176.29.74:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345\"\n");
-	gsm.write("AT+HTTPACTION=0\n");
-	gsm.write("AT+HTTPREAD\n");
+	write_gsm("AT+HTTPINIT\n");
+	write_gsm("AT+HTTPPARA=\"CID\",1\n");
+	write_gsm("AT+HTTPPARA=\"URL\",\"http://46.176.29.74:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\n");
+	write_gsm("AT+HTTPACTION=0\n");
+	write_gsm("AT+HTTPREAD\n");
 }
 
 
@@ -65,6 +88,10 @@ void setup()
 
   Serial.println("\n\nTinyGSM example.");
   mil1 = millis();
+  
+  
+  powerPeripherals( 0,0 );
+  powerGPRSGPS( 0 );
 }
 
 
@@ -74,6 +101,9 @@ unsigned char peron=0;
 void loop()
 {
   char c;
+  uint8_t i;
+  unsigned long volt;
+    
   if(Serial.available()) {
     c=Serial.read();
     switch( c ) {
@@ -99,9 +129,18 @@ void loop()
 		case '$':
 			http_send();
 			break;
+		case '%':
+			Serial.print("Vcc: ");
+			
+			for(i=0;i<10;i++) {
+				volt += readVcc();
+				delay(5);
+			}
+			Serial.println( volt / 10 );
+			break;
+
 		default:
-			delay(10);
-			gsm.write( c );	//Serial.read() );
+			gsm.write( c );
 	}
   }
   

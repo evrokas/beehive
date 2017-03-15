@@ -26,12 +26,12 @@
 
 
 // define the follwing if we have the weight sensor and want to log beehive weight
-#define	HAVE_WEIGHT_SENSOR	1
+//#define	HAVE_WEIGHT_SENSOR	1
 
 
 
 #define	p_nodeId	0
-#define p_mcuTemp	1
+//#define p_mcuTemp	1
 #define p_batVolt	2
 #define p_bhvTemp	3
 #define p_bhvHumid	4
@@ -117,23 +117,32 @@ typedef struct {
 #define ENCODE_TAIL(xx,tail)	(xx[1]=(xx[1]&0x1f)|((tail&0x07)<<5));(xx[2]=(tail>>3&0xff));(xx[3]=(xx[3]&0xc0)|((tail>>11)&0x03))
 #define ENCODE_TYPE(xx,type)	(xx[3]=(xx[3]&0x3f)|((type&0x3)<<6));
 
+#if defined( LINUX_NATIVE_APP )
+
+#define gpsCoordType	float
+
+#elif defined( ARDUINO_ARCH_AVR )
+
+#define gpsCoordType	float
+
+#endif
 
 
 typedef struct {
 	uint16_t	nodeId;
-	uint8_t		mcuTemp;
+//	uint8_t		mcuTemp;
 	uint16_t	batVolt;
 	uint16_t	bhvTemp;
 	uint16_t	bhvHumid;
-	uint8_t		rtcDateTime[4];
+	uint32_t	rtcDateTime;
 	uint8_t		gsmSig;
 	uint16_t	gsmVolt;
 
-	uint8_t		gpsLonLat[9];	/* 9 bytes, 18 nibbles, first 9 nibbles is
-								 * longitude, last 9 nibbles is latitude */
+	gpsCoordType gpsLon;
+	gpsCoordType gpsLat;	
 
 #if HAVE_WEIGHT_SENSOR == 1
-	uint8_t		bhWeight[3];
+	uint32_t		bhWeight[3];
 #endif
 
 } datablock_t;
@@ -148,32 +157,10 @@ typedef struct {
 
 
 
-#if 0
-void encodeStr2BCD(char *aval, uint8_t nstart, uint8_t nlen, uint8_t *abcd)
-{
-  uint8_t nb;
-
-  	nb = nstart / 2;
-
-	aval += nb
-
-	if(odd(nstart)	
-	
-	
-	abcd = val % 10;
-	nlen--;
-	
-	while(nlen>0) {
-		abcd++;
-		val /= 10;
-		(*abcd) += val % 10;
-	}
-}
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 void filesystem_init();
 void filesystem_done();

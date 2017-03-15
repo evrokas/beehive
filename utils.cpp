@@ -52,6 +52,9 @@ void setupPeripheralsControl()
 
 	DDRB |=		B11000000;
 	PORTB &=	B00111111;
+
+	/* must add here initialization for RTC power */
+	
 }
 
 
