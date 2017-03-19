@@ -4,7 +4,7 @@
 #
 
 # compiler
-CC	= gcc
+CC	= g++
 
 # C flags
 CFLAGS	= -Wall -g

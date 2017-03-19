@@ -1,3 +1,17 @@
+2017-03-19	Evangelos Rokas <evrokas@gmail.com>
+* Makefile.top: added flag AVRDUDE and AVRDUDE_CONF to point at system avrdude program
+* gsm.cpp: new compile defines DEF_CLEAR_TEMPBUF and READGSM, use these to
+		define, use and read to a temporary buffer with a specified length,
+		added CF compile define
+		added gsm_relayOutput(), fixed gsm_activateBearerProfile(),
+		gsm_getBearerStatus(), gsm_deactivateBearerProfile()
+		changed gsm_getRequest() to accept data length for received data
+		gsm_getBattery() new implementation, added gsm_flushInput(), added
+		gsm_sendPin(), gsm_moduleRead(), gsm_sendrecvcmdtimeout(),
+		gsm_getTimeDateLonLat()
+* gsm/main.c: added command for '*' and '^'
+* utils.c: added powerRTC() function
+		
 2017-03-15	Evangelos Rokas <evrokas@gmail.com>
 * data.h: mcuTemp is deprecated, commented out, changed deginition of gpsLat,gpsLon
 					to float and rtcDateTime to uint32_t (unix time)

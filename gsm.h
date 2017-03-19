@@ -26,6 +26,10 @@ extern "C" {
     void gsm_init(void);
 
     bool gsm_sendrecvcmd(char *cmd, char *expstr);
+    bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout);
+    void gsm_sendcmd(char *cmd);
+
+    void gsm_relayOutput( Stream &ast );
     
     bool gsm_activateBearerProfile(char *apn, char *user, char *pass);
     
@@ -36,14 +40,23 @@ extern "C" {
     uint16_t http_getRequest(char *url, char *args);
 
     bool gsm_moduleInfo();
-	uint16_t gsm_getBattery();
+
+		bool gsm_getBattery(uint16_t &bat);
 	    
     bool gsm_available();
     char gsm_read();
     void gsm_write(char c);
     
-    void gsm_flushinput();
-    
+    void gsm_flushInput();
+
+	bool gsm_sendPin(char *apin);    
+	bool gsm_moduleReady();
+
+	bool gsm_moduleLowPower( bool alowpower );
+	bool gsm_getSignalQuality(uint8_t &asqual);
+	
+	bool gsm_getDateTime(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month, uint16_t &year);
+
 };
 
 

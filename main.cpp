@@ -88,12 +88,16 @@ void setup()
 
 //	TWBR = 152;		/* switch to 25KHz I2C interface */
 
+	powerRTC( 1, 10 );
+	powerPeripherals(1,1);
+	powerGPRSGPS( 0 );
 
 	therm_init();
 	rtc_init();
 	accel_init();
 
 	powerPeripherals(0,0);	/* disable all peripherals */
+	powerRTC( 0, 1 );
 	Serial.begin( 9600 );
 	Dln("\n\n\nHello world. Sleep cycling begins!");
 	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
@@ -108,7 +112,7 @@ void setup()
 
 #if	HAVE_GSM_GPRS == 1
 	gsm_init();
-	powerGPRSGPS( 0 );
+//	powerGPRSGPS( 0 );
 #endif
 
 
@@ -140,7 +144,7 @@ void mySleep()
 }
 
 
-char tmpb[16];
+char tmpb[32];
 int16_t ax, ay, az;
 int poweredGSM=0;
 
@@ -154,9 +158,11 @@ void loop()
 #define DEBUG_SLEEP_CYCLE	1
 
 	/* get initial time */
-    powerPeripherals(1,1);
+//    powerPeripherals(1,1);
+		powerRTC( 1, 10 );
     rtc_getTime(&dt);
-    powerPeripherals(0,0);
+    powerRTC( 0, 1 );
+//    powerPeripherals(0,0);
     
     lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
     curMinLogCycle = lastMinLogCycle;
@@ -180,20 +186,6 @@ void loop()
   		D("curSleepCycle ");Dln(curSleepCycle);
 #endif
 
-
-#if 0
-#ifdef DEBUG_ACCEL
-		D("reading accelerator values ... ");
-		powerPeripherals(1,1);
-//		delay(10);
-		rtc_getTime(&dt);
-		accel_getxyz(&ax, &ay, &az);
-		powerPeripherals(0,0);
-		D(ax);D("\t");D(ay);D("\t");Dln(az);
-#endif
-#endif
-
-
 		if(curSleepCycle >= maxSleepCycle) {
 		    /* do not reset curSleepCycle yet, since PERIOD might not
 		     * have been reached yet, do it inside the inner loop */
@@ -203,10 +195,13 @@ void loop()
 #endif			
 
 			f3a = readVcc();
-			powerPeripherals(1, 1);
+			
+			powerRTC( 1, 10 );
+//			powerPeripherals(1, 1);
 
 			rtc_getTime(&dt);
-
+			powerRTC( 0, 1 );
+			
 			/* do not power off peripherals, since they might be needed, by next check */
 //          powerPeripherals(0, 0);
 
@@ -222,20 +217,20 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 			  
-//			    powerPeripherals(1,1);
+			    powerPeripherals(1,1);
     			f1 = therm_getTemperature();
     			f2 = therm_getHumidity();
     			f3b = readVcc();
-  	    		powerPeripherals(0, 0);
+					powerPeripherals(0, 0);
 			
-                Serial.print(">>,");
+          Serial.print(">>,");
 		    	/* date */
-		    	convertDate2Str(tmp, &dt);
-		    	Serial.print(tmp); Serial.print(",");
+//		    	convertDate2Str(tmp, &dt);
+//		    	Serial.print(tmp); Serial.print(",");
 			
 		    	/* time */
-		    	convertTime2Str(tmp, &dt);
-		    	Serial.print(tmp); Serial.print(",");
+//		    	convertTime2Str(tmp, &dt);
+//		    	Serial.print(tmp); Serial.print(",");
 			
 		    	/* power voltage, before powering peripherals */
 		    	Serial.print(f3a); Serial.print(",");
@@ -249,9 +244,9 @@ void loop()
 		    	Serial.print(f2); Serial.print("\n\r");
 
 		    	Serial.flush();
-            } else {
-            	powerPeripherals(0,0);
 			}
+  
+//			powerPeripherals( 0,0 );
             
 			if(curMinNetCycle - lastMinNetCycle >= maxMinNetCycle) {
 #ifdef DEBUG_SLEEP_CYCLE
@@ -280,11 +275,10 @@ void loop()
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
 						powerGPRSGPS( 1 );
+					memset(tmpb, 0, sizeof( tmpb ));
 					continue;
 				}
 
-				gsm_flushinput();
-				
 				poweredGSM++;
 				if( !gsm_moduleInfo() ) {
 					D("GSM module is not ready yet! try ... "); Dln( poweredGSM );
@@ -303,14 +297,23 @@ void loop()
 			    gsm_deactivateBearerProfile();
 #endif
 
-				gsm_flushinput();
-				gsm_getBattery();
+//				gsm_getBattery();
+
+//				Dln("Setting pin");
+//				gsm_sendPin( "1234" );
+
+				delay( 1000 );
+
+#define CF( str )	(char *)( str )
+				gsm_sendcmd(CF( F( "AT+CFUNC?\n\r" ) ) );
 				
+				gsm_relayOutput( Serial );
+								
 				powerGPRSGPS( 0 );
 				poweredGSM = 0;
 				
-			    lastMinNetCycle = curMinNetCycle;
-			    curSleepCycle = 0;	/* reset sleep cycle */
+				lastMinNetCycle = curMinNetCycle;
+				curSleepCycle = 0;	/* reset sleep cycle */
 
 //				gsm_sendrecvcmd("ATI\n", tmpb);
 //				Dln(tmpb);

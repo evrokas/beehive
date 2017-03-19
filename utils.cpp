@@ -52,9 +52,6 @@ void setupPeripheralsControl()
 
 	DDRB |=		B11000000;
 	PORTB &=	B00111111;
-
-	/* must add here initialization for RTC power */
-	
 }
 
 
@@ -92,10 +89,10 @@ void powerGPRSGPS(unsigned char onoff)
 {
 	switch(onoff) {
 		case 0:  	/* power off */
-			PORTB |= B1100000;
+			PORTB |= B10000000;
 			break;
 		case 1: 	/* power on */
-			PORTB &= B00111111;
+			PORTB &= B01111111;
 			break;
 	}
 }
@@ -105,12 +102,13 @@ void powerGPRSGPS(unsigned char onoff)
 void powerRTC(unsigned char onoff, unsigned char mdel)
 {
 	switch(onoff) {
-		case 0: {	/* power off */
-			}; break;
-		case 1: { /* power on */
-			}; break;
+		case 0: 	/* power off */
+			PORTB &= B10111111;
+			break;
+		case 1:   /* power on */
+			PORTB |= B01000000;
+			break;
 	}
-	
 	delay( mdel );
 }
 

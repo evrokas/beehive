@@ -7,7 +7,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SoftwareSerial.h>
-
+#include "LowPower.h"
 //#include <Sim800l.h>
 
 #include "bms.h"
@@ -138,7 +138,16 @@ void loop()
 			}
 			Serial.println( volt / 10 );
 			break;
-
+		case '^':
+			Serial.print("Entering power down mode ... ");
+			LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+			Serial.println("done!");
+			break;
+		case '*':
+			powerRTC(1, 10);
+			delay(2000);
+			powerRTC(0, 1);
+			break;
 		default:
 			gsm.write( c );
 	}

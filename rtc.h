@@ -44,8 +44,10 @@ void displayTime();
 
 void setTime(byte second, byte minute, byte hour, byte dayOfWeek, byte dayOfMonth, byte month, byte yr);
 
+#if 0
 void convertTime2Str(char *str, datetime_t *dt);
 void convertDate2Str(char *str, datetime_t *dt);
+#endif
 
 #ifdef __cplusplus
 }
