@@ -49,6 +49,12 @@ void convertTime2Str(char *str, datetime_t *dt);
 void convertDate2Str(char *str, datetime_t *dt);
 #endif
 
+static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d);
+static long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s);
+uint32_t unixtime(datetime_t *dt);
+long secondstime(datetime_t *dt);
+
+
 #ifdef __cplusplus
 }
 #endif

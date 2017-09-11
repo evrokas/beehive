@@ -20,33 +20,38 @@
 #include "thermal.h"
 #include "LowPower.h"
 #include "gsm.h"
+#include "data.h"
 
-unsigned short int curSleepCycle;
-unsigned short int curLogCycle;
-unsigned short int curNetCycle;
 
-unsigned short int maxSleepCycle;
-unsigned short int maxLogCycle;
-unsigned short int maxNetCycle;
+/* counter of sleep cycles */
+uint32_t cntSleepCycle;
 
-unsigned short int curMinLogCycle;
-unsigned short int maxMinLogCycle;
-unsigned short int lastMinLogCycle;
+uint16_t curSleepCycle;
+uint16_t curLogCycle;
+uint16_t curNetCycle;
 
-unsigned short int curMinNetCycle;
-unsigned short int maxMinNetCycle;
-unsigned short int lastMinNetCycle;
+uint16_t maxSleepCycle;
+uint16_t maxLogCycle;
+uint16_t maxNetCycle;
+
+uint16_t curMinLogCycle;
+uint16_t maxMinLogCycle;
+uint16_t lastMinLogCycle;
+
+uint16_t curMinNetCycle;
+uint16_t maxMinNetCycle;
+uint16_t lastMinNetCycle;
 
 
 char tmp[56], tmp2[16];
 
+#ifndef NODE_ID
 
-/* sleep mcu for 8 seconds */
-void bmsSleep()
-{
-  /* do sleep */
-}
-  
+#define NODE_ID	1000
+
+#endif
+
+
 
 /* setup steps of the project */
 void setup()
@@ -68,6 +73,8 @@ void setup()
 	curNetCycle = 0;
 	curSleepCycle = 0;
 
+
+	cntSleepCycle = 0;
 
 	maxLogCycle = CYCLES_LOG_COUNT;
 	maxMinLogCycle = DAILY_LOG_PERIOD;
@@ -126,6 +133,7 @@ void setup()
 	Serial.println("Now you must comment out RTC writing code, and reload program to board.\n");
 	while(true);
 #endif
+
 }
 
 
@@ -134,6 +142,11 @@ void mySleep()
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
 	Wire.begin();
+	
+	/* increase sleep cycle counter */
+	cntSleepCycle++;
+	
+	
 //	TWBR = 152;		/* switch to 25KHz I2C interface */
 
 #if 0
@@ -154,6 +167,8 @@ void loop()
   datetime_t dt;
   float f1, f2;
   unsigned long f3a, f3b;
+  datablock_t	db;
+
 
 #define DEBUG_SLEEP_CYCLE	1
 
@@ -174,7 +189,6 @@ void loop()
 #endif
 
 
-
 	/* enter endless loop */
   	while(1) {
   		mySleep();
@@ -183,6 +197,8 @@ void loop()
 
 		
 #ifdef DEBUG_SLEEP_CYCLE
+  		D("[");D(cntSleepCycle);D("] ");
+  		
   		D("curSleepCycle ");Dln(curSleepCycle);
 #endif
 
@@ -193,12 +209,13 @@ void loop()
 #ifdef DEBUG_SLEEP_CYCLE
 			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
 #endif			
-
-			f3a = readVcc();
+			db.nodeId = NODE_ID;
+			db.batVolt = readVcc();
+			//f3a = readVcc();
 			
 			powerRTC( 1, 10 );
 //			powerPeripherals(1, 1);
-
+			displayTime();
 			rtc_getTime(&dt);
 			powerRTC( 0, 1 );
 			
@@ -206,7 +223,7 @@ void loop()
 //          powerPeripherals(0, 0);
 
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
-			if(curMinLogCycle - lastMinLogCycle >= maxMinLogCycle) {
+			if(abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle) {
 
 #ifdef DEBUG_SLEEP_CYCLE
 			    D( F("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
@@ -216,22 +233,32 @@ void loop()
 			    lastMinLogCycle = curMinLogCycle;
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
+
+#define DEB_STUFF
+
 			  
+					powerRTC( 1, 1 );
 			    powerPeripherals(1,1);
+			    db.bhvTemp = therm_getTemperature();
+			    db.bhvHumid = therm_getHumidity();
+
+#ifdef DEB_STUFF
     			f1 = therm_getTemperature();
     			f2 = therm_getHumidity();
     			f3b = readVcc();
+#endif
+
+
 					powerPeripherals(0, 0);
-			
+					powerRTC( 0, 1 );
+
+
+
+					db.rtcDateTime = unixtime( &dt );
+
           Serial.print(">>,");
-		    	/* date */
-//		    	convertDate2Str(tmp, &dt);
-//		    	Serial.print(tmp); Serial.print(",");
-			
-		    	/* time */
-//		    	convertTime2Str(tmp, &dt);
-//		    	Serial.print(tmp); Serial.print(",");
-			
+
+#ifdef DEB_STUFF
 		    	/* power voltage, before powering peripherals */
 		    	Serial.print(f3a); Serial.print(",");
 			
@@ -244,11 +271,26 @@ void loop()
 		    	Serial.print(f2); Serial.print("\n\r");
 
 		    	Serial.flush();
+#endif
+
+/*
+
+					if( mem_pushDatablock( &db ) ) {
+						Serial.println("pushed datablock to EEPROM successfully.");
+					} else {
+						Serial.println("could not push datablock to EEPROM.");
+					}
+*/
+					
+					/* put here code to store in EEPROM memory data blocks until
+					 * net cycle is reached, and data are forwarded to internet server */
+
+
 			}
   
 //			powerPeripherals( 0,0 );
             
-			if(curMinNetCycle - lastMinNetCycle >= maxMinNetCycle) {
+			if(abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle) {
 #ifdef DEBUG_SLEEP_CYCLE
 			    D("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
 			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
@@ -309,11 +351,23 @@ void loop()
 				
 				gsm_relayOutput( Serial );
 								
+
+				/* put here code to read data blocks from EEPROM,
+				 * and forward them to the internet server.
+				 * there are 2 options, (1) a series of GET requests to the server
+				 * and (2) one POST request with all data included in the payload
+				 */
+				 
+
+
+
 				powerGPRSGPS( 0 );
 				poweredGSM = 0;
 				
 				lastMinNetCycle = curMinNetCycle;
 				curSleepCycle = 0;	/* reset sleep cycle */
+
+
 
 //				gsm_sendrecvcmd("ATI\n", tmpb);
 //				Dln(tmpb);

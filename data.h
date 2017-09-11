@@ -36,10 +36,10 @@
 #define p_bhvTemp	3
 #define p_bhvHumid	4
 #define p_rtcDateTime	5
-#define p_gsmSig	6
-#define p_gsmVolt	7
-#define p_gpsLong	8
-#define p_gpsLat	9
+//#define p_gsmSig	6
+//#define p_gsmVolt	7
+//#define p_gpsLong	8
+//#define p_gpsLat	9
 #define p_bhvWeight	10
 
 #if RECORD_STATS == 1
@@ -49,26 +49,6 @@
 #endif	/* RECORD_STATS */
 
 
-
-typedef struct {
-	uint8_t	nibbleStart, nibbleStop;
-} nibblepos_t;
-
-#if 0
-nibblepos_t	block[] = {
-	{ 0, 3},		// nodeId
-	{ 4, 5},		// mcuTemp
-	{ 6, 9},		// batVolt
-	{10,11},		// bhvTemp
-	{12,13},		// bhvHumid
-	{14,20},		// rtcDateTime
-	{21,22},		// gsmSig
-	{23,26},		// gsmVolt
-	{27,35},		// gpsLong
-	{36,44},		// gpsLat
-	{45,50},		// bhvWeight
-};
-#endif
 
 #define SECTOR_HEADER_SIZE	4
 #define SECTOR_PAYLOAD_SIZE	28
@@ -130,21 +110,22 @@ typedef struct {
 
 typedef struct {
 	uint16_t	nodeId;
-//	uint8_t		mcuTemp;
 	uint16_t	batVolt;
 	uint16_t	bhvTemp;
 	uint16_t	bhvHumid;
 	uint32_t	rtcDateTime;
+
+#if 0
 	uint8_t		gsmSig;
 	uint16_t	gsmVolt;
-
-	gpsCoordType gpsLon;
-	gpsCoordType gpsLat;	
-
-#if HAVE_WEIGHT_SENSOR == 1
-	uint32_t		bhWeight[3];
 #endif
 
+#if 0
+	gpsCoordType gpsLon;
+	gpsCoordType gpsLat;	
+#endif
+
+	uint32_t		bhvWeight;
 } datablock_t;
 
 

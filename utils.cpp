@@ -48,10 +48,10 @@ void twi_enable_pullups()
 void setupPeripheralsControl()
 {
 	DDRC |=		B00000001;
-	PORTC &=	B11111110;
+	PORTC &=	B11111111;	/* last -1- should be 1 in order for peripherals to be off */
 
 	DDRB |=		B11000000;
-	PORTB &=	B00111111;
+	PORTB &=	B10111111;
 }
 
 

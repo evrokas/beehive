@@ -35,12 +35,71 @@ This is the come back of the Beehive Monitoring System Project.
 Basically, after half a year hibernation, I decided to come back to
 the project in order to help my father with beekeeping.
 
-RTC				is working
-TEMPERATURE/HUMIDIty sensor	is working
-ACCELERATOR sensor		is working (movement alert should be implemented)
-GPS receiver			is working (software integration is needed to be written)
-GSM/GPRS module			is partially working, working on the power of the module which
-				is causing restarts even on normal voltage range(!)
+RTC														is working
+TEMPERATURE/HUMIDIty sensor		is working
+ACCELERATOR sensor						is working (movement alert should be implemented)
+GPS receiver									is working (software integration is needed to be written)
+GSM/GPRS module								is partially working, working on the power of the module which
+																is causing restarts even on normal voltage range(!)
 
 After working prototype is ready, a new schematic will be created and new
 PCBs will be ordered.
+
+
+
+
+----- POST data -----
+
+up vote
+5
+down vote
+httpdata=100,10000 means that SIM800 should expect 100 bytes within 10 seconds.
+
+This is how I accomplished this using the HTTP client:
+
+AT+HTTPINIT
+AT+HTTPPARA="CID",1
+AT+HTTPPARA="URL","http://url.com/endPoint"
+AT+HTTPPARA="CONTENT","application/json"
+AT+HTTPDATA=40,10000
+At this point, the SIM800 should respond with "DOWNLOAD". Which means it's expecting your data. Send in your data; in my case:
+
+{"location_id": 238, "fill_percent": 90}
+Wait 10 seconds to send the rest of the commands. Then:
+
+AT+HTTPACTION=1
+AT+HTTPREAD
+AT+HTTPTERM
+That did it for me. Hope it helps.
+
+This is where I got the information from: http://www.raviyp.com/embedded/194-sim900-gprs-http-at-commands
+
+
+	
+answered Dec 9 '15 at 19:12
+
+Alan Alvarez
+936
+add a comment
+up vote
+4
+down vote
+I managed to get it to do what I need, this code-snippet will likely help others
+
+AT+CGATT=1
+AT+CIPMUX=0
+AT+CSTT="APN","USER","PASS"
+AT+CIICR
+AT+CIFSR # ip up - gprs working
+AT+CIPSHUT # shut down 
+# Now do a post request to remote server api in json format. Express server
+AT+CIPSTART="TCP","IP_ADDR|DOMAIN","2000"
+AT+CIPSEND=119 # Num of char in tcp/ip data, \r & \n count as 1 char
+POST /post HTTP/1.1
+Host: **.**.***.***
+Content-Type: application/json
+Content-Length:23
+
+{"postkey":"postvalue"}
+Hope this helps the next person stuck on it.
+

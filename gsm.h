@@ -1,5 +1,5 @@
 /*
- * gsm.h -GSM/GPRS module header
+ * gsm.h - GSM/GPRS module header
  *
  * Beehive Monitoring System - BMS
  * (c) Evangelos Rokas, 2015-17

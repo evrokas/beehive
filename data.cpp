@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 #include "data.h"
+#include "mem.h"
 
-
-#define FILESYSTEM_NAME	"filesystem"
-FILE *fd;
+//#define FILESYSTEM_NAME	"filesystem"
+//FILE *fd;
 
 #define STATSYSTEM_NAME	"filesystem.stats"
 FILE *stfd;
@@ -17,39 +17,46 @@ RING fstypes[ SECTOR_TYPE_COUNT ];
 
 STATS *strecs;
 
+//#define EEPROM_SIZE		512
+#define EEPROM_SIZE		32
 #define BANK_COUNT		(1)
-#define BIT_COUNT			(BANK_COUNT * 512 * 1024)
+#define BIT_COUNT			(BANK_COUNT * EEPROM_SIZE * 1024)
 #define BYTE_COUNT		(BIT_COUNT>>3)
 #define SECTOR_COUNT	(BYTE_COUNT>>5)
 
 
 void __fs_readSector(uint16_t sectorIndex, void *buf)
 {
+	__ee_readblock( sectorIndex * sizeof( SECTOR ), (char *)buf, sizeof( SECTOR ) );
+
+#if 0
 	fseek(fd, sectorIndex * sizeof( SECTOR ), SEEK_SET);
 
 	if(fread(buf, 1, sizeof( SECTOR ), fd) != sizeof( SECTOR )) {
 		fprintf(stderr, "%s: error reading correct number of bytes from filesystem\n", "fs_readsector");
 		exit(-1);
 	}
+#endif
 	
 	strecs[ sectorIndex ].rdCount++;
 }
 
 void __fs_writeSector(uint16_t sectorIndex, void *buf)
 {
-  unsigned int i;
-  
 #if 0
 	printf("__fs__writeSector: writing sector: %u (pos: %lu)\n", sectorIndex, sectorIndex * sizeof( SECTOR ));
 #endif
 
+	__ee_writeblock( sectorIndex * sizeof( SECTOR ), (char *)buf, sizeof( SECTOR ) );
 
+#if 0
 	fseek(fd, sectorIndex * sizeof( SECTOR ), SEEK_SET);
 	if((i=fwrite(buf, 1, sizeof( SECTOR ), fd)) != sizeof( SECTOR )) {
 		fprintf(stderr, "%s: error writing correct number of bytes to filesystem (%u)\n", "fs_writesector", i);
 		exit(-1);
 	}
-	
+#endif
+
 	strecs[ sectorIndex ].wrCount++;
 }
 
@@ -98,11 +105,15 @@ void filesystem_init()
 			fstypes[i].TAIL = 0xffff;
 		}
 
+#if 0
 		fd = fopen(FILESYSTEM_NAME, "r+");
 		if(!fd) {
 			fprintf(stderr, "could not open filesystem file: %s\n", FILESYSTEM_NAME);
 			exit(-1);
 		}
+#else
+		__ee_init( 0xfa, 32 );
+#endif
 		
 		stfd = fopen(STATSYSTEM_NAME, "r+");
 		if(!stfd) {
@@ -164,7 +175,12 @@ void filesystem_done()
 		
 		fclose(stfd);
 		
+#if 0
 		fclose(fd);
+#else
+		__ee_end();
+#endif
+
 }
 
 void dumpStats()

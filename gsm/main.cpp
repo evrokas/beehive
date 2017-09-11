@@ -9,9 +9,14 @@
 #include <SoftwareSerial.h>
 #include "LowPower.h"
 //#include <Sim800l.h>
+#include <extEEPROM.h>
 
 #include "bms.h"
 #include "utils.h"
+#include "../mem.h"
+#include "../rtc.h"
+
+//#include "../drivers/ee_i2c.hpp"
 
 SoftwareSerial	gsm(9,10);
 
@@ -62,28 +67,32 @@ void http_send()
 	write_gsm("AT+HTTPREAD\n");
 }
 
+extEEPROM	ee(kbits_256, 1, 64, 0x51);
 
 
 
 
 void setup()
 {
+	uint8_t eepst;
+	
   setupPeripheralsControl();
-
   // reset peripherals
-  powerPeripherals( 0,0 );
-  delay( 1000 );
-
-  // and leave them on
   powerPeripherals( 1,1 );
 
-//  powerGPRSGPS(1);
-
   Serial.begin( 9600 );
-
   gsm.begin( 9600 );
-  delay( 1000 );
-  
+
+  powerRTC( 1, 10 );
+
+  Serial.println("ee.begin()\n"); Serial.flush();
+
+	if( (eepst=ee.begin( extEEPROM::twiClock100kHz )) ) {
+		Serial.print( "Could not initialize external EEPROM. Status = 0x" );
+		Serial.println( eepst, HEX );
+	}
+	
+	
 //  gps.listen();
 
   Serial.println("\n\nTinyGSM example.");
@@ -92,17 +101,23 @@ void setup()
   
   powerPeripherals( 0,0 );
   powerGPRSGPS( 0 );
+  powerRTC( 0, 1 );
+  
+  mem_init( 32, /*256,*/ (0x50) );
 }
 
 
 unsigned char gsmon=0;
 unsigned char peron=0;
+unsigned char rtcon=0;
+char tempbuf[32];
 
 void loop()
 {
   char c;
   uint8_t i;
   unsigned long volt;
+  datetime_t dt;
     
   if(Serial.available()) {
     c=Serial.read();
@@ -113,7 +128,7 @@ void loop()
 		
     		powerGPRSGPS( gsmon );
     		Serial.print("GSM/GPRS ... ");
-			Serial.println( gsmon?"on":"off" );
+    		Serial.println( gsmon?"on":"off" );
     		break;
 		case '@':
 			if(peron == 1)peron = 0;
@@ -139,15 +154,81 @@ void loop()
 			Serial.println( volt / 10 );
 			break;
 		case '^':
-			Serial.print("Entering power down mode ... ");
+			Serial.print("Entering power down mode ... "); Serial.flush();
 			LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
 			Serial.println("done!");
 			break;
-		case '*':
-			powerRTC(1, 10);
-			delay(2000);
-			powerRTC(0, 1);
+		case '&':
+			Serial.print("Reading time ... ");
+			displayTime();
+//			rtc_getTime( &dt );
+			//Serial.println( dt );
 			break;
+		case '*':
+			if(rtcon == 1)rtcon = 0;
+			else rtcon = 1;
+			
+			Serial.print("RTC ... ");
+			powerRTC(rtcon, 10);
+			Serial.println( rtcon ? "on":"off" );
+			break;
+		case '~':
+			memset(tempbuf, 0, sizeof( tempbuf ));
+			strcpy(tempbuf, "");
+			
+			Serial.print("enter cmd: ");
+			
+			do {
+				while( !Serial.available() ) ;
+				c = Serial.read();
+				Serial.print(c);
+				if(c == '\r') {
+				  uint8_t bln;
+					char *cc;
+					  
+					Serial.print("\r\n>>> ");
+					Serial.println( tempbuf+1 );
+					
+					switch( tempbuf[0] ) {
+						case 'r':
+							bln = atoi( tempbuf+1 );
+							Serial.print( "EEPROM: read offset: 0x" ); Serial.print( bln * 32, HEX ); Serial.print( ": " );
+//							c = ee.read( bln * 32 );
+							c = __ee_read( bln * 32UL );
+							Serial.println( (char)c, HEX );
+							break;
+						case 'w':
+							bln = atoi( tempbuf+1 );
+							cc = strchr(tempbuf, ',') + 1;
+							c = atoi( cc );
+							Serial.print( "EEPROM: write 0x");
+							Serial.print( c, HEX ); 
+							Serial.print(" at offset: 0x" ); Serial.println( bln * 32, HEX );
+//							ee.write(bln * 32, c );
+							__ee_write( bln * 32UL, c );
+
+							c = 0;
+							Serial.print( "EEPROM: read offset: 0x" ); Serial.print( bln * 32, HEX ); Serial.print( ": " );
+//							c = ee.read( bln * 32 );
+							c = __ee_read( bln * 32UL );
+							Serial.println( (char)c, HEX );
+							break;
+						case 's':
+							c = (tempbuf[1] - '0') * 16 + (tempbuf[2] - '0');
+							Serial.print("Selecting EEPROM device: 0x"); Serial.println( c, HEX);
+//							__ee_setaddr( c );
+							break;
+						default:;
+					}
+					
+						
+						
+
+					break;
+				}
+				strncat(tempbuf, &c, 1);
+			} while(1);
+			break;			
 		default:
 			gsm.write( c );
 	}
