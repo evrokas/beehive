@@ -109,24 +109,31 @@ bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
     if(!gsm_sendrecvcmdtimeout( CF( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , CF( "OK\r\n") , 2 ) )
     	return false;
     
-    	
+		Serial.println("+SAPBR=3,1,CONTYPE OK\r\n");
+		
     gsmserial.print( CF( F("AT+SAPBR=3,1,\"APN\",\"") ) );
     	gsmserial.print( apn );
     	gsmserial.print("\"\r\n");
 
 		if(!READGSM( 2 ) || !strstr(_tempbuf, CF( F("OK\r\n") ) ))return false;
 
+		Serial.println("+SAPBR=3,1,APN OK\r\n");
 
     gsmserial.print( F("AT+SAPBR=3,1,\"USER\",\"") );
         gsmserial.print( user );
         gsmserial.print("\"\r\n");
     if(!READGSM( 2 ) || !strstr(_tempbuf, "OK\r\n"))return false;
 
+		Serial.println("+SAPBR=3,1,USER OK\r\n");
+
+
+
     gsmserial.print( F("AT+SAPBR=3,1,\"PWD\",\"") );
         gsmserial.print( pass );
         gsmserial.print( F("\"\r\n") );
     if(!READGSM( 2 ) || !strstr(_tempbuf, "OK\r\n"))return false;
 
+		Serial.println("+SAPBR=3,1,PWD OK\r\n");
     
     /* actual connection */
     if(!gsm_sendrecvcmdtimeout(CF( F("AT+SAPBR=1,1\r\n") ), CF( F("OK\r\n") ), 85) )

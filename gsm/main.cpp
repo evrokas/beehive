@@ -6,7 +6,6 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <SoftwareSerial.h>
 #include "LowPower.h"
 //#include <Sim800l.h>
 #include <extEEPROM.h>
@@ -15,10 +14,24 @@
 #include "utils.h"
 #include "../mem.h"
 #include "../rtc.h"
+#include "../gsm.h"
 
 //#include "../drivers/ee_i2c.hpp"
 
+//#define USE_NEWSWSERIAL
+
+#ifndef USE_NEOSWSERIAL
+
+#include <SoftwareSerial.h>
 SoftwareSerial	gsm(9,10);
+
+#else
+
+#include "NeoSWSerial.h"
+NeoSWSerial			gsm(9, 10);
+
+#endif
+
 
 //TinyGsm gsmi( gsm );
 
@@ -33,17 +46,30 @@ void write_gsm(char *str)
 	}
 }
 
+#define CF(str)	(char *)( str )
+
 
 void sapbr_init()
 {
 	write_gsm("AT+CIPSHUT\n");
 	write_gsm("AT+CIPMUX=0\n");
+
+
+#if 0
+	if( gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF("") ) ) {
+		Serial.println("GSM: bearer profile is activated!\n");
+	} else {
+		Serial.println("GSM: bearer profile is *NOT* activated!\n");
+	}
+#endif
+
 	write_gsm("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
 	write_gsm("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
 	write_gsm("AT+SAPBR=3,1,\"USER\",\"\"\n");
 	write_gsm("AT+SAPBR=3,1,\"PWD\",\"\"\n");
 	write_gsm("AT+SAPBR=1,1\n");
 	write_gsm("AT+SAPBR=2,1\n");
+
 }
 
 
@@ -62,12 +88,12 @@ void http_send()
 {
 	write_gsm("AT+HTTPINIT\n");
 	write_gsm("AT+HTTPPARA=\"CID\",1\n");
-	write_gsm("AT+HTTPPARA=\"URL\",\"http://46.176.29.74:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\n");
+	write_gsm("AT+HTTPPARA=\"URL\",\"http://5.55.150.188:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\n");
 	write_gsm("AT+HTTPACTION=0\n");
 	write_gsm("AT+HTTPREAD\n");
 }
 
-extEEPROM	ee(kbits_256, 1, 64, 0x51);
+extEEPROM	ee(kbits_256, 1, 64, 0x57);
 
 
 
@@ -102,8 +128,8 @@ void setup()
   powerPeripherals( 0,0 );
   powerGPRSGPS( 0 );
   powerRTC( 0, 1 );
-  
-  mem_init( 32, /*256,*/ (0x50) );
+
+  mem_init( 32, /*256,*/ (0x57) );
 }
 
 
@@ -119,6 +145,12 @@ void loop()
   unsigned long volt;
   datetime_t dt;
     
+  if(gsm.available() ) {
+    Serial.write( gsm.read() );
+  }
+
+
+
   if(Serial.available()) {
     c=Serial.read();
     switch( c ) {
@@ -169,7 +201,7 @@ void loop()
 			else rtcon = 1;
 			
 			Serial.print("RTC ... ");
-			powerRTC(rtcon, 10);
+			powerRTC(rtcon, 1);
 			Serial.println( rtcon ? "on":"off" );
 			break;
 		case '~':
@@ -234,9 +266,6 @@ void loop()
 	}
   }
   
-  if(gsm.available() ) {
-    Serial.write( gsm.read() );
-  }
 
 }
 
