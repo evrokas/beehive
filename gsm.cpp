@@ -12,20 +12,31 @@
 
 
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include "gsm.h"
 
 
-#define TEMP_BUF_LEN	32
+#define USE_NEOSW
+#ifdef USE_NEOSW
+
+#include <NeoSWSerial.h>
+NeoSWSerial gsmserial(GSM_RX, GSM_TX);
+
+#else
+
+#include <SoftwareSerial.h>
+SoftwareSerial gsmserial(GSM_RX, GSM_TX);
+
+#endif	/* USE_NEOSW */
+
+
+#define TEMP_BUF_LEN	64
 #define	DEF_CLEAR_TEMPBUF	char _tempbuf[ TEMP_BUF_LEN ]; memset( _tempbuf, 0, TEMP_BUF_LEN )
+#define CLEAR_TEMPBUF	memset( _tempbuf, 0, TEMP_BUF_LEN )
 
 /* shortcut to read data in _tempbuf */
 #define READGSM( lat )	gsm_readSerial( _tempbuf, TEMP_BUF_LEN, (lat) )
 
 #define CF(str)	(char *)( str )
-
-
-SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 
 /* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
@@ -57,8 +68,10 @@ void gsm_init()
 bool gsm_sendrecvcmd(char *cmd, char *expstr)
 {
 	DEF_CLEAR_TEMPBUF;
+
+		while(gsm_available())gsm_read();
 	  
-		gsmserial.print( cmd );
+		gsm_sendcmd( cmd );
     
 		if( READGSM( 2 ) ) {
 			/* there was a string response read in 2sec */
@@ -73,19 +86,23 @@ bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 {
 	DEF_CLEAR_TEMPBUF;
   
-		gsmserial.print( cmd );
+		gsm_sendcmd( cmd );
     
 		if( READGSM ( timeout ) ) {
 			/* there was a string response read in timeout secs */
+			Serial.print("exp: "); Serial.println( expstr );
+			Serial.print("rcv: "); Serial.println(_tempbuf );
 			if(strstr(_tempbuf, expstr)) {
 				/* expected string found */
 				return true;
-			} else return false;
-		} else return false;
+			} else { Serial.println("timeout"); return false; }
+		} else { Serial.println("no READGSM"); return false; }
 }
 
 void gsm_sendcmd(char *cmd)
 {
+	while(gsm_available())gsm_read();
+	
 	gsmserial.print( cmd );
 }
 
@@ -99,7 +116,7 @@ void gsm_relayOutput( Stream &ast )
 
 bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
 {
-	char _tempbuf[ TEMP_BUF_LEN ];
+	DEF_CLEAR_TEMPBUF;
 //AT+SAPBR=3,1,"CONTYPE","GPRS"
 //AT+SAPBR=3,1,"APN","myq"
 //AT+SAPBR=3,1,"USER",""
@@ -108,35 +125,75 @@ bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
 		/* set parameters */
     if(!gsm_sendrecvcmdtimeout( CF( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , CF( "OK\r\n") , 2 ) )
     	return false;
+    gsm_relayOutput( Serial );
     
 		Serial.println("+SAPBR=3,1,CONTYPE OK\r\n");
 		
-    gsmserial.print( CF( F("AT+SAPBR=3,1,\"APN\",\"") ) );
-    	gsmserial.print( apn );
-    	gsmserial.print("\"\r\n");
+		strcpy(_tempbuf, "AT+SAPBR=3,1,\"APN\",\"" );
+		strcat(_tempbuf, apn );
+		strcat(_tempbuf, "\"\r\n" );
+		
+		Serial.println(_tempbuf );
+		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK\r\n" ), 2 ) )
+			return false;
+		
+		
+#if 0
+    gsm_sendcmd( CF( "AT+SAPBR=3,1,\"APN\",\"" ) );
+    	gsm_sendcmd( apn );
+    	gsm_sendcmd(CF( "\"\r\n" ) );
 
-		if(!READGSM( 2 ) || !strstr(_tempbuf, CF( F("OK\r\n") ) ))return false;
+		if(!READGSM( 2 ) || !strstr(_tempbuf, CF( "OK\r\n" ) )) {
+			Serial.print("<< "); Serial.println(_tempbuf); return false;
+		}
+#endif
 
 		Serial.println("+SAPBR=3,1,APN OK\r\n");
+		
+		strcpy(_tempbuf, "AT+SAPBR=3,1,\"USER\",\"" );
+		strcat(_tempbuf, user );
+		strcat(_tempbuf, "\"\r\n" );
+		Serial.println( _tempbuf );
+		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK" ), 2 ) )
+			return false;
 
-    gsmserial.print( F("AT+SAPBR=3,1,\"USER\",\"") );
-        gsmserial.print( user );
-        gsmserial.print("\"\r\n");
-    if(!READGSM( 2 ) || !strstr(_tempbuf, "OK\r\n"))return false;
+#if 0
+    gsm_sendcmd( CF("AT+SAPBR=3,1,\"USER\",\"") );
+        if(strlen(user))gsm_sendcmd( user );
+        gsm_sendcmd(CF( "\"\r\n" ) );
+		
+		CLEAR_TEMPBUF;
+    if(!READGSM( 2 ) || !strstr(_tempbuf, CF( "OK\r\n" ) )) {
+    	Serial.print("<< "); Serial.println(_tempbuf); return false;
+		}
+#endif
 
 		Serial.println("+SAPBR=3,1,USER OK\r\n");
 
 
-
-    gsmserial.print( F("AT+SAPBR=3,1,\"PWD\",\"") );
-        gsmserial.print( pass );
-        gsmserial.print( F("\"\r\n") );
-    if(!READGSM( 2 ) || !strstr(_tempbuf, "OK\r\n"))return false;
-
+		strcpy(_tempbuf, "AT+SAPBR=3,1,\"PWD\",\"" );
+		strcat(_tempbuf, pass );
+		strcat(_tempbuf, "\"\r\n" );
+		Serial.println( _tempbuf );
+		
+		if(!gsm_sendrecvcmdtimeout( CF(_tempbuf ), CF( "OK\r\n" ), 2 ) )
+			return false;
+			
+#if 0
+    gsm_sendcmd( CF("AT+SAPBR=3,1,\"PWD\",\"") );
+        gsm_sendcmd( pass );
+        gsm_sendcmd( CF("\"\r\n") );
+        
+		CLEAR_TEMPBUF;
+    if(!READGSM( 2 ) || !strstr(_tempbuf, CF("OK\r\n") )) {
+    	Serial.print("<< "); Serial.println(_tempbuf); return false;
+		}
+#endif
+	
 		Serial.println("+SAPBR=3,1,PWD OK\r\n");
     
     /* actual connection */
-    if(!gsm_sendrecvcmdtimeout(CF( F("AT+SAPBR=1,1\r\n") ), CF( F("OK\r\n") ), 85) )
+    if(!gsm_sendrecvcmdtimeout(CF( ("AT+SAPBR=1,1\r\n") ), CF( ("OK\r\n") ), 85) )
     return false;
 
     /* so we are connected! */
@@ -149,7 +206,7 @@ uint8_t	gsm_getBearerStatus()
   DEF_CLEAR_TEMPBUF;
   
 
-    gsm_sendcmd( CF( F("AT+SAPBR=2,1\r\n") ) );
+    gsm_sendcmd( CF( ("AT+SAPBR=2,1\r\n") ) );
     READGSM( 2 );
 
     c = strstr(_tempbuf, "+SAPBR: ");
@@ -282,7 +339,7 @@ bool gsm_moduleInfo()
 	
   	gsm_flushInput();
 
-  	gsmserial.print( CF( F("ATI\r\n") ) );
+  	gsmserial.print( CF( ("ATI\r\n") ) );
   	gsm_readSerial(_tempbuf, TEMP_BUF_LEN, 2 );
   	Serial.print("GSM response: <"); Serial.print( _tempbuf ); Serial.println(">");
   	
@@ -298,11 +355,10 @@ bool gsm_getBattery(uint16_t &bat)
 	char *c;
 	DEF_CLEAR_TEMPBUF;
 
-		gsm_flushInput();
-		gsmserial.print( CF( F("AT+CBC\r\n") ) );
+		gsm_sendcmd( CF( ("AT+CBC\r\n") ) );
 		if( !READGSM( 2 ) )return false;
 		
-		c = strstr( _tempbuf, "CBC: ");
+		c = strstr( _tempbuf, "+CBC: ");
 		if(!c)return false;
 		
 		c = strrchr( c, ',' );
@@ -348,12 +404,12 @@ bool gsm_sendPin(char *aspin)
 	DEF_CLEAR_TEMPBUF;
 
 		gsm_flushInput();
-		gsmserial.print( CF( F("AT+CPIN=") ) );
-		gsmserial.print( aspin );
-		gsmserial.println(CF( F("\r\n") ) );
-		gsm_readSerial( _tempbuf, TEMP_BUF_LEN, 2 );
-		if(!strstr(_tempbuf, CF( F("OK\r\n") ) )) {
-			Serial.println(CF( F( "Error setting cpin\n" ) ) );
+		gsm_sendcmd( CF( ("AT+CPIN=") ) );
+		gsm_sendcmd( aspin );
+		gsm_sendcmd( CF( ("\r\n") ) );
+		if(!READGSM(2))return false;
+		if(!strstr(_tempbuf, CF( ("OK\r\n") ) )) {
+			Serial.println(CF( ( "Error setting cpin\n" ) ) );
 			return false;
 		}
 		
@@ -412,7 +468,7 @@ bool gsm_moduleLowPower( bool alowpower )
 		if( gsm_sendrecvcmdtimeout( CF( F("AT+CFUNC=0\n\r") ) , CF( F("OK\r\n") ), 2) )return true;
 		else return false;
 	} else {
-		if( gsm_sendrecvcmdtimeout("AT+CFUNC=1\n\r", "OK\r\n", 2) )return true;
+		if( gsm_sendrecvcmdtimeout(CF("AT+CFUNC=1\n\r"), CF("OK\r\n"), 2) )return true;
 		else return false;
 	}
 }
@@ -446,7 +502,7 @@ uint8_t &year, float &lon, float &lat)
 	int16_t res;
 	DEF_CLEAR_TEMPBUF;
 
-		gsm_sendcmd("AT+CIPGSMLOC=1,1\n");
+		gsm_sendcmd( CF("AT+CIPGSMLOC=1,1\n") );
 		
 		c=strstr( _tempbuf, "GSMLOC: " );
 		if(!c)return false;

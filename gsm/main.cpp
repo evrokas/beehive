@@ -23,12 +23,12 @@
 #ifndef USE_NEOSWSERIAL
 
 #include <SoftwareSerial.h>
-SoftwareSerial	gsm(9,10);
+//SoftwareSerial	gsm(9,10);
 
 #else
 
 #include "NeoSWSerial.h"
-NeoSWSerial			gsm(9, 10);
+//NeoSWSerial			gsm(9, 10);
 
 #endif
 
@@ -40,7 +40,7 @@ unsigned long mil1, mil2;
 void write_gsm(char *str)
 {
 	while( *str != '\0') {
-		gsm.write( *str );
+		gsm_write( *str );
 		str++;
 		delay(10);
 	}
@@ -55,7 +55,7 @@ void sapbr_init()
 	write_gsm("AT+CIPMUX=0\n");
 
 
-#if 0
+#if 1
 	if( gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF("") ) ) {
 		Serial.println("GSM: bearer profile is activated!\n");
 	} else {
@@ -63,12 +63,14 @@ void sapbr_init()
 	}
 #endif
 
+#if 0
 	write_gsm("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
 	write_gsm("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
 	write_gsm("AT+SAPBR=3,1,\"USER\",\"\"\n");
 	write_gsm("AT+SAPBR=3,1,\"PWD\",\"\"\n");
 	write_gsm("AT+SAPBR=1,1\n");
 	write_gsm("AT+SAPBR=2,1\n");
+#endif
 
 }
 
@@ -107,7 +109,7 @@ void setup()
   powerPeripherals( 1,1 );
 
   Serial.begin( 9600 );
-  gsm.begin( 9600 );
+  gsm_init( );
 
   powerRTC( 1, 10 );
 
@@ -142,11 +144,12 @@ void loop()
 {
   char c;
   uint8_t i;
+  uint16_t i16;
   unsigned long volt;
   datetime_t dt;
     
-  if(gsm.available() ) {
-    Serial.write( gsm.read() );
+  if(gsm_available() ) {
+    Serial.write( gsm_read() );
   }
 
 
@@ -250,6 +253,21 @@ void loop()
 							Serial.print("Selecting EEPROM device: 0x"); Serial.println( c, HEX);
 //							__ee_setaddr( c );
 							break;
+
+						case 'z':
+							Serial.print("Bearer status: ");
+							i = gsm_getBearerStatus();
+							Serial.println( (char)('0' + i) );
+							break;
+						
+						case 'x':
+							Serial.print("Battery: ");
+							if( gsm_getBattery( i16 ) )
+								Serial.println( i16 );
+							else
+								Serial.println("could not read battery levels!");
+							break;
+
 						default:;
 					}
 					
@@ -262,7 +280,7 @@ void loop()
 			} while(1);
 			break;			
 		default:
-			gsm.write( c );
+			gsm_write( c );
 	}
   }
   

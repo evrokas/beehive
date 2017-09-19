@@ -93,7 +93,8 @@ void setup()
       
 	setupPeripheralsControl();
 
-//	TWBR = 152;		/* switch to 25KHz I2C interface */
+	//Wire.init();
+	TWBR = 152;		/* switch to 25KHz I2C interface */
 
 	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
@@ -157,7 +158,7 @@ void mySleep()
 }
 
 
-char tmpb[32];
+char tmpb[100];
 int16_t ax, ay, az;
 int poweredGSM=0;
 
@@ -165,8 +166,8 @@ int poweredGSM=0;
 void loop()
 {
   datetime_t dt;
-  float f1, f2;
-  unsigned long f3a, f3b;
+//  float f1, f2;
+//  unsigned long f3a, f3b;
   datablock_t	db;
 
 
@@ -214,16 +215,14 @@ void loop()
 			//f3a = readVcc();
 			
 			powerRTC( 1, 10 );
-//			powerPeripherals(1, 1);
 			displayTime();
 			rtc_getTime(&dt);
 			powerRTC( 0, 1 );
 			
-			/* do not power off peripherals, since they might be needed, by next check */
-//          powerPeripherals(0, 0);
-
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 			if(abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle) {
+					/* maxMinLogCycle minutes have passed since last cycle
+					 * do log-ging of data */
 
 #ifdef DEBUG_SLEEP_CYCLE
 			    D( F("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
@@ -234,41 +233,31 @@ void loop()
 
 			    curSleepCycle = 0;	/* reset sleep cycle */
 
+			    powerRTC(1, 10);
+			    powerPeripherals(1,50);
+			    db.bhvTemp = therm_getTemperature() * 100;
+			    db.bhvHumid = therm_getHumidity() * 100;
+			    
+			    powerPeripherals(0,0);
+			    powerRTC(0, 0);
+			    
+					db.rtcDateTime = unixtime( &dt );
+					
+					Dln("after powering off peripherals");
+
 #define DEB_STUFF
 
-			  
-					powerRTC( 1, 1 );
-			    powerPeripherals(1,1);
-			    db.bhvTemp = therm_getTemperature();
-			    db.bhvHumid = therm_getHumidity();
-
 #ifdef DEB_STUFF
-    			f1 = therm_getTemperature();
-    			f2 = therm_getHumidity();
-    			f3b = readVcc();
-#endif
-
-
-					powerPeripherals(0, 0);
-					powerRTC( 0, 1 );
-
-
-
-					db.rtcDateTime = unixtime( &dt );
-
           Serial.print(">>,");
 
-#ifdef DEB_STUFF
 		    	/* power voltage, before powering peripherals */
-		    	Serial.print(f3a); Serial.print(",");
-			
-				/* power voltage, after powering peripherals */
-		    	Serial.print(f3b); Serial.print(",");
+		    	Serial.print(db.batVolt); Serial.print(",");
 			
 		    	/* temperature */
-		    	Serial.print(f1); Serial.print(",");
+		    	Serial.print(db.bhvTemp); Serial.print(",");
 			
-		    	Serial.print(f2); Serial.print("\n\r");
+					/* humidity */
+		    	Serial.print(db.bhvHumid); Serial.print("\n\r");
 
 		    	Serial.flush();
 #endif
@@ -288,18 +277,19 @@ void loop()
 
 			}
   
-//			powerPeripherals( 0,0 );
-            
 			if(abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle) {
+				/* maxMinNetCycle minutes have passed since last cycle
+				 * do net-working stuff */
+
 #ifdef DEBUG_SLEEP_CYCLE
 			    D("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
 			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
 #endif
 
-				if( poweredGSM > 5 ) {
-					Dln("GSM was not ready after 5 tries. Skip session");
+				if( poweredGSM >= 3 ) {
+					Dln("GSM was not ready after 3 tries. Skip NETWORK session");
 					
-					/* module is not ready after 5 cycles, so there might be a problem,
+					/* module is not ready after 3 cycles, so there might be a problem,
 					 * skip network communication this time */
 					poweredGSM = 0;
 					powerGPRSGPS( 0 );
@@ -312,13 +302,20 @@ void loop()
 				
 				if(!poweredGSM) {
 					poweredGSM++;
-					D("GSM is not ready on try ... "); Dln( poweredGSM );
+					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
 					
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
 						powerGPRSGPS( 1 );
 					memset(tmpb, 0, sizeof( tmpb ));
-					continue;
+					
+					do {
+						uint32_t m;
+							m = millis() + 3000;
+							
+							while( millis() < m) {};
+					} while(0);
+
 				}
 
 				poweredGSM++;
@@ -333,23 +330,47 @@ void loop()
 
 				Dln("Doing network stuff");
 
+				if ( gsm_sendPin( "1234" ) ) {
+					Dln("PIN set OK");
+				} else {
+					Dln("PIN was NOT set");
+				}
+		
+				do {
+					uint8_t	r;
+
+						while( !gsm_getRegistration( r ) ) {} ;
+				} while(0);
+				
+				gsm_activateBearerProfile("internet.cyta.gr", "", "");
+						
 #if 0
-			    gsm_activateBearerProfile("internet.cyta.gr", "", "");
+				
+			gsm_activateBearerProfile("internet.cyta.gr", "", "");
 			    http_getRequest("https://52.7.7.190", "/update?api_key=7EE6FEDU182QNN2U&1=60&2=100" );
 			    gsm_deactivateBearerProfile();
 #endif
 
-//				gsm_getBattery();
+				do {
+					uint16_t	ii;
+					
+					
+						if( gsm_getBattery( ii ) ) {
+							Serial.print("Battery level: " ); Serial.println( ii );
+						}
+				} while(0);
 
+
+				delay(5000);
 //				Dln("Setting pin");
 //				gsm_sendPin( "1234" );
-
-				delay( 1000 );
+#if 0
 
 #define CF( str )	(char *)( str )
-				gsm_sendcmd(CF( F( "AT+CFUNC?\n\r" ) ) );
+				gsm_sendcmd(CF( ("AT+CFUNC?\n\r" ) ) );
 				
 				gsm_relayOutput( Serial );
+#endif
 								
 
 				/* put here code to read data blocks from EEPROM,
@@ -358,8 +379,6 @@ void loop()
 				 * and (2) one POST request with all data included in the payload
 				 */
 				 
-
-
 
 				powerGPRSGPS( 0 );
 				poweredGSM = 0;

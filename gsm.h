@@ -50,6 +50,7 @@ extern "C" {
     void gsm_flushInput();
 
 	bool gsm_sendPin(char *apin);    
+	bool gsm_getRegistration(uint8_t &areg);
 	bool gsm_moduleReady();
 
 	bool gsm_moduleLowPower( bool alowpower );

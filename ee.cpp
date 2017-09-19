@@ -32,6 +32,7 @@ extern uint32_t	__ee_dev_size;
 /* compile for beehive production board
  */
 
+//#include "drivers/ee_i2c.hpp"
 #include "../drivers/ee_i2c.hpp"
 
 #endif	/* LINUX_NATIVE_APP */
