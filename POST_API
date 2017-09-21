@@ -1,0 +1,17 @@
+POST API
+Command:
+add
+
+Parameters:
+nodeId
+apikey
+mcuTemp
+batVolt
+bhvTemp
+bhvHumid
+rtcDateTime
+gsmSig
+gsmVolt
+gpsLon
+gpsLat
+bhvWeight
