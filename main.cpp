@@ -285,7 +285,8 @@ void loop()
 			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
 #endif
 
-				if( poweredGSM >= 3 ) {
+#if 0
+				if( poweredGSM >= 4 ) {
 					Dln("GSM was not ready after 3 tries. Skip NETWORK session");
 					
 					/* module is not ready after 3 cycles, so there might be a problem,
@@ -298,32 +299,45 @@ void loop()
 
 					continue;
 				}
+#endif
 				
 				if(!poweredGSM) {
 					poweredGSM++;
-//					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
+					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
 					
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
 						powerGPRSGPS( 1 );
-//					memset(tmpb, 0, sizeof( tmpb ));
-					
-					do {
-						uint32_t m;
-							m = millis() + 3000;
-							
-							while( millis() < m) {};
-					} while(0);
 
 				}
 
-				poweredGSM++;
-				if( !gsm_moduleInfo() ) {
-					D( F("GSM module is not ready yet! try ... ") ); Dln( poweredGSM );
-					/* module is not yet ready, skip this cycle */
+				//poweredGSM++;
+				
+				while( poweredGSM < 10 ) {
+					if( !gsm_moduleInfo() ) {
+						D( F("GSM module is not ready yet! try ... ") ); Dln( poweredGSM );
+						/* module is not yet ready, skip this cycle */
+
+						delay(5000);
+					} else
+						break;	/* module ready! */
+					
+					poweredGSM++;
+				}
+
+				Dln( poweredGSM );
+				
+				if(poweredGSM == 10) {
+					// module was not ready, so skip this session
+					poweredGSM = 0;
+					powerGPRSGPS( 0 );
+
+					lastMinNetCycle = curMinNetCycle;
+					curSleepCycle = 0;	/* reset sleep cycle */
+
 					continue;
 				}
-
+				
 #define CF( str )	(char *)( str )
 				
 				Dln( F("GSM module is ready!") );
@@ -382,7 +396,7 @@ void loop()
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();
 
-				delay(5000);
+//				delay(5000);
 
 				/* put here code to read data blocks from EEPROM,
 				 * and forward them to the internet server.

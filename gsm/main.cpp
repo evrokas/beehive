@@ -150,6 +150,7 @@ void loop()
   uint16_t i16;
   unsigned long volt;
   datetime_t dt;
+  float av;
     
   if(gsm_available() ) {
     Serial.write( gsm_read() );
@@ -271,6 +272,12 @@ void loop()
 								Serial.println("could not read battery levels!");
 							break;
 
+						case 'v':
+							av = strtod( tempbuf+1, NULL );;
+							Serial.print("New voltage reference: ");Serial.println( av );
+							setVccFactor( av );
+							break;
+							
 						default:;
 					}
 					

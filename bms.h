@@ -76,7 +76,7 @@
 /* Timinig constants */
 
 /* seconds that wdt timeout cycle lasts */
-#define SLEEP_CYCLE	8
+#define SLEEP_CYCLE	2
 
 /* number of sleep cycles to test for time */
 #define CYCLES_SLEEP_COUNT	2
@@ -91,7 +91,8 @@
  
 //#define SPEED_RATIO	24		/* cycles 15 */
 //#define SPEED_RATIO	48		/* cycles 7 */
-#define SPEED_RATIO	96		/* cycles 3 */
+//#define SPEED_RATIO	96		/* cycles 3 */
+#define SPEED_RATIO	48
 
 /* daily data logging frequency */
 #define DAILY_LOG_FREQ	(6*5 * (SPEED_RATIO))	// 5 times/hour, every 12 minutes

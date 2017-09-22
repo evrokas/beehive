@@ -371,15 +371,25 @@ bool gsm_moduleInfo()
 {
 	DEF_CLEAR_TEMPBUF;
 	
-  	gsm_flushInput();
+//  	gsm_flushInput();
 
-  	gsmserial.print( CF( ("ATI\r\n") ) );
-  	gsm_readSerial(_tempbuf, TEMP_BUF_LEN, 2 );
-//  	Serial.print("GSM response: <"); Serial.print( _tempbuf ); Serial.println(">");
+		if(gsm_sendrecvcmdtimeout( CF( "ATI\r\n" ), CF( "OK\r\n" ), 2 ) )
+			return true;
+		else
+			return false;
+	
+
+  	gsm_sendcmd( CF( ("ATI\r\n") ) );
+  	READGSM( 2 );
+//  	Serial.print("GSM response: <");
+  	Serial.print( _tempbuf ); Serial.println(">");
   	
-  	_tempbuf[12] = '\0';
+//  	_tempbuf[12] = '\0';
  // 	Serial.print(">>"); Serial.print(_tempbuf+6); Serial.println("<<");
   	
+ 		if(strstr( _tempbuf, "OK" ) )return true;
+ 		else return false;
+ 		
   	if(!strncmp( _tempbuf+6, "SIM800", 6 ))return true;
   	else return false;
 }

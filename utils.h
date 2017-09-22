@@ -96,6 +96,7 @@ void powerRTC(unsigned char onoff, unsigned char mdel);
 /* function to read power line voltage */
 unsigned long readVcc();
 
+void setVccFactor(float avref);
 
 #ifdef __cplusplus
 } /* extern */

@@ -112,7 +112,7 @@ void powerRTC(unsigned char onoff, unsigned char mdel)
 	delay( mdel );
 }
 
-
+float	VREF = 1.035;
 
 /* read Vcc using internal 1.1V reference */
 unsigned long readVcc()
@@ -138,7 +138,12 @@ unsigned long readVcc()
   
 //  result = 1125300L * (4.96/5.5) / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
 //  result = 1125300L * VCC_CORRECTION / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*10
-    f = ( ( ( InternalReferenceVoltage * 1024.0 ) / result) + 5.0);	// / 10.0;
+    f = ( ( ( VREF * InternalReferenceVoltage * 1024.0 ) / result) + 5.0);	// / 10.0;
   result = f;
   return result; // Vcc in millivolts
+}
+
+void setVccFactor(float avref)
+{
+	VREF = avref;
 }
