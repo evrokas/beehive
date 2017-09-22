@@ -356,6 +356,22 @@ void loop()
 				} while( 1 );		/* set a timeout here */
 				}
 				
+				
+				do {
+					uint16_t ii;
+					uint8_t iii;
+					
+					if( gsm_getBattery( ii ) ) {
+//						Serial.print("Battery level: " ); Serial.println( ii );
+						db.gsmVolt = ii;
+					}
+
+					if( gsm_getSignalQuality( iii ) ) {
+//						Serial.print("Signal quality: " ); Serial.println( iii );
+						db.gsmSig = iii;
+					}
+				} while(0);
+				
 				if(gsm_activateBearerProfile("internet.cyta.gr", "", "")) {
 					if( http_initiateGetRequest() ) {
 						if( http_send_datablock( db ) ) {
@@ -365,33 +381,8 @@ void loop()
 				
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();
-#if 0
-				
-			gsm_activateBearerProfile("internet.cyta.gr", "", "");
-			    http_getRequest("https://52.7.7.190", "/update?api_key=7EE6FEDU182QNN2U&1=60&2=100" );
-			    gsm_deactivateBearerProfile();
-#endif
-
-				do {
-					uint16_t	ii;
-					
-					
-						if( gsm_getBattery( ii ) ) {
-							Serial.print("Battery level: " ); Serial.println( ii );
-						}
-				} while(0);
-
 
 				delay(5000);
-//				Dln("Setting pin");
-//				gsm_sendPin( "1234" );
-#if 0
-
-				gsm_sendcmd(CF( ("AT+CFUNC?\n\r" ) ) );
-				
-				gsm_relayOutput( Serial );
-#endif
-								
 
 				/* put here code to read data blocks from EEPROM,
 				 * and forward them to the internet server.

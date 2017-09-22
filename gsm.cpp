@@ -384,27 +384,6 @@ bool gsm_moduleInfo()
   	else return false;
 }
 
-bool gsm_getBattery(uint16_t &bat)
-{
-	char *c;
-	DEF_CLEAR_TEMPBUF;
-
-		
-		if(!gsm_sendrecvcmdtimeout( CF( "AT+CBC\r\n" ), CF( "+CBC:" ), 2))
-			return false;
-		READGSM(2);
-		
-		c = strrchr( _tempbuf, ',' );
-		if(!c)return false;
-		
-		bat = atoi( ++c );
-
-#if 0
-  	Serial.print("CBC battery level: "); Serial.println( bat );
-#endif
-
-	return true;
-}
 
 
 bool gsm_available()
@@ -514,26 +493,41 @@ bool gsm_moduleLowPower( bool alowpower )
 	}
 }
 
+bool gsm_getBattery(uint16_t &bat)
+{
+	char *c;
+	DEF_CLEAR_TEMPBUF;
+
+		
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CBC\r\n" ), CF( "+CBC:" ), 2))
+			return false;
+		
+		READGSM(2);
+		
+		c = strrchr( _tempbuf, ',' );
+		if(!c)return false;
+		
+		bat = atoi( ++c );
+
+	return true;
+}
+
 bool gsm_getSignalQuality(uint8_t &asqual)
 {
 	char *c;
   DEF_CLEAR_TEMPBUF;
 
-  	gsm_sendcmd( CF( ( "AT+CSQ\n\r" ) ) );
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CSQ\r\n" ), CF( "+CSQ: " ), 2))
+			return false;
+
   	READGSM( 2 );
-  	
-  	c = strstr(_tempbuf, CF( ( "CSQ: " ) ) );
-  	if(c) {
-  		c += 5;
-  		asqual = atoi( c );
-  		
-#if 0
-  		D("CSQ signal quality: "); Dln( asqual );
-#endif
-			return true;
-		}
+		c = _tempbuf;
+  	if(!c)return false;
+
+  	asqual = atoi( c );
+		return true;
 		
-	return false;
+	return true;
 }
 
 bool gsm_getDateTimeLonLat(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month,
