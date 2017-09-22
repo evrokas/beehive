@@ -32,8 +32,13 @@ extern uint32_t	__ee_dev_size;
 /* compile for beehive production board
  */
 
-//#include "drivers/ee_i2c.hpp"
+#ifdef GSM_MODULE
+// GSM_MODULE is defined in the Makefile of the gsm/ directory
+
 #include "../drivers/ee_i2c.hpp"
+#else
+#include "drivers/ee_i2c.hpp"
+#endif
 
 #endif	/* LINUX_NATIVE_APP */
 

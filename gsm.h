@@ -20,6 +20,7 @@
 #define GSM_SERIAL_BAUDRATE	9600
 #endif
 
+#include "data.h"
 
 extern "C" {
 
@@ -37,8 +38,13 @@ extern "C" {
     
     bool gsm_deactivateBearerProfile();
     
-    uint16_t http_getRequest(char *url, char *args);
 
+    bool http_initiateGetRequest();
+    void http_terminateRequest();
+    
+    uint16_t http_getRequest(char *url, char *args);
+    bool http_send_datablock(datablock_t &db);
+    
     bool gsm_moduleInfo();
 
 		bool gsm_getBattery(uint16_t &bat);

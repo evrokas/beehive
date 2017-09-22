@@ -42,7 +42,7 @@ void write_gsm(char *str)
 	while( *str != '\0') {
 		gsm_write( *str );
 		str++;
-		delay(10);
+		//delay(10);
 	}
 }
 
@@ -51,8 +51,11 @@ void write_gsm(char *str)
 
 void sapbr_init()
 {
+#if 0
+
 	write_gsm("AT+CIPSHUT\n");
 	write_gsm("AT+CIPMUX=0\n");
+#endif
 
 
 #if 1
@@ -88,11 +91,11 @@ mcuTemp is deprecate therefore it is removed.
 
 void http_send()
 {
-	write_gsm("AT+HTTPINIT\n");
-	write_gsm("AT+HTTPPARA=\"CID\",1\n");
+	write_gsm("AT+HTTPINIT\r\n");
+	write_gsm("AT+HTTPPARA=\"CID\",1\r\n");
 	write_gsm("AT+HTTPPARA=\"URL\",\"http://5.55.150.188:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\n");
-	write_gsm("AT+HTTPACTION=0\n");
-	write_gsm("AT+HTTPREAD\n");
+	write_gsm("AT+HTTPACTION=0\r\n");
+	write_gsm("AT+HTTPREAD\r\n");
 }
 
 extEEPROM	ee(kbits_256, 1, 64, 0x57);

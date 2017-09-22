@@ -1,8 +1,8 @@
 /*
- * main.ino - main file
+ * main.cpp - main file
  *
  * Beehive Monitoring System - BMS
- * (c) Evangelos Rokas, 2015-16
+ * (c) Evangelos Rokas, 2015-16-17
  *
  * This software is Free Software and distributed under
  * the terms of GNU General Public License.
@@ -47,7 +47,7 @@ char tmp[56], tmp2[16];
 
 #ifndef NODE_ID
 
-#define NODE_ID	1000
+#define NODE_ID	1088
 
 #endif
 
@@ -57,6 +57,7 @@ char tmp[56], tmp2[16];
 void setup()
 {
 	Dinit;
+	Serial.begin( 9600 );
 
 /*
  * Noticed that some times reading the ADXL345 without first enabling
@@ -87,14 +88,14 @@ void setup()
 	maxMinLogCycle = 2;
 	maxMinNetCycle = 4;
 #endif
-
+	Dln("hello world!");
 
 	maxSleepCycle = maxLogCycle;
       
 	setupPeripheralsControl();
 
 	//Wire.init();
-	TWBR = 152;		/* switch to 25KHz I2C interface */
+//	TWBR = 152;		/* switch to 25KHz I2C interface */
 
 	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
@@ -102,11 +103,10 @@ void setup()
 
 	therm_init();
 	rtc_init();
-	accel_init();
+	//accel_init();
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	powerRTC( 0, 1 );
-	Serial.begin( 9600 );
 	Dln("\n\n\nHello world. Sleep cycling begins!");
 	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
     Dln(tmp);
@@ -158,7 +158,7 @@ void mySleep()
 }
 
 
-char tmpb[100];
+//char tmpb[100];
 int16_t ax, ay, az;
 int poweredGSM=0;
 
@@ -212,7 +212,6 @@ void loop()
 #endif			
 			db.nodeId = NODE_ID;
 			db.batVolt = readVcc();
-			//f3a = readVcc();
 			
 			powerRTC( 1, 10 );
 			displayTime();
@@ -225,7 +224,7 @@ void loop()
 					 * do log-ging of data */
 
 #ifdef DEBUG_SLEEP_CYCLE
-			    D( F("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
+			    D( ("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
 			    D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
 #endif
 
@@ -302,12 +301,12 @@ void loop()
 				
 				if(!poweredGSM) {
 					poweredGSM++;
-					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
+//					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
 					
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
 						powerGPRSGPS( 1 );
-					memset(tmpb, 0, sizeof( tmpb ));
+//					memset(tmpb, 0, sizeof( tmpb ));
 					
 					do {
 						uint32_t m;
@@ -320,30 +319,52 @@ void loop()
 
 				poweredGSM++;
 				if( !gsm_moduleInfo() ) {
-					D("GSM module is not ready yet! try ... "); Dln( poweredGSM );
+					D( F("GSM module is not ready yet! try ... ") ); Dln( poweredGSM );
 					/* module is not yet ready, skip this cycle */
 					continue;
 				}
+
+#define CF( str )	(char *)( str )
 				
-				Dln("GSM module is ready!");
+				Dln( F("GSM module is ready!") );
 				/* so module is ready */
 
-				Dln("Doing network stuff");
+				Dln( F("Doing network stuff") );
 
-				if ( gsm_sendPin( "1234" ) ) {
-					Dln("PIN set OK");
+				if ( gsm_sendPin( CF( "1234" ) ) ) {
+					Dln( F("PIN set OK") );
 				} else {
-					Dln("PIN was NOT set");
+					Dln( F("PIN was NOT set") );
 				}
-		
-				do {
-					uint8_t	r;
 
-						while( !gsm_getRegistration( r ) ) {} ;
-				} while(0);
+				if(!gsm_sendrecvcmdtimeout( CF(""), CF("SMS Ready\r\n"), 10)) {
+//					Dln("module out of sync....");
+				};
+//				 else Dln("module in sync....");
 				
-				gsm_activateBearerProfile("internet.cyta.gr", "", "");
-						
+
+				/* disable local echo */
+				gsm_sendcmd(CF("ATE0\r\n"));
+				
+		
+				{
+				uint8_t r;
+				do {
+					//uint8_t	r;
+						gsm_getRegistration( r );
+						if((r == 1) || (r == 5))break;
+				} while( 1 );		/* set a timeout here */
+				}
+				
+				if(gsm_activateBearerProfile("internet.cyta.gr", "", "")) {
+					if( http_initiateGetRequest() ) {
+						if( http_send_datablock( db ) ) {
+						} else Serial.println(F("error: could not send data block"));
+					} else Serial.println(F("error: could not initiate get request"));
+				} else Serial.println(F("error: could not activate bearer profile"));
+				
+				http_terminateRequest();						
+				gsm_deactivateBearerProfile();
 #if 0
 				
 			gsm_activateBearerProfile("internet.cyta.gr", "", "");
@@ -366,7 +387,6 @@ void loop()
 //				gsm_sendPin( "1234" );
 #if 0
 
-#define CF( str )	(char *)( str )
 				gsm_sendcmd(CF( ("AT+CFUNC?\n\r" ) ) );
 				
 				gsm_relayOutput( Serial );
@@ -407,3 +427,4 @@ void loop()
 	
 	}	/* main while loop  */
 }
+

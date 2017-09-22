@@ -115,12 +115,12 @@ typedef struct {
 	uint16_t	bhvHumid;
 	uint32_t	rtcDateTime;
 
-#if 0
+#if 1
 	uint8_t		gsmSig;
 	uint16_t	gsmVolt;
 #endif
 
-#if 0
+#if 1
 	gpsCoordType gpsLon;
 	gpsCoordType gpsLat;	
 #endif
