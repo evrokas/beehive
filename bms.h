@@ -25,8 +25,8 @@
 
 /* setup defines */
 
-#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
-//#define LP_SLEEP_MODE	SLEEP_8S		/* 8 seconds sleep */
+//#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
+#define LP_SLEEP_MODE	SLEEP_8S		/* 8 seconds sleep */
 
 /* set to 1 if project has Ublox Neo6M GPS receiver */
 #define	HAVE_GPS	1
@@ -76,11 +76,11 @@
 /* Timinig constants */
 
 /* seconds that wdt timeout cycle lasts */
-#define SLEEP_CYCLE	2
+#define SLEEP_CYCLE	8
 
 /* number of sleep cycles to test for time */
-#define CYCLES_SLEEP_COUNT	2
-//#define CYCLES_SLEEP_COUNT	7
+//#define CYCLES_SLEEP_COUNT	2
+#define CYCLES_SLEEP_COUNT	7
 
 
 #define VALUE_TO_STRING(x)	#x
@@ -92,13 +92,15 @@
 //#define SPEED_RATIO	24		/* cycles 15 */
 //#define SPEED_RATIO	48		/* cycles 7 */
 //#define SPEED_RATIO	96		/* cycles 3 */
-#define SPEED_RATIO	48
+#define SPEED_RATIO	1
 
 /* daily data logging frequency */
-#define DAILY_LOG_FREQ	(6*5 * (SPEED_RATIO))	// 5 times/hour, every 12 minutes
+#define DAILY_LOG_FREQ	(24 * 5 * (SPEED_RATIO))	// 24 hours, 5 times per hour
+//#define DAILY_LOG_FREQ	(24 * 5 * 2 * 2 * 2*(SPEED_RATIO))	// 24 hours, 5 times per hour
 
 /* daily network communication frequency */
-#define DAILY_NET_FREQ	(6*5 * (SPEED_RATIO))    //(12)		// 12 times per day, every 2 hours
+#define DAILY_NET_FREQ	(24 * 1 * (SPEED_RATIO))	// 24 hours, 1 time per hour
+//#define DAILY_NET_FREQ	(24 * 5 * 2 * 2 * (SPEED_RATIO))	// 24 hours, 1 time per hour
 
 //#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )
 
@@ -109,14 +111,6 @@
 #define DAILY_NET_PERIOD	(1440 / DAILY_NET_FREQ)
 
 
-/* number of cycles for data logging */
-#define CYCLES_LOG_COUNT	((86400 / DAILY_LOG_FREQ) / SLEEP_CYCLE)
-
-
-/* nuimber of cycles for network data communication */
-#define CYCLES_NET_COUNT	((86400 / DAILY_NET_FREQ) / SLEEP_CYCLE)
-
-
 #if 0
 unsigned short int EEMEM MaxLogCycle = CYCLES_LOG_COUNT;
 unsigned short int EEMEM MaxNetCycle = CYCLES_NET_COUNT;
@@ -125,7 +119,8 @@ unsigned short int EEMEM MaxNetCycle = CYCLES_NET_COUNT;
 
 /* this is the VCC correction variable used in readVcc() */
 #define VCC_CORRECTION  		1	//0.9854
-#define InternalReferenceVoltage	(1062.0)
+//#define InternalReferenceVoltage	(1062.0)
+#define InternalReferenceVoltage	(1100.0)
 
 
 #endif	/* __BMS_H__ */

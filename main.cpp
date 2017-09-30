@@ -70,17 +70,22 @@ void setup()
  *
  */
  
+ 	/* current logging cycle counter */
 	curLogCycle = 0;
+	
+	/* current networking cycle counter */
 	curNetCycle = 0;
+	
+	/* current sleep cycle counter */
 	curSleepCycle = 0;
 
 
 	cntSleepCycle = 0;
 
-	maxLogCycle = CYCLES_LOG_COUNT;
+	//maxLogCycle = CYCLES_LOG_COUNT;
 	maxMinLogCycle = DAILY_LOG_PERIOD;
 
-	maxNetCycle = CYCLES_NET_COUNT;
+	//maxNetCycle = CYCLES_NET_COUNT;
 	maxMinNetCycle = DAILY_NET_PERIOD;
 
 #if 0
@@ -88,9 +93,7 @@ void setup()
 	maxMinLogCycle = 2;
 	maxMinNetCycle = 4;
 #endif
-	Dln("hello world!");
-
-	maxSleepCycle = maxLogCycle;
+	maxSleepCycle = CYCLES_SLEEP_COUNT;
       
 	setupPeripheralsControl();
 
@@ -109,32 +112,17 @@ void setup()
 	powerRTC( 0, 1 );
 	Dln("\n\n\nHello world. Sleep cycling begins!");
 	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
-    Dln(tmp);
+  Dln(tmp);
 
-    sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
-    Dln(tmp);
+  sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
+  Dln(tmp);
 
-    sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
-    Dln(tmp);
-
+  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
+  Dln(tmp);
 
 #if	HAVE_GSM_GPRS == 1
-	gsm_init();
-//	powerGPRSGPS( 0 );
+		gsm_init();
 #endif
-
-
-#if 0
-	/* run this code only to setup date and time */
-	powerPeripherals( 1, 1 );
-	setTime(0,45, 16, 4, 1, 3, 17 );
-	powerPeripherals( 0, 0 );
-
-	/* stop program execution */
-	Serial.println("Now you must comment out RTC writing code, and reload program to board.\n");
-	while(true);
-#endif
-
 }
 
 
@@ -171,7 +159,7 @@ void loop()
   datablock_t	db;
 
 
-#define DEBUG_SLEEP_CYCLE	1
+#define DEBUG_SLEEP_CYCLE
 
 	/* get initial time */
 //    powerPeripherals(1,1);
@@ -187,6 +175,12 @@ void loop()
 #ifdef DEBUG_SLEEP_CYCLE
 	D("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
 	D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+
+#define DBGSLEEP	D("cntSleepCycle: ");D(cntSleepCycle);D(" curSleepCycle: ");D(curSleepCycle); \
+	D(" maxSleepCycle: ");D(maxSleepCycle);D(" curMinLogCycle: ");D(curMinLogCycle); \
+	D(" lastMinLogCycle: ");D(lastMinLogCycle); D(" curMinNetCycle: ");D(curMinNetCycle); \
+	D(" lastMinNetCycle: ");Dln(lastMinNetCycle);
+
 #endif
 
 
@@ -196,6 +190,7 @@ void loop()
 	
   		curSleepCycle++;
 
+//  		DBGSLEEP;
 		
 #ifdef DEBUG_SLEEP_CYCLE
   		D("[");D(cntSleepCycle);D("] ");
@@ -203,9 +198,13 @@ void loop()
   		D("curSleepCycle ");Dln(curSleepCycle);
 #endif
 
+#ifndef DEBUG_SLEEP_CYCLE
+			Serial.write(".");
+#endif
+
+
 		if(curSleepCycle >= maxSleepCycle) {
-		    /* do not reset curSleepCycle yet, since PERIOD might not
-		     * have been reached yet, do it inside the inner loop */
+			curSleepCycle = 0;
 	
 #ifdef DEBUG_SLEEP_CYCLE
 			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
@@ -214,7 +213,7 @@ void loop()
 			db.batVolt = readVcc();
 			
 			powerRTC( 1, 10 );
-			displayTime();
+//			displayTime();
 			rtc_getTime(&dt);
 			powerRTC( 0, 1 );
 			
