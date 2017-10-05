@@ -113,6 +113,8 @@ void powerRTC(unsigned char onoff, unsigned char mdel)
 }
 
 float	VREF = 1.035;
+uint32_t InternalReferenceVoltage = (uint32_t)(1100);
+
 
 /* read Vcc using internal 1.1V reference */
 unsigned long readVcc()

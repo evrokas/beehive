@@ -155,21 +155,21 @@ bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
     if(!gsm_sendrecvcmdtimeout( CF( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , CF( "OK\r\n") , 2 ) )
     	return false;
     
-		strcpy(_tempbuf, ("AT+SAPBR=3,1,\"APN\",\"") );
+		strcpy(_tempbuf, CF("AT+SAPBR=3,1,\"APN\",\"") );
 		strcat(_tempbuf, apn );
-		strcat(_tempbuf, ("\"\r\n") );
+		strcat(_tempbuf, CF("\"\r\n") );
 		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK\r\n" ), 2 ) )
 			return false;
 		
-		strcpy(_tempbuf, ("AT+SAPBR=3,1,\"USER\",\"") );
+		strcpy(_tempbuf, CF("AT+SAPBR=3,1,\"USER\",\"") );
 		strcat(_tempbuf, user );
-		strcat(_tempbuf, "\"\r\n" );
+		strcat(_tempbuf, CF("\"\r\n") );
 		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK" ), 2 ) )
 			return false;
 		
-		strcpy(_tempbuf, ("AT+SAPBR=3,1,\"PWD\",\"") );
+		strcpy(_tempbuf, CF("AT+SAPBR=3,1,\"PWD\",\"") );
 		strcat(_tempbuf, pass );
-		strcat(_tempbuf, "\"\r\n" );
+		strcat(_tempbuf, CF("\"\r\n") );
 		if(!gsm_sendrecvcmdtimeout( CF(_tempbuf ), CF( "OK\r\n" ), 2 ) )
 			return false;
 			
@@ -225,6 +225,76 @@ bool gsm_deactivateBearerProfile()
   return true;
 }
 
+bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr)
+{
+	DEF_CLEAR_TEMPBUF;
+	char *c;
+
+/*
+ * AT+CIPSHUT					SHUT OK
+ * AT+CIPMUX=0				OK
+ * AT+CSTT="apn", "user", "pass"		OK
+ * AT+CIPSTATUS											IP START
+ * AT+CIICR													OK
+ * AT+CIPSTATUS											IP GPRSACT
+ * AT+CIFSR													0.0.0.0
+ * AT+CDNSGIP="url.ext"							+CDNSGIP: 1, "url.ext", "0.0.0.0"
+ */
+
+		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPSHUT\r\n"), CF("SHUT OK\r\n"), 2) )
+			return false;
+			
+		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPMUX=0\r\n"), CF("OK\r\n"), 2 ) )
+			return false;
+		
+		gsm_sendcmd( CF( "AT+CSTT=\"") );
+		gsm_sendcmd( apn );
+		gsm_sendcmd( CF("\",\"") );
+		gsm_sendcmd( user );
+		gsm_sendcmd( CF("\",\"") );
+		gsm_sendcmd( pass );
+		if(!gsm_sendrecvcmdtimeout( CF( "\"\r\n" ), CF( "OK\r\n" ), 2 ) )
+			return false;
+
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CIPSTATUS\r\n" ), CF( "IP START\r\n" ), 5 ) )
+			return false;
+		
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CIICR\r\n" ), CF( "OK\r\n" ), 5 ) )
+			return false;
+		
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CIPSTATUS\r\n" ), CF( "IP GPRSACT\r\n" ), 5 ) )
+			return false;
+		
+		if(!gsm_sendrecvcmdtimeout( CF( "AT+CIFSR\r\n" ), CF( "." ), 5 ) )
+			return false;
+		
+		gsm_sendcmd( CF( "AT+CDNSGIP=\"" ) );
+		gsm_sendcmd( dns );
+		if(!gsm_sendrecvcmdtimeout( CF( "\"\r\n" ), "+CDNSGIP:", 10 ) )
+			return false;
+		
+		CLEAR_TEMPBUF;
+		READGSM( 5 );
+		
+		/* _tempbuf hold something like: < 1,"dns","5.55.2.216"\r\n> */				
+		
+		/* find last comma <,> */
+		c = strrchr( _tempbuf, ',' );
+		c++; // eat ,
+		c++; // eat \"
+		
+		/* copy string to ipstr */
+		strcpy( ipstr, c );
+
+		/* ipstr hold: <5.55.2.216\"\r\n> */
+		/* find last \" */
+		c = strchr( ipstr, '\"');
+		*c = 0;		// null terminate string there
+		
+	return true;
+}
+		
+
 bool http_initiateGetRequest()
 {
 	DEF_CLEAR_TEMPBUF;
@@ -247,9 +317,14 @@ void http_terminateRequest()
 }
 
 
+#ifndef SERVER_URL
+//#define SERVER_URL	CF( "5.55.150.188" )
+#define SERVER_URL	CF( "46.176.45.246" )
+#endif
 
-#define SERVER_URL	CF( "5.55.150.188" )
+#ifndef SERVER_PORT
 #define SERVER_PORT	CF( "8088" )
+#endif
 
 
 bool http_send_datablock(datablock_t &db)
@@ -302,8 +377,8 @@ bool http_send_datablock(datablock_t &db)
 		
 		db.gpsLon=34.123456;
 		db.gpsLat=32.123456;
-		SEND( CF("gpsLon"), "&%s=32.123456", 32 );	//db.gpsLon );
-		SEND( CF("gpsLat"), "&%s=32.123456", 45 );	//db.gpsLat );
+		SEND( CF("gpsLon"), "&%s=%s", "32.32" );	//db.gpsLon );
+		SEND( CF("gpsLat"), "&%s=%s", "45.45" );	//db.gpsLat );
 
 		c = dtostrf(((float)db.bhvWeight/1000.0), 0, 3, cbuf );
 		SEND( CF("bhvWeight"), "&%s=%s", cbuf );

@@ -51,6 +51,31 @@ char tmp[56], tmp2[16];
 
 #endif
 
+void initializeCounters()
+{
+ 	/* current logging cycle counter */
+	curLogCycle = 0;
+	
+	/* current networking cycle counter */
+	curNetCycle = 0;
+	
+	/* current sleep cycle counter */
+	curSleepCycle = 0;
+
+	/* global sleep cycle counter */
+	cntSleepCycle = 0;
+
+ 	maxMinLogCycle = DAILY_LOG_PERIOD;
+	maxMinNetCycle = DAILY_NET_PERIOD;
+
+#if 0
+	/* hardwire log cycles for debugging purposes */
+	maxMinLogCycle = 2;
+	maxMinNetCycle = 4;
+#endif
+
+	maxSleepCycle = CYCLES_SLEEP_COUNT;
+}
 
 
 /* setup steps of the project */
@@ -69,31 +94,7 @@ void setup()
  * resistors.
  *
  */
- 
- 	/* current logging cycle counter */
-	curLogCycle = 0;
-	
-	/* current networking cycle counter */
-	curNetCycle = 0;
-	
-	/* current sleep cycle counter */
-	curSleepCycle = 0;
-
-
-	cntSleepCycle = 0;
-
-	//maxLogCycle = CYCLES_LOG_COUNT;
-	maxMinLogCycle = DAILY_LOG_PERIOD;
-
-	//maxNetCycle = CYCLES_NET_COUNT;
-	maxMinNetCycle = DAILY_NET_PERIOD;
-
-#if 0
-	/* hardwire log cycles for debugging purposes */
-	maxMinLogCycle = 2;
-	maxMinNetCycle = 4;
-#endif
-	maxSleepCycle = CYCLES_SLEEP_COUNT;
+	initializeCounters(); 
       
 	setupPeripheralsControl();
 
@@ -110,15 +111,15 @@ void setup()
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	powerRTC( 0, 1 );
-	Dln("\n\n\nHello world. Sleep cycling begins!");
-	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
-  Dln(tmp);
+//	Dln("\n\n\nHello world. Sleep cycling begins!");
+//	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
+//  Dln(tmp);
 
-  sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
-  Dln(tmp);
+//  sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
+//  Dln(tmp);
 
-  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
-  Dln(tmp);
+//  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
+//  Dln(tmp);
 
 #if	HAVE_GSM_GPRS == 1
 		gsm_init();
@@ -135,20 +136,40 @@ void mySleep()
 	/* increase sleep cycle counter */
 	cntSleepCycle++;
 	
-	
 //	TWBR = 152;		/* switch to 25KHz I2C interface */
-
-#if 0
-	Wire.beginTransmission(RTC_I2C_ADDRESS);
-	Wire.write(0); // set DS3231 register pointer to 00h
-	Wire.endTransmission();
-#endif
 }
 
 
 //char tmpb[100];
 int16_t ax, ay, az;
 int poweredGSM=0;
+
+
+void setupLoop()
+{
+	powerRTC( 1, 10 );
+  rtc_getTime(&dt);
+  powerRTC( 0, 1 );
+
+  lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
+  curMinLogCycle = lastMinLogCycle;
+  curMinNetCycle = lastMinNetCycle;
+
+#ifdef DEBUG_SLEEP_CYCLE
+	D("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+	D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+
+#define DBGSLEEP	D("cntSleepCycle: ");D(cntSleepCycle);D(" curSleepCycle: ");D(curSleepCycle); \
+	D(" maxSleepCycle: ");D(maxSleepCycle);D(" curMinLogCycle: ");D(curMinLogCycle); \
+	D(" lastMinLogCycle: ");D(lastMinLogCycle); D(" curMinNetCycle: ");D(curMinNetCycle); \
+	D(" lastMinNetCycle: ");Dln(lastMinNetCycle);
+
+#else
+#define DBGSLEEP
+#endif	/* DEBUG_SLEEP_CYCLE */
+
+}
+
 
 
 void loop()
@@ -161,28 +182,7 @@ void loop()
 
 #define DEBUG_SLEEP_CYCLE
 
-	/* get initial time */
-//    powerPeripherals(1,1);
-		powerRTC( 1, 10 );
-    rtc_getTime(&dt);
-    powerRTC( 0, 1 );
-//    powerPeripherals(0,0);
-    
-    lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
-    curMinLogCycle = lastMinLogCycle;
-    curMinNetCycle = lastMinNetCycle;
-
-#ifdef DEBUG_SLEEP_CYCLE
-	D("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
-	D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
-
-#define DBGSLEEP	D("cntSleepCycle: ");D(cntSleepCycle);D(" curSleepCycle: ");D(curSleepCycle); \
-	D(" maxSleepCycle: ");D(maxSleepCycle);D(" curMinLogCycle: ");D(curMinLogCycle); \
-	D(" lastMinLogCycle: ");D(lastMinLogCycle); D(" curMinNetCycle: ");D(curMinNetCycle); \
-	D(" lastMinNetCycle: ");Dln(lastMinNetCycle);
-
-#endif
-
+	setupLoop();
 
 	/* enter endless loop */
   	while(1) {
@@ -204,7 +204,19 @@ void loop()
 
 
 		if(curSleepCycle >= maxSleepCycle) {
+			
+#if 1			
+			/* do not reset curSleepCycle now, but leave it as is.
+			 * the reason is that one minute is 60 seconds, but with 8seconds
+			 * per sleep cycle one needs 7.5 sleep cycles, so we should set
+			 * maxSleepCycle to 7, then in 4 seconds one minute will have passed,
+			 * if we reset the curSleepCycle here, in order for the algorithm to
+			 * sense for the minute passed must wait for another 56 seconds.
+			 * If we leave curSleepCycle as is, in the next 8 seconds, the algorithm
+			 * will sense the passed minute and reset the timer. This results in
+			 * timing */
 			curSleepCycle = 0;
+#endif
 	
 #ifdef DEBUG_SLEEP_CYCLE
 			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
@@ -229,7 +241,10 @@ void loop()
 
 			    lastMinLogCycle = curMinLogCycle;
 
+#if 0
+					/* this is the correct position to reset curSleepCycle */
 			    curSleepCycle = 0;	/* reset sleep cycle */
+#endif
 
 			    powerRTC(1, 10);
 			    powerPeripherals(1,50);
@@ -344,6 +359,9 @@ void loop()
 
 				Dln( F("Doing network stuff") );
 
+				/* disable local echo */
+				gsm_sendcmd(CF("ATE0\r\n"));
+
 				if ( gsm_sendPin( CF( "1234" ) ) ) {
 					Dln( F("PIN set OK") );
 				} else {
@@ -351,13 +369,10 @@ void loop()
 				}
 
 				if(!gsm_sendrecvcmdtimeout( CF(""), CF("SMS Ready\r\n"), 10)) {
-//					Dln("module out of sync....");
-				};
-//				 else Dln("module in sync....");
+					Dln("module out of sync....");
+				} else Dln("module in sync....");
 				
 
-				/* disable local echo */
-				gsm_sendcmd(CF("ATE0\r\n"));
 				
 		
 				{

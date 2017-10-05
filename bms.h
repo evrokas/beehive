@@ -99,10 +99,12 @@
 //#define DAILY_LOG_FREQ	(24 * 5 * 2 * 2 * 2*(SPEED_RATIO))	// 24 hours, 5 times per hour
 
 /* daily network communication frequency */
-#define DAILY_NET_FREQ	(24 * 1 * (SPEED_RATIO))	// 24 hours, 1 time per hour
+//#define DAILY_NET_FREQ	(24 * 1 * (SPEED_RATIO))	// 24 hours, 1 time per hour
+#define DAILY_NET_FREQ	(24 * 2 * (SPEED_RATIO))	// 24 hours, 2 time per hour
 //#define DAILY_NET_FREQ	(24 * 5 * 2 * 2 * (SPEED_RATIO))	// 24 hours, 1 time per hour
 
 //#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )
+
 
 /* daily data logging period */
 #define DAILY_LOG_PERIOD	(1440 / DAILY_LOG_FREQ)
@@ -111,16 +113,9 @@
 #define DAILY_NET_PERIOD	(1440 / DAILY_NET_FREQ)
 
 
-#if 0
-unsigned short int EEMEM MaxLogCycle = CYCLES_LOG_COUNT;
-unsigned short int EEMEM MaxNetCycle = CYCLES_NET_COUNT;
-#endif
-
-
-/* this is the VCC correction variable used in readVcc() */
-#define VCC_CORRECTION  		1	//0.9854
 //#define InternalReferenceVoltage	(1062.0)
-#define InternalReferenceVoltage	(1100.0)
+//#define InternalReferenceVoltage	(1100.0)
+extern uint32_t InternalReferenceVoltage;	// = (uint32_t)(1100);
 
 
 #endif	/* __BMS_H__ */

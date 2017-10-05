@@ -55,15 +55,15 @@ extern "C" {
     
     void gsm_flushInput();
 
-	bool gsm_sendPin(char *apin);    
-	bool gsm_getRegistration(uint8_t &areg);
-	bool gsm_moduleReady();
+    bool gsm_sendPin(char *apin);    
+    bool gsm_getRegistration(uint8_t &areg);
+		bool gsm_moduleReady();
 
-	bool gsm_moduleLowPower( bool alowpower );
-	bool gsm_getSignalQuality(uint8_t &asqual);
+		bool gsm_moduleLowPower( bool alowpower );
+		bool gsm_getSignalQuality(uint8_t &asqual);
 	
-	bool gsm_getDateTime(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month, uint16_t &year);
-
+		bool gsm_getDateTime(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month, uint16_t &year);
+		bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr);
 };
 
 
