@@ -149,3 +149,59 @@ void setVccFactor(float avref)
 {
 	VREF = avref;
 }
+
+
+#define EEPROM_SIZE	1024
+
+uint16_t eepromLastAddress = 0;
+
+void eepromMemBase( uint16_t amembase )
+{
+	if(amembase < EEPROM_SIZE)
+		eepromLastAddress = amembase;
+}
+
+uint16_t eepromGetAddr( uint8_t asize )
+{
+  uint16_t nsize = eepromLastAddress;
+
+  	eepromLastAddress += asize;
+  	
+	return (nsize);
+}
+
+
+uint8_t	eepromGetByte( uint16_t aaddr )
+{
+  return ( EEPROM[ aaddr ] )
+}
+
+uint16_t eepromGetWord( uint16_t aaddr )
+{
+	return (eepromGetByte(  aaddr ) + eepromGetByte( aaddr + 1 ) << 8 );
+}
+
+uint32_t eepromGetLong( uint16_t aaddr )
+{
+	return (eepromGetWord( aaddr ) + eepromGetWord( aaddr + 2 ) << 16 );
+}
+
+float eepromGetFloat( uint16_t aaddr )
+{
+  return (float)(eepromGetLong( aaddr ) );
+}
+
+char eepromGetChar( uint16_t aaddr )
+{
+  return (char)(eepromGetByte( aaddr ) );
+}
+
+void eepromGetStr(uint16_t aaddr, int acnt, char *astr)
+{
+	while(acnt >= 0) {
+		astr[ acnt ] = eepromGetChar( aaddr + acnt );
+		acnt--;
+	}
+}
+		
+  							 

@@ -319,7 +319,8 @@ void http_terminateRequest()
 
 #ifndef SERVER_URL
 //#define SERVER_URL	CF( "5.55.150.188" )
-#define SERVER_URL	CF( "46.176.45.246" )
+#define SERVER_URL	CF( "141.255.39.13" )
+
 #endif
 
 #ifndef SERVER_PORT

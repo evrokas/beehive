@@ -23,6 +23,17 @@
 #endif
 
 
+/* system board revision string */
+#define BOARD_REVISION		"3"
+#define BOARD_REV_MAX			3
+#define BOARD_REV_MIN			0
+
+/* firmware revision number */
+#define FIRMWARE_REVISION	"alpha"
+#define FIRMWARE_REV_MAX	0
+#define FIRMWARE_REV_MIN	0
+
+
 /* setup defines */
 
 //#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
@@ -38,10 +49,10 @@
 #define HAVE_THSENSOR	1
 
 /* set to 1 if project has ADXL345 accelerator */
-#define HAVE_ACCEL	1
+#define HAVE_ACCEL	0
 
 /* set to 1 if project has nRF24L01 RF module */
-#define HAVE_RF		1
+#define HAVE_RF		0
 
 /* set to 1 if project has HX711 weight sensor module */
 #define HAVE_WEIGHT_SENSOR	0

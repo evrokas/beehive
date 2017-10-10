@@ -12,6 +12,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <EEPROM.h>
 
 #include "bms.h"
 #include "utils.h"
@@ -43,13 +44,32 @@ uint16_t maxMinNetCycle;
 uint16_t lastMinNetCycle;
 
 
-char tmp[56], tmp2[16];
-
 #ifndef NODE_ID
 
 #define NODE_ID	1088
 
 #endif
+
+uint16_t	addrNodeId;
+uint16_t	addrAPIKEY;
+uint16_t	addrAPN;
+uint16_t	addrUSER;
+uint16_t	addrPASS;
+uint16_t	addrSERVER;
+uint16_t	addrPORT;
+
+
+void initalizeEEPROM()
+{
+	addrNodeId	= eepromGetAddr( 2 );
+	addrAPIKEY	= eepromGetAddr( 8 );
+	addrAPN			= eepromGetAddr( 32 );
+	addrUSER		= eepromGetAddr( 16 );
+	addrPASS		= eepromGetAddr( 16 );
+	addrSERVER	= eepromGetAddr( 4 );			/* 255.255.255.255, each byte is stored separately */
+	addrPORT		= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
+}
+
 
 void initializeCounters()
 {
@@ -84,6 +104,13 @@ void setup()
 	Dinit;
 	Serial.begin( 9600 );
 
+	Serial.println(F("Beehive Monitoring System (c) 2015,16,17. All Rights reserved"));
+	Serial.println(F("(c) Evangelos Rokas <evrokas@gmail.com>"));
+	Serial.print(F("System Board version ")); Serial.print( BOARD_REVISION );
+	Serial.print(F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
+	
+	delay(5000);
+
 /*
  * Noticed that some times reading the ADXL345 without first enabling
  * peripherals, returns trash from the ADXL345 IC.
@@ -94,23 +121,39 @@ void setup()
  * resistors.
  *
  */
+
 	initializeCounters(); 
       
 	setupPeripheralsControl();
 
-	//Wire.init();
+
+//Wire.init();
 //	TWBR = 152;		/* switch to 25KHz I2C interface */
 
 	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
 	powerGPRSGPS( 0 );
 
-	therm_init();
+	/* always have RTC(!) */
 	rtc_init();
-	//accel_init();
+
+#if HAVE_THSENSOR == 1
+	therm_init();
+#endif
+
+#if HAVE_ACCEL == 1
+	accel_init();
+#endif
+
+#if	HAVE_GSM_GPRS == 1
+		gsm_init();
+#endif
+
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	powerRTC( 0, 1 );
+
+
 //	Dln("\n\n\nHello world. Sleep cycling begins!");
 //	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
 //  Dln(tmp);
@@ -121,9 +164,6 @@ void setup()
 //  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
 //  Dln(tmp);
 
-#if	HAVE_GSM_GPRS == 1
-		gsm_init();
-#endif
 }
 
 
@@ -143,6 +183,7 @@ void mySleep()
 //char tmpb[100];
 int16_t ax, ay, az;
 int poweredGSM=0;
+datetime_t dt;
 
 
 void setupLoop()
@@ -170,11 +211,27 @@ void setupLoop()
 
 }
 
+#define BUF_SIZE	32
+
+void doMaintenance()
+{
+	char *c;
+	char buf[BUF_SIZE];
+
+		memset(buf, 0, BUF_SIZE);
+		c = buf;
+		while(1) {
+			while( Serial.available() ) {
+				if(strlen(buf) < BUF_SIZE-1)
+					*c++ = Serial.read();
+			}
+		}
+}
+
 
 
 void loop()
 {
-  datetime_t dt;
 //  float f1, f2;
 //  unsigned long f3a, f3b;
   datablock_t	db;
@@ -187,6 +244,15 @@ void loop()
 	/* enter endless loop */
   	while(1) {
   		mySleep();
+
+  		if(Serial.available()) {
+  			switch( Serial.read() ) {
+  				case '+': /* enter maintenance mode */
+  					doMaintenance();
+  					break;
+					default: ;
+				}
+			}
 	
   		curSleepCycle++;
 
@@ -230,6 +296,11 @@ void loop()
 			powerRTC( 0, 1 );
 			
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
+
+#ifdef DEBUG_SLEEP_CYCLE
+			D(F("logCycle remaining: "));D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle)); D(F("\tnetCycle remaining: ")); Dln(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));
+#endif
+
 			if(abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle) {
 					/* maxMinLogCycle minutes have passed since last cycle
 					 * do log-ging of data */
