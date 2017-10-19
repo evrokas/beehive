@@ -22,8 +22,10 @@ AVRDUDE_ISP_BAUDRATE	= 19200
 
 #AVRDUDE_ARD_PROGRAMMER	= stv500v1
 
-AVRDUDE			= /usr/local/bin/avrdude
-AVRDUDE_CONF	= /usr/local/etc/avrdude.conf
+#AVRDUDE			= /usr/local/bin/avrdude
+#AVRDUDE_CONF	= /usr/local/etc/avrdude.conf
+AVRDUDE		= /usr/bin/avrdude
+AVRDUDE_CONF	= /etc/avrdude.conf
 
 ARDUINO_PORT = /dev/ttyACM0
 ARDUINO_DIR = $(ROOT_DIR)/$(ARDUINO_SRC_DIR)

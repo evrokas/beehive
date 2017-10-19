@@ -101,6 +101,8 @@ void initializeCounters()
 /* setup steps of the project */
 void setup()
 {
+	delay(2000);
+	
 	Dinit;
 	Serial.begin( 9600 );
 
@@ -109,7 +111,7 @@ void setup()
 	Serial.print(F("System Board version ")); Serial.print( BOARD_REVISION );
 	Serial.print(F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
 	
-	delay(5000);
+	delay(2000);
 
 /*
  * Noticed that some times reading the ADXL345 without first enabling
@@ -470,13 +472,15 @@ void loop()
 						db.gsmSig = iii;
 					}
 				} while(0);
-				
-				if(gsm_activateBearerProfile("internet.cyta.gr", "", "")) {
-					if( http_initiateGetRequest() ) {
-						if( http_send_datablock( db ) ) {
-						} else Serial.println(F("error: could not send data block"));
-					} else Serial.println(F("error: could not initiate get request"));
-				} else Serial.println(F("error: could not activate bearer profile"));
+
+				if( gsm_dnsLookup("internet.cyta.gr","","","evrokas.sytes.net", NULL, serverip)) {
+					if(gsm_activateBearerProfile("internet.cyta.gr", "", "")) {
+						if( http_initiateGetRequest() ) {
+							if( http_send_datablock( db ) ) {
+							} else Serial.println(F("error: could not send data block"));
+						} else Serial.println(F("error: could not initiate get request"));
+					} else Serial.println(F("error: could not activate bearer profile"));
+				} else Serial.println(F("error: could not resolve server ip dns name"));
 				
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();
@@ -515,6 +519,6 @@ void loop()
 		
 		}	/* Sleep Cycle */
 	
-	}	/* main while loop  */
+	}	/* main while logop  */
 }
 
