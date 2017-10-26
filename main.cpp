@@ -519,6 +519,6 @@ void loop()
 		
 		}	/* Sleep Cycle */
 	
-	}	/* main while loop  */
+	}	/* main while logop  */
 }
 
