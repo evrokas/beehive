@@ -177,7 +177,7 @@ void loop()
 			Serial.print("Peripherals ... ");
 			Serial.println( peron?"on":"off" );
 			break;
-		case '#':
+		case ')':
 			sapbr_init();
 			break;
 		case '$':
@@ -210,6 +210,9 @@ void loop()
 			Serial.print("RTC ... ");
 			powerRTC(rtcon, 1);
 			Serial.println( rtcon ? "on":"off" );
+			break;
+		case '[':
+//			while(1) { sleep( SLEEP_8S ); };
 			break;
 		case '(':
 			{

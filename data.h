@@ -16,7 +16,7 @@
 
 #include <stdint.h>
 #include "bms.h"
-
+#include "rtc.h"
 
 // add debugging info
 #define	RECORD_DEBUG	1
@@ -126,6 +126,7 @@ typedef struct {
 #endif
 
 	uint32_t		bhvWeight;
+	datetime_t	dt;
 } datablock_t;
 
 

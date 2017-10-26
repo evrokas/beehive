@@ -16,6 +16,7 @@
 
 #include "bms.h"
 #include "utils.h"
+#include "data.h"
 #include "rtc.h"
 #include "accel.h"
 #include "thermal.h"
@@ -174,7 +175,7 @@ void mySleep()
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
 	Wire.begin();
-	
+//	Serial.begin( 9600 );	
 	/* increase sleep cycle counter */
 	cntSleepCycle++;
 	
@@ -215,6 +216,8 @@ void setupLoop()
 
 #define BUF_SIZE	32
 
+bool doNet=false, doLog=false;
+
 void doMaintenance()
 {
 	char *c;
@@ -223,10 +226,30 @@ void doMaintenance()
 		memset(buf, 0, BUF_SIZE);
 		c = buf;
 		while(1) {
+			Serial.print("> ");
 			while( Serial.available() ) {
 				if(strlen(buf) < BUF_SIZE-1)
 					*c++ = Serial.read();
 			}
+
+			if(strlen(buf) > 0) {
+				switch(buf[0]) {
+					case 'q':	/* exit maintenance mode */;
+						return;
+						break;
+					case 'v':
+						{
+							uint16_t	bv;
+								bv = readVcc();
+								Serial.print("Battery voltage: "); Serial.println(bv / 1000.0 );
+						}
+						break;
+				default:
+					Serial.println("unknown command!");
+					break;
+				}
+			}
+			
 		}
 }
 
@@ -247,23 +270,33 @@ void loop()
   	while(1) {
   		mySleep();
 
+#if 0
+  		Serial.println("out of sleep");
+  		delay(2);
   		if(Serial.available()) {
   			switch( Serial.read() ) {
   				case '+': /* enter maintenance mode */
+  					while(Serial.available())Serial.read();
   					doMaintenance();
   					break;
 					default: ;
 				}
 			}
+#endif
 	
   		curSleepCycle++;
 
 //  		DBGSLEEP;
 		
 #ifdef DEBUG_SLEEP_CYCLE
+#if 0
   		D("[");D(cntSleepCycle);D("] ");
   		
   		D("curSleepCycle ");Dln(curSleepCycle);
+#endif
+
+			D("[");D(cntSleepCycle);D("]");
+			
 #endif
 
 #ifndef DEBUG_SLEEP_CYCLE
@@ -287,7 +320,9 @@ void loop()
 #endif
 	
 #ifdef DEBUG_SLEEP_CYCLE
+#if 0
 			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
+#endif
 #endif			
 			db.nodeId = NODE_ID;
 			db.batVolt = readVcc();
@@ -300,10 +335,18 @@ void loop()
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 
 #ifdef DEBUG_SLEEP_CYCLE
+#if 0
 			D(F("logCycle remaining: "));D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle)); D(F("\tnetCycle remaining: ")); Dln(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));
 #endif
+			D("{");D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle));D(",");D(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));Dln("}");
+#endif
 
-			if(abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle) {
+			doNet = doLog = false;
+			
+			if(abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle)
+				doLog = true;
+
+			if(doLog) {	//abs(curMinLogCycle - lastMinLogCycle) >= maxMinLogCycle) {
 					/* maxMinLogCycle minutes have passed since last cycle
 					 * do log-ging of data */
 
@@ -323,13 +366,16 @@ void loop()
 			    powerPeripherals(1,50);
 			    db.bhvTemp = therm_getTemperature() * 100;
 			    db.bhvHumid = therm_getHumidity() * 100;
-			    
+					db.bhvWeight = 75432;
+								    
 			    powerPeripherals(0,0);
 			    powerRTC(0, 0);
+			    doLog = false;
 			    
 					db.rtcDateTime = unixtime( &dt );
+					memcpy((void *)&db.dt, (void *)&dt, sizeof(dt));
 					
-					Dln("after powering off peripherals");
+//					Dln("after powering off peripherals");
 
 #define DEB_STUFF
 
@@ -359,11 +405,12 @@ void loop()
 					
 					/* put here code to store in EEPROM memory data blocks until
 					 * net cycle is reached, and data are forwarded to internet server */
-
-
 			}
   
-			if(abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle) {
+			if(abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle)
+				doNet = true;
+				
+			if(doNet)	{	//abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle) {
 				/* maxMinNetCycle minutes have passed since last cycle
 				 * do net-working stuff */
 
@@ -447,14 +494,30 @@ void loop()
 				
 
 				
+#define REG_TIMEOUT	15
 		
 				{
-				uint8_t r;
+				uint8_t r, cc=0;
 				do {
 					//uint8_t	r;
 						gsm_getRegistration( r );
 						if((r == 1) || (r == 5))break;
-				} while( 1 );		/* set a timeout here */
+						delay( 1000 );
+						cc++;
+
+				} while( cc < REG_TIMEOUT );		/* set a timeout here, 15 secs */
+				
+				if( cc == REG_TIMEOUT ) { 
+
+					poweredGSM = 0;
+					powerGPRSGPS( 0 );
+
+					lastMinNetCycle = curMinNetCycle;
+					curSleepCycle = 0;	/* reset sleep cycle */
+
+					continue;
+				}
+
 				}
 				
 				
@@ -473,14 +536,23 @@ void loop()
 					}
 				} while(0);
 
-				if( gsm_dnsLookup("internet.cyta.gr","","",NULL, serverip)) {
-					if(gsm_activateBearerProfile("internet.cyta.gr", "", "")) {
-						if( http_initiateGetRequest() ) {
-							if( http_send_datablock( db ) ) {
-							} else Serial.println(F("error: could not send data block"));
-						} else Serial.println(F("error: could not initiate get request"));
-					} else Serial.println(F("error: could not activate bearer profile"));
-				} else Serial.println(F("error: could not resolve server ip dns name"));
+				{
+					uint8_t srvip[4];
+						
+						if( gsm_dnsLookup(CF("internet.cyta.gr"),CF(""),CF(""),CF("evrokas.sytes.net"), NULL, srvip)) {
+							Dln( CF("successfully resolved domain name"));
+							memcpy(serverip, srvip, 4);
+						} else {
+							Dln( CF("could not successfully resolve domain name, using old IP address"));
+						}
+				}
+				
+				if(gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF(""))) {
+					if( http_initiateGetRequest() ) {
+						if( http_send_datablock( db ) ) {
+						} else Serial.println(F("error: could not send data block"));
+					} else Serial.println(F("error: could not initiate get request"));
+				} else Serial.println(F("error: could not activate bearer profile"));
 				
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();
