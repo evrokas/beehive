@@ -11,6 +11,8 @@
  */
 
 #include <Arduino.h>
+#include <EEPROM.h>
+
 #include "bms.h"
 #include "utils.h"
 
@@ -173,7 +175,7 @@ uint16_t eepromGetAddr( uint8_t asize )
 
 uint8_t	eepromGetByte( uint16_t aaddr )
 {
-  return ( EEPROM[ aaddr ] )
+  return ( EEPROM[ aaddr ] );
 }
 
 uint16_t eepromGetWord( uint16_t aaddr )

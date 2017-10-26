@@ -30,7 +30,7 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 #endif	/* USE_NEOSW */
 
 
-#define TEMP_BUF_LEN	32
+#define TEMP_BUF_LEN	64
 #define	DEF_CLEAR_TEMPBUF	char _tempbuf[ TEMP_BUF_LEN ]; memset( _tempbuf, 0, TEMP_BUF_LEN )
 #define CLEAR_TEMPBUF	memset( _tempbuf, 0, TEMP_BUF_LEN )
 
@@ -225,10 +225,11 @@ bool gsm_deactivateBearerProfile()
   return true;
 }
 
-bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr)
+bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, 
+	char *ipstr, uint8_t *ipaddr)
 {
 	DEF_CLEAR_TEMPBUF;
-	char *c;
+	char *c, *cc;
 
 /*
  * AT+CIPSHUT					SHUT OK
@@ -238,7 +239,7 @@ bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr)
  * AT+CIICR													OK
  * AT+CIPSTATUS											IP GPRSACT
  * AT+CIFSR													0.0.0.0
- * AT+CDNSGIP="url.ext"							+CDNSGIP: 1, "url.ext", "0.0.0.0"
+ * AT+CDNSGIP="url.ext"							+CDNSGIP: 1,"url.ext","0.0.0.0"
  */
 
 		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPSHUT\r\n"), CF("SHUT OK\r\n"), 2) )
@@ -277,19 +278,42 @@ bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr)
 		READGSM( 5 );
 		
 		/* _tempbuf hold something like: < 1,"dns","5.55.2.216"\r\n> */				
+
+//		Serial.print(">> ");Serial.println(_tempbuf);
 		
 		/* find last comma <,> */
 		c = strrchr( _tempbuf, ',' );
 		c++; // eat ,
 		c++; // eat \"
 		
-		/* copy string to ipstr */
-		strcpy( ipstr, c );
+//		/* copy string to ipstr */
+//		strcpy( ipstr, c );
 
 		/* ipstr hold: <5.55.2.216\"\r\n> */
 		/* find last \" */
-		c = strchr( ipstr, '\"');
-		*c = 0;		// null terminate string there
+		cc = strchr( c, '\"');
+		*cc = 0;		// null terminate string there
+
+		/* set ipstr only if ipstr pointer is non null */
+		if(ipstr)
+			strcpy(ipstr, c);
+
+#define STRTOD(_v,_s)	_v=0;while(isdigit( *_s )) { _v=_v*10+(*_s - '0');_s++; }
+	
+		/* set ipaddr only if ipaddr pointer is non null */
+		if(ipaddr) {
+			STRTOD(ipaddr[0], c);c++;
+			STRTOD(ipaddr[1], c);c++;
+			STRTOD(ipaddr[2], c);c++;
+			STRTOD(ipaddr[3], c);
+		
+			Serial.println(ipaddr[0], DEC);
+			Serial.println(ipaddr[1], DEC);
+			Serial.println(ipaddr[2], DEC);
+			Serial.println(ipaddr[3], DEC);
+		}
+		
+		gsm_sendrecvcmdtimeout( CF( "AT+CIPSHUT\r\n" ), CF("SHUT OK\r\n"), 2 );
 		
 	return true;
 }
@@ -319,7 +343,7 @@ void http_terminateRequest()
 
 #ifndef SERVER_URL
 //#define SERVER_URL	CF( "5.55.150.188" )
-#define SERVER_URL	CF( "141.255.39.13" )
+#define SERVER_URL	CF( "evrokas.sytes.net" )
 
 #endif
 
@@ -327,18 +351,24 @@ void http_terminateRequest()
 #define SERVER_PORT	CF( "8088" )
 #endif
 
+uint8_t serverip[4];
+
 
 bool http_send_datablock(datablock_t &db)
 {
 	DEF_CLEAR_TEMPBUF;
-	char	cbuf[12], *c;
+	char	cbuf[16], *c;
 	uint16_t dlen;
 
 
 		Serial.println( F("trying to send data block") );
-		
+
 		gsm_sendcmd( CF( "AT+HTTPPARA=\"URL\",\"http://") );
-		gsm_sendcmd( SERVER_URL );
+
+		sprintf(cbuf, "%d.%d.%d.%d", serverip[0],serverip[1],serverip[2],serverip[3]);
+
+		gsm_sendcmd( cbuf );
+//		gsm_sendcmd( SERVER_URL );
 		gsm_sendcmd( CF( ":" ) );
 		gsm_sendcmd( SERVER_PORT );
 		//gsm_sendcmd( CF( "\",\"" ) );

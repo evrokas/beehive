@@ -98,6 +98,16 @@ unsigned long readVcc();
 
 void setVccFactor(float avref);
 
+void eepromMemBase( uint16_t amembase );
+uint16_t eepromGetAddr( uint8_t asize );
+uint8_t	eepromGetByte( uint16_t aaddr );
+uint16_t eepromGetWord( uint16_t aaddr );
+uint32_t eepromGetLong( uint16_t aaddr );
+float eepromGetFloat( uint16_t aaddr );
+char eepromGetChar( uint16_t aaddr );
+void eepromGetStr(uint16_t aaddr, int acnt, char *astr);
+
+
 #ifdef __cplusplus
 } /* extern */
 #endif
