@@ -22,6 +22,7 @@
 
 #endif
 
+#include "ver.h"
 
 /* system board revision string */
 #define BOARD_REVISION		"3"
@@ -29,7 +30,9 @@
 #define BOARD_REV_MIN			0
 
 /* firmware revision number */
+#ifndef FIRMWARE_REVISION
 #define FIRMWARE_REVISION	"alpha"
+#endif
 #define FIRMWARE_REV_MAX	0
 #define FIRMWARE_REV_MIN	0
 
@@ -111,7 +114,7 @@
 
 /* daily network communication frequency */
 //#define DAILY_NET_FREQ	(24 * 1 * (SPEED_RATIO))	// 24 hours, 1 time per hour
-#define DAILY_NET_FREQ	(24 * 2 * (SPEED_RATIO))	// 24 hours, 2 time per hour
+#define DAILY_NET_FREQ	(24  * 2 * (SPEED_RATIO))	// 24 hours, 2 time per hour
 //#define DAILY_NET_FREQ	(24 * 5 * 2 * 2 * (SPEED_RATIO))	// 24 hours, 1 time per hour
 
 //#pragma message(VAR_NAME_VALUE( DAILY_LOG_FREQ) )

@@ -1,3 +1,11 @@
+2017-10-26  Evangelos Rokas <evrokas@gmail.com>
+* ver.h: added version header file,
+* data.h: added dt field in datablock_t,
+* gsm.cpp (http_send_datablock): fixed errors,
+* main.cpp: added doNet, doLog flags and modified code accordingly, fix registration code,
+					to sense correctly, resolve server name to get IP address using GSM module
+					commands
+
 2017-03-19	Evangelos Rokas <evrokas@gmail.com>
 * Makefile.top: added flag AVRDUDE and AVRDUDE_CONF to point at system avrdude program
 * gsm.cpp: new compile defines DEF_CLEAR_TEMPBUF and READGSM, use these to
