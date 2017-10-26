@@ -496,47 +496,44 @@ void loop()
 				
 #define REG_TIMEOUT	30
 		
-				{
-				uint8_t r, cc=0;
 				do {
-					//uint8_t	r;
-						gsm_getRegistration( r );
-						if((r == 1) || (r == 5))break;
-						delay( 200 );
-						cc++;
-
-				} while( cc < REG_TIMEOUT );		/* set a timeout here, 15 secs */
+					uint8_t r, cc=0;
+						do {
+							gsm_getRegistration( r );
+							if((r == 1) || (r == 5))break;
+							delay( 200 );
+							cc++;
+						} while( cc < REG_TIMEOUT );		/* set a timeout here, 15 secs */
 				
-				if( cc == REG_TIMEOUT ) { 
+						if( cc == REG_TIMEOUT ) { 
+							poweredGSM = 0;
+							powerGPRSGPS( 0 );
 
-					poweredGSM = 0;
-					powerGPRSGPS( 0 );
+							lastMinNetCycle = curMinNetCycle;
+							curSleepCycle = 0;	/* reset sleep cycle */
 
-					lastMinNetCycle = curMinNetCycle;
-					curSleepCycle = 0;	/* reset sleep cycle */
-
-					continue;
-				}
-
-				}
+							doNet = 0;
+							continue;
+						}
+				} while(0);
 				
 				
 				do {
 					uint16_t ii;
 					uint8_t iii;
 					
-					if( gsm_getBattery( ii ) ) {
-//						Serial.print("Battery level: " ); Serial.println( ii );
-						db.gsmVolt = ii;
-					}
+						if( gsm_getBattery( ii ) ) {
+//							Serial.print("Battery level: " ); Serial.println( ii );
+							db.gsmVolt = ii;
+						}
 
-					if( gsm_getSignalQuality( iii ) ) {
-//						Serial.print("Signal quality: " ); Serial.println( iii );
-						db.gsmSig = iii;
-					}
+						if( gsm_getSignalQuality( iii ) ) {
+//							Serial.print("Signal quality: " ); Serial.println( iii );
+							db.gsmSig = iii;
+						}
 				} while(0);
 
-				{
+				do {
 					uint8_t srvip[4];
 						
 						if( gsm_dnsLookup(CF("internet.cyta.gr"),CF(""),CF(""),CF("evrokas.sytes.net"), NULL, srvip)) {
@@ -545,7 +542,7 @@ void loop()
 						} else {
 							Dln( CF("could not successfully resolve domain name, using old IP address"));
 						}
-				}
+				} while(0);
 				
 				if(gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF(""))) {
 					if( http_initiateGetRequest() ) {

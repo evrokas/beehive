@@ -116,7 +116,7 @@ bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 
 bool mem_pushDatablock(datablock_t *db)
 {
-	
+	Serial.println("mem_pushDatablock");
 	fprintf(stderr, "mem_pushDatablock\n");
 	
 	if(__cnt_db >= __max_db)return false;
@@ -139,6 +139,7 @@ bool mem_pushDatablock(datablock_t *db)
 
 bool mem_popDatablock(datablock_t *db)
 {
+	Serial.println("mem_popDatablock");
 	fprintf(stderr, "mem_popDatablock\n");
 	
 	if(!__cnt_db)return false;

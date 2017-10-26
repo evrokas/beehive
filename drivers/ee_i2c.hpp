@@ -10,7 +10,7 @@
 #define __EE_I2C_HPP__
 
 
-extern uint8_t		__ee_dev_addr;
+extern uint8_t	__ee_dev_addr;
 extern uint32_t	__ee_dev_size;
 
 void __ee_init(uint8_t addr, uint16_t dsize)
