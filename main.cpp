@@ -494,7 +494,7 @@ void loop()
 				
 
 				
-#define REG_TIMEOUT	15
+#define REG_TIMEOUT	30
 		
 				{
 				uint8_t r, cc=0;
@@ -502,7 +502,7 @@ void loop()
 					//uint8_t	r;
 						gsm_getRegistration( r );
 						if((r == 1) || (r == 5))break;
-						delay( 1000 );
+						delay( 200 );
 						cc++;
 
 				} while( cc < REG_TIMEOUT );		/* set a timeout here, 15 secs */
