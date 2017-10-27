@@ -69,6 +69,10 @@
 /* set this to 1 to enable maintenance mode, otherwise set to 0 */
 #define ENABLE_MAINTENANCE	0
 
+/* set to 1 if storage of data is enabled, set to 0 otherwise */
+#define ENABLE_DATAPUSHING	11
+
+
 
 /* this factor is determined by trial and error, may be different
  * for various chips, may have to remove hard coding and replace it
@@ -116,7 +120,7 @@
 #define SPEED_RATIO	1
 
 /* daily data logging frequency */
-#define DAILY_LOG_FREQ	(24 * 5 * (SPEED_RATIO))	// 24 hours, 5 times per hour
+#define DAILY_LOG_FREQ	(24 * 5 *6 * (SPEED_RATIO))	// 24 hours, 5 times per hour
 //#define DAILY_LOG_FREQ	(24 * 5 * 2 * 2 * 2*(SPEED_RATIO))	// 24 hours, 5 times per hour
 
 /* daily network communication frequency */

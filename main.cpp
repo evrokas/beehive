@@ -401,14 +401,15 @@ void loop()
 		    	Serial.flush();
 #endif
 
-/*
+
+#if ENABLE_DATAPUSHING == 1
 
 					if( mem_pushDatablock( &db ) ) {
 						Serial.println("pushed datablock to EEPROM successfully.");
 					} else {
 						Serial.println("could not push datablock to EEPROM.");
 					}
-*/
+#endif
 					
 					/* put here code to store in EEPROM memory data blocks until
 					 * net cycle is reached, and data are forwarded to internet server */
