@@ -23,6 +23,7 @@
 #include "LowPower.h"
 #include "gsm.h"
 #include "data.h"
+#include "mem.h"
 
 
 /* counter of sleep cycles */
