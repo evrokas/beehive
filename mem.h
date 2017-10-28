@@ -16,7 +16,7 @@
 #include "bms.h"
 #include "data.h"
 
-#define BLOCK_SIZE	16
+#define BLOCK_SIZE	32
 
 
 #ifdef __cplusplus

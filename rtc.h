@@ -13,7 +13,16 @@
 #ifndef __RTC_H__
 #define __RTC_H__
 
+#if 0
+#ifndef LINUX_NATIVE_APP
 #include <WString.h>
+#endif
+#endif
+
+#ifndef byte
+#define byte	char
+#endif
+
 
 #define RTC_I2C_ADDRESS 0x68
 

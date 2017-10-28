@@ -12,7 +12,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 
 #include "bms.h"
 #include "utils.h"
@@ -112,7 +112,7 @@ void setup()
 	Serial.print(F("System Board version ")); Serial.print( BOARD_REVISION );
 	Serial.print(F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
 	
-	delay(2000);
+//	delay(2000);
 
 /*
  * Noticed that some times reading the ADXL345 without first enabling
@@ -170,12 +170,16 @@ void setup()
 }
 
 
+/* this is where the actual sleep of the mcu takes place, try
+ * to keep this as small as possible */
 void mySleep()
 {
 	Serial.flush();
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
 	Wire.begin();
+
 //	Serial.begin( 9600 );	
+
 	/* increase sleep cycle counter */
 	cntSleepCycle++;
 	
@@ -183,8 +187,6 @@ void mySleep()
 }
 
 
-//char tmpb[100];
-int16_t ax, ay, az;
 int poweredGSM=0;
 datetime_t dt;
 
@@ -218,6 +220,8 @@ void setupLoop()
 
 bool doNet=false, doLog=false;
 
+
+#if ENABLE_MAINTENANCE == 1
 void doMaintenance()
 {
 	char *c;
@@ -252,6 +256,7 @@ void doMaintenance()
 			
 		}
 }
+#endif
 
 
 
@@ -270,7 +275,8 @@ void loop()
   	while(1) {
   		mySleep();
 
-#if 0
+
+#if ENABLE_MAINTENANCE == 1
   		Serial.println("out of sleep");
   		delay(2);
   		if(Serial.available()) {
@@ -283,6 +289,7 @@ void loop()
 				}
 			}
 #endif
+
 	
   		curSleepCycle++;
 

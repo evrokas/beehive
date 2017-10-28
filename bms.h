@@ -22,6 +22,7 @@
 
 #endif
 
+#include <stdint.h>
 #include "ver.h"
 
 /* system board revision string */
@@ -65,6 +66,10 @@
 #define PERIPH_POWER_PIN	PC0
 
 
+/* set this to 1 to enable maintenance mode, otherwise set to 0 */
+#define ENABLE_MAINTENANCE	0
+
+
 /* this factor is determined by trial and error, may be different
  * for various chips, may have to remove hard coding and replace it
  * in the EEPROM */
@@ -86,6 +91,8 @@
  * also prevented if one removes all pullup resistors from all
  * modules on the I2C bus, but turning off pullup is much easier */
 #define TURNOFF_I2C_PULLUPS_DURING_SLEEP	1
+
+
 
 /* Timinig constants */
 
@@ -130,6 +137,5 @@
 //#define InternalReferenceVoltage	(1062.0)
 //#define InternalReferenceVoltage	(1100.0)
 extern uint32_t InternalReferenceVoltage;	// = (uint32_t)(1100);
-
 
 #endif	/* __BMS_H__ */

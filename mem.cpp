@@ -76,7 +76,15 @@ void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 	__end_addr = (uint32_t)dev_size * 1024UL / 8;			/* this is for 24C32 memory chip, found in DS3231 breakout board */
 	
 	
+#if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "ee_dev_size: %i\t ee_dev_addr=0x%02x\n", __ee_dev_size, __ee_dev_addr);
+#else
+	Serial.print("ee_dev_size: ");
+	Serial.print(__ee_dev_size, DEC);
+	Serial.print("\tee_dev_addr: 0x");
+	Serial.println(__ee_dev_addr, HEX);
+#endif
+
 }
 
 void mem_end()
@@ -100,14 +108,30 @@ uint16_t __linearaddress2block(uint32_t linaddress)
 
 bool mem_write(const void *p, uint8_t psize, uint16_t blockno)
 {
+#if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_write (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress(blockno));
+#else
+	Serial.print("mem_write (blockno: ");
+	Serial.print( blockno, DEC );
+	Serial.print("\tlinadd= ");
+	Serial.println( __block2linearaddress(blockno) );
+#endif
+
 	__ee_writeblock( __block2linearaddress( blockno ), (char *)p, psize );
 	return true;
 }
 
 bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 {
+#if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_read (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress( blockno ));
+#else
+	Serial.print("mem_read (blockno: ");
+	Serial.print( blockno, DEC );
+	Serial.print("\tlinadd= ");
+	Serial.println( __block2linearaddress(blockno) );
+#endif
+
 	if( __ee_readblock( __block2linearaddress( blockno ), (char *)p, psize ) == psize)
 		return true;
 	else
@@ -116,8 +140,11 @@ bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 
 bool mem_pushDatablock(datablock_t *db)
 {
-	Serial.println("mem_pushDatablock");
+#if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_pushDatablock\n");
+#else	
+	Serial.println("mem_pushDatablock");
+#endif
 	
 	if(__cnt_db >= __max_db)return false;
 	if((__head_db == -1) && (__cnt_db == 0)) {
@@ -133,21 +160,37 @@ bool mem_pushDatablock(datablock_t *db)
 	/* increase __head_db taking care of overflow */
 	__head_db = (__head_db + 1) % __max_db;
 	
+
+#if LINUX_NATIVE_APP == 1
+#else
+	Serial.print("push: new __head_db: ");
+	Serial.println( __head_db, DEC );
+#endif
 	
 	return true;
 }
 
 bool mem_popDatablock(datablock_t *db)
 {
-	Serial.println("mem_popDatablock");
+#if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_popDatablock\n");
-	
+#else
+	Serial.println("mem_popDatablock");
+#endif
+
 	if(!__cnt_db)return false;
 	
 	mem_read(db, sizeof( datablock_t ), __tail_db);
 
 	__tail_db = (__tail_db + 1) % __max_db;
 	__cnt_db--;
+
+#if LINUX_NATIVE_APP == 1
+#else
+	Serial.print("pop: new __tail_db: ");
+	Serial.println( __tail_db, DEC );
+#endif
+
 		
 	return true;
 }

@@ -20,6 +20,11 @@ extern uint8_t		__ee_dev_addr;
 extern uint32_t	__ee_dev_size;
 
 
+/* set this to 1 to use dummy routines that do not actually
+ * write or read anything from EEPROM, otherwise set to 0 */
+#define USE_DUMMY_ROUTINES	1
+
+
 #if LINUX_NATIVE_APP == 1
 
 /* compile for linux native application, used for testing
@@ -32,12 +37,10 @@ extern uint32_t	__ee_dev_size;
 /* compile for beehive production board
  */
 
-#ifdef GSM_MODULE
-// GSM_MODULE is defined in the Makefile of the gsm/ directory
-
-#include "../drivers/ee_i2c.hpp"
+#if USE_DUMMY_ROUTINES == 1
+#  include "drivers/ee_dummy.hpp"
 #else
-#include "drivers/ee_i2c.hpp"
+#  include "drivers/ee_i2c.hpp"
 #endif
 
 #endif	/* LINUX_NATIVE_APP */
