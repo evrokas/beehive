@@ -30,6 +30,10 @@ extern "C" {
     bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout);
     void gsm_sendcmd(char *cmd);
 
+    void gsm_sendcmdp(const __FlashStringHelper *cmd);
+    bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr);
+    bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr, uint8_t timeout);
+
     void gsm_relayOutput( Stream &ast );
     
     bool gsm_activateBearerProfile(char *apn, char *user, char *pass);
@@ -68,7 +72,5 @@ extern "C" {
 		extern uint8_t serverip[4];
 		
 };
-
-
 
 #endif	/* __GSM_H__ */

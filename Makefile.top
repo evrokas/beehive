@@ -11,8 +11,10 @@
 #
 
 
-ARDUINO_SRC_VERSION	= 1.8.1
-ARDUINO_SRC_DIR		= arduino-$(ARDUINO_SRC_VERSION)
+#ARDUINO_SRC_VERSION	= 1.8.1
+#ARDUINO_SRC_DIR		= arduino-$(ARDUINO_SRC_VERSION)
+ARDUINO_SRC_DIR		= arduino
+
 
 
 #initialize programmer params

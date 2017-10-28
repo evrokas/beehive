@@ -86,6 +86,24 @@ bool gsm_sendrecvcmd(char *cmd, char *expstr)
 			} else return false;
 		} else return false;
 }
+
+bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr)
+{
+	DEF_CLEAR_TEMPBUF;
+
+		while(gsm_available())gsm_read();
+	  
+		gsm_sendcmdp( cmd );
+    
+		if( READGSM( 2 ) ) {
+			/* there was a string response read in 2sec */
+			if(strstr_P(_tempbuf, (PGM_P)expstr)) {
+				/* expected string found */
+				return true;
+			} else return false;
+		} else return false;
+}
+
 #endif
 
 bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
@@ -120,6 +138,38 @@ bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 	return false;
 }
 
+bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr, uint8_t timeout)
+{
+	DEF_CLEAR_TEMPBUF;
+	uint32_t mils;
+	char *tb;
+  
+		while(gsm_available())gsm_read();
+
+		gsm_sendcmdp( cmd );
+
+		mils = millis() + 1000UL * timeout;
+		
+		tb = _tempbuf;
+		while( millis() < mils ) {
+			while(gsm_available()) {
+				if(strlen(_tempbuf) < TEMP_BUF_LEN-1) {
+					*tb++ = gsm_read();
+				} else {
+					return false;
+				}
+			
+				if(strstr_P(_tempbuf, (PGM_P)expstr)) {
+					/* expected string found */
+					return true;
+				}
+			}
+		}
+		
+		/* timeout */
+	return false;
+}
+
 
 void gsm_sendcmd(char *cmd)
 {
@@ -128,6 +178,16 @@ void gsm_sendcmd(char *cmd)
 	gsmserial.print( cmd );
 //	Serial.print( cmd );
 }
+
+void gsm_sendcmdp(const __FlashStringHelper *cmd)
+{
+	while(gsm_available())gsm_read();
+	
+	gsmserial.print( cmd );
+}
+
+		
+
 
 void gsm_relayOutput( Stream &ast )
 {
@@ -145,9 +205,14 @@ bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
 //AT+SAPBR=3,1,"USER",""
 //AT+SAPBR=3,1,"PWD",""
 
+#if 0
 		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPSHUT\r\n"), CF("SHUT OK\r\n"), 2) )
 			return false;
-			
+#else
+		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK\r\n"), 2) )
+			return false;
+#endif
+	
 		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPMUX=0\r\n"), CF("OK\r\n"), 2 ) )
 			return false;
 
