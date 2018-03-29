@@ -13,7 +13,8 @@
 #define __VER_H__
 
 #ifndef FIRMWARE_REVISION
-#define FIRMWARE_REVISION	"8629903"
+#define FIRMWARE_REVISION	"053707eb"
+#define FIRMWARE_REVISION_SHORT	"07eb"
 #endif
 
 #endif
