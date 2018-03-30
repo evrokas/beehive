@@ -19,10 +19,13 @@
 #endif
 #endif
 
+#if 0
+
 #ifndef byte
 #define byte	char
 #endif
 
+#endif
 
 #define RTC_I2C_ADDRESS 0x68
 

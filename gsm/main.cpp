@@ -98,6 +98,9 @@ void http_send()
 	write_gsm(CF("AT+HTTPREAD\r\n"));
 }
 
+
+#define USE_extEEPROM	1
+
 extEEPROM	ee(kbits_256, 1, 64, 0x57);
 
 
@@ -118,11 +121,14 @@ void setup()
 
   Serial.println("ee.begin()\n"); Serial.flush();
 
+
+#if USE_extEEPROM
 	if( (eepst=ee.begin( extEEPROM::twiClock100kHz )) ) {
 		Serial.print( "Could not initialize external EEPROM. Status = 0x" );
 		Serial.println( eepst, HEX );
 	}
-	
+#endif
+
 	
 //  gps.listen();
 
@@ -252,9 +258,14 @@ void loop()
 						case 'r':
 							bln = atoi( tempbuf+1 );
 							Serial.print( "EEPROM: read offset: 0x" ); Serial.print( bln * 32, HEX ); Serial.print( ": " );
-//							c = ee.read( bln * 32 );
+
+#if USE_extEEPROM
+							c = ee.read( bln * 32 );
+#else
 							c = __ee_read( bln * 32UL );
-							Serial.println( (char)c, HEX );
+#endif
+							Serial.print( (char)c, HEX );
+							Serial.print(" [" ); Serial.print(c, DEC); Serial.println ("]");
 							break;
 						case 'w':
 							bln = atoi( tempbuf+1 );
@@ -262,20 +273,28 @@ void loop()
 							c = atoi( cc );
 							Serial.print( "EEPROM: write 0x");
 							Serial.print( c, HEX ); 
-							Serial.print(" at offset: 0x" ); Serial.println( bln * 32, HEX );
-//							ee.write(bln * 32, c );
+							Serial.print(" at offset: 0x" ); Serial.print( bln * 32, HEX );
+#if USE_extEEPROM
+							ee.write(bln * 32, c );
+#else
 							__ee_write( bln * 32UL, c );
+#endif
 
 							c = 0;
 							Serial.print( "EEPROM: read offset: 0x" ); Serial.print( bln * 32, HEX ); Serial.print( ": " );
-//							c = ee.read( bln * 32 );
+#if USE_extEEPROM
+							c = ee.read( bln * 32 );
+#else
 							c = __ee_read( bln * 32UL );
+#endif
 							Serial.println( (char)c, HEX );
 							break;
 						case 's':
 							c = (tempbuf[1] - '0') * 16 + (tempbuf[2] - '0');
 							Serial.print("Selecting EEPROM device: 0x"); Serial.println( c, HEX);
-//							__ee_setaddr( c );
+#if !USE_extEEPROM
+							__ee_setaddr( c );
+#endif
 							break;
 
 						case 'z':

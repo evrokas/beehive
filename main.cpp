@@ -108,7 +108,7 @@ void setup()
 	Dinit;
 	Serial.begin( 9600 );
 
-	Serial.println(F("Beehive Monitoring System (c) 2015,16,17. All Rights reserved"));
+	Serial.println(F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
 	Serial.println(F("(c) Evangelos Rokas <evrokas@gmail.com>"));
 	Serial.print(F("System Board version ")); Serial.print( BOARD_REVISION );
 	Serial.print(F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
