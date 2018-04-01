@@ -1,0 +1,48 @@
+LP_SLEEP_MODE					SLEEP_8S | SLEEP_2S | etc
+VCC_CORRECTION_FACTOR
+SLEEP_CYCLE						8 | 2 | ...
+CYCLES_SLEEP_COUNT		7
+SERVER_URL
+SERVER_PORT
+GSM_APN
+GSM_USER
+GSM_PASS
+NODE_ID
+NODE_APIKEY
+SIM_PIN
+SIM_CIID
+
+
+Maintanance mode
+
+
++++		3 + in less than 1 second (1000msec) enters maintanance mode
+
+In maintanance mode: (each command is followed by \r)
+
+u<server url>			set URL of data server to <server url>
+p<server port>		set PORT of data server to <server port>
+a<APN>						set APN to <APN>
+r<USER>						set USER to <USER>
+s<PASS>						set PASS to <PASS>
+i<nodeid>					set NODE_ID to <nodeid>
+k<apikey>					set APIKEY to <apikey>
+l<log freq>				set logging frequency	(5 per hour)
+n<net freq>				set networking frequency (1 per hour)
+
+X									exit maintanance mode and resume
+E									reset counter to initial values
+
+P									dump sleep counter
+D									dump data variables
+
+
+V									dump cpu voltage
+T									dump temperature
+H									dump humidity
+C									dump clock time
+G									power GSM module
+F									power off GSM module
+B									dump GSM battery
+Q									dump GSM signal quality
+R									register GSM module to network

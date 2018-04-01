@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "data.h"
-#include "mem.h"
+#include "../mem.h"
 
 //#define FILESYSTEM_NAME	"filesystem"
 //FILE *fd;

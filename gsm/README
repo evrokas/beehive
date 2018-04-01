@@ -1,0 +1,16 @@
+!		GSM/GPRS on/off
+@		Peripheral on/off
+)		sapbr_init()
+$		http_send()
+%		Vcc
+^		power down mode for 8 seconds
+&		read time
+*		RTC on/off
+(		resolve 'evrokas.sytes.net'
+~		enter command mode:
+	r##			read EEPROM position ## (hex)
+	w##,nn	write nn to EEPROM position ## (hex)
+	s##			select EEPROM device 0x##
+	z				Bearer status
+	x				gsmBattery()
+	v##			set voltage factor [setVccFactor()]

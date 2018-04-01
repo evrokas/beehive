@@ -14,9 +14,59 @@
 #define __MEM_H__
 
 #include "bms.h"
-#include "data.h"
+#include "rtc.h"
+//#include "data.h"
 
 #define BLOCK_SIZE	32
+
+#ifdef HAVE_DATA_H
+/* if compiling with old data.h and data.cpp, then include
+ * this file instead */
+#include "fs2/data.h"
+#endif
+
+#ifndef HAVE_DATA_H
+
+
+#if defined( LINUX_NATIVE_APP )
+
+#define gpsCoordType	float
+
+#elif defined( ARDUINO_ARCH_AVR )
+
+#define gpsCoordType	float
+
+#endif
+
+
+typedef struct {
+	uint16_t	nodeId;
+	uint16_t	batVolt;
+	uint16_t	bhvTemp;
+	uint16_t	bhvHumid;
+	uint32_t	rtcDateTime;
+
+#if 1
+	uint8_t		gsmSig;
+	uint16_t	gsmVolt;
+#endif
+
+#if 1
+	gpsCoordType gpsLon;
+	gpsCoordType gpsLat;	
+#endif
+
+	uint32_t		bhvWeight;
+
+
+#if 1
+	datetime_t	dt;
+#endif
+} datablock_t;
+
+
+#endif	/* HAVE_DATA_H */
+
 
 
 #ifdef __cplusplus

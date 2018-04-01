@@ -41,6 +41,9 @@ uint8_t		__ee_dev_addr;
 uint32_t	__ee_dev_size;
 
 
+// set DEBUG_MEM to 1 in order to emit the debugging messages
+#define DEBUG_MEM	1
+
 
 void mem_stats()
 {
@@ -56,16 +59,13 @@ void mem_stats()
 }
 
 
-/* dev_size: eeprom size in kbits, dev_addr, device address (default: 0x50)
+/* dev_size: eeprom size in kbits, dev_addr: device address (default: 0x50)
  */
  
 void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 {
 	__ee_init(dev_addr, dev_size);
 	
-//	__ee_dev_addr = dev_addr;
-//	__ee_dev_size = dev_size * 1024UL / 8;
-
 	__head_db = -1;
 	__tail_db = 0;
 	__max_db = __ee_dev_size / BLOCK_SIZE;
@@ -75,7 +75,9 @@ void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 	__begin_addr = 0;
 	__end_addr = (uint32_t)dev_size * 1024UL / 8;			/* this is for 24C32 memory chip, found in DS3231 breakout board */
 	
-	
+
+#if DEBUG_MEM
+
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "ee_dev_size: %i\t ee_dev_addr=0x%02x\n", __ee_dev_size, __ee_dev_addr);
 #else
@@ -83,8 +85,9 @@ void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 	Serial.print(__ee_dev_size, DEC);
 	Serial.print("\tee_dev_addr: 0x");
 	Serial.println(__ee_dev_addr, HEX);
-#endif
+#endif	/* LINUX_NATIVE_APP */
 
+#endif	/* DEBUG_MEM */
 }
 
 void mem_end()
@@ -108,14 +111,19 @@ uint16_t __linearaddress2block(uint32_t linaddress)
 
 bool mem_write(const void *p, uint8_t psize, uint16_t blockno)
 {
+#if DEBUG_MEM
+
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_write (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress(blockno));
 #else
 	Serial.print("mem_write (blockno: ");
 	Serial.print( blockno, DEC );
 	Serial.print("\tlinadd= ");
-	Serial.println( __block2linearaddress(blockno) );
+	Serial.print( __block2linearaddress(blockno) );
+	Serial.println(")");
 #endif
+
+#endif	/* DEBUG_MEM */
 
 	__ee_writeblock( __block2linearaddress( blockno ), (char *)p, psize );
 	return true;
@@ -123,14 +131,20 @@ bool mem_write(const void *p, uint8_t psize, uint16_t blockno)
 
 bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 {
+
+#if DEBUG_MEM
+
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_read (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress( blockno ));
 #else
 	Serial.print("mem_read (blockno: ");
 	Serial.print( blockno, DEC );
 	Serial.print("\tlinadd= ");
-	Serial.println( __block2linearaddress(blockno) );
+	Serial.print( __block2linearaddress(blockno) );
+	Serial.println(")");
 #endif
+
+#endif	/* DEBUG_MEM */
 
 	if( __ee_readblock( __block2linearaddress( blockno ), (char *)p, psize ) == psize)
 		return true;
@@ -140,11 +154,16 @@ bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 
 bool mem_pushDatablock(datablock_t *db)
 {
+#if DEBUG_MEM
+
 #if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_pushDatablock\n");
 #else	
 	Serial.println("mem_pushDatablock");
 #endif
+
+#endif	/* DEBUG_MEM */
+
 	
 	if(__cnt_db >= __max_db)return false;
 	if((__head_db == -1) && (__cnt_db == 0)) {
@@ -161,11 +180,16 @@ bool mem_pushDatablock(datablock_t *db)
 	__head_db = (__head_db + 1) % __max_db;
 	
 
+#if DEBUG_MEM
+
 #if LINUX_NATIVE_APP == 1
+	fprintf(stderr, "push: new __head_db: %i\n", __head_db);
 #else
 	Serial.print("push: new __head_db: ");
 	Serial.println( __head_db, DEC );
 #endif
+
+#endif	/* DEBUG_MEM */
 	
 	return true;
 }
@@ -185,11 +209,17 @@ bool mem_popDatablock(datablock_t *db)
 	__tail_db = (__tail_db + 1) % __max_db;
 	__cnt_db--;
 
+
+#if DEBUG_MEM
+
 #if LINUX_NATIVE_APP == 1
+	fprintf(stderr, "pop: new __tail_db: %i\n", __tail_db );
 #else
 	Serial.print("pop: new __tail_db: ");
 	Serial.println( __tail_db, DEC );
 #endif
+
+#endif	/* DEBUG_MEM */
 
 		
 	return true;

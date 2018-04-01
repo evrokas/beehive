@@ -1,0 +1,67 @@
+> AT+CIPMUX=0
+< OK
+Also, let's check the current GPRS connection status
+
+> AT+CIPSTATUS
+< OK
+<
+< STATE: IP INITIAL
+Initial state, i.e. nothing is going on.
+
+Setting up GPRS communication
+
+You're going to need some mobile internet configuration information from your operator for this step. I don't know how common it is that they publish this information, in my case, they have it all on their customer service website. You'll basically need the access point name and maybe username and password information.
+
+For me, it's simply access point "Internet" without any identification. So setting it up, and checking the connection status afterwards.
+
+> AT+CSTT="Internet","",""
+< OK
+> AT+CIPSTATUS
+< OK
+<
+< STATE: IP START
+State has changed, good. Bringing up the module's wireless connector next.
+
+> AT+CIICR
+< OK
+> AT+CIPSTATUS
+< OK
+<
+< STATE: IP GPRSACT
+We can now check our module's IP address
+
+> AT+CIFSR
+< 10.158.41.180
+And for fun, let's just look up some DNS as well
+
+> AT+CDNSGIP="google.fi"
+< OK
+<
+< +CDNSGIP: 1,"google.fi","172.217.22.163"
+Excellent.
+
+Connecting to somewhere
+
+As last example, we're going to receive something via HTTP from a Hollywood movie IP address 350.123.55.218.
+
+> AT+CIPSTART="TCP","350.123.55.218","80"
+< OK
+<
+< CONNECT OK
+> AT+CIPSEND
+> > GET /~sven/test.xxx HTTP/1.0^J^M
+> ^J^M
+> ^Z
+< SEND OK
+HTTP/1.1 200 OK
+Date: Sat, 22 Oct 2016 21:09:50 GMT
+Server: Apache
+Last-Modified: Sat, 22 Oct 2016 21:07:38 GMT
+ETag: "d-53f7a8c72025b"
+Accept-Ranges: bytes
+Content-Length: 13
+Connection: close
+
+yeah, works.
+
+< CLOSED

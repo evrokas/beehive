@@ -15,8 +15,8 @@
 
 
 #include <stdint.h>
-#include "bms.h"
-#include "rtc.h"
+#include "../bms.h"
+#include "../rtc.h"
 
 // add debugging info
 #define	RECORD_DEBUG	1
@@ -25,7 +25,7 @@
 #define RECORD_STATS	1
 
 
-// define the follwing if we have the weight sensor and want to log beehive weight
+// define the following if we have the weight sensor and want to log beehive weight
 //#define	HAVE_WEIGHT_SENSOR	1
 
 
@@ -126,7 +126,7 @@ typedef struct {
 #endif
 
 	uint32_t		bhvWeight;
-	datetime_t	dt;
+//	datetime_t	dt;
 } datablock_t;
 
 

@@ -1,0 +1,7 @@
+In this directory filesystem development is done.
+
+# create stats file system
+dd if=/dev/zero of=filesystem.stat bs=4 count=2048
+
+# create main file system
+dd if=/dev/zero of=filesystem bs=32 count=2048

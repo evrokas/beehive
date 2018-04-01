@@ -20,7 +20,8 @@
 #define GSM_SERIAL_BAUDRATE	9600
 #endif
 
-#include "data.h"
+//#include "data.h"
+#include "mem.h"
 
 extern "C" {
 

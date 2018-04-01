@@ -19,7 +19,7 @@
 #endif
 #endif
 
-#if 0
+#if LINUX_NATIVE_APP
 
 #ifndef byte
 #define byte	char

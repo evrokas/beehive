@@ -14,7 +14,8 @@
 #include <Arduino.h>
 #include "rtc.h"
 #include "gsm.h"
-#include "data.h"
+#include "mem.h"
+//#include "data.h"
 
 
 #define USE_NEOSW

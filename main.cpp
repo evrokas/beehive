@@ -2,7 +2,7 @@
  * main.cpp - main file
  *
  * Beehive Monitoring System - BMS
- * (c) Evangelos Rokas, 2015-16-17
+ * (c) Evangelos Rokas, 2015-16-17-18
  *
  * This software is Free Software and distributed under
  * the terms of GNU General Public License.
@@ -16,13 +16,12 @@
 
 #include "bms.h"
 #include "utils.h"
-#include "data.h"
 #include "rtc.h"
 #include "accel.h"
 #include "thermal.h"
 #include "LowPower.h"
 #include "gsm.h"
-#include "data.h"
+//#include "data.h"
 #include "mem.h"
 
 

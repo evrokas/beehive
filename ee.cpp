@@ -13,10 +13,10 @@
 
 
 #include "mem.h"
-#include "data.h"
+//#include "data.h"
 
 
-extern uint8_t		__ee_dev_addr;
+extern uint8_t	__ee_dev_addr;
 extern uint32_t	__ee_dev_size;
 
 
