@@ -14,6 +14,7 @@
 #include <Wire.h>
 //#include <EEPROM.h>
 
+#include "conf.h"
 #include "bms.h"
 #include "utils.h"
 #include "rtc.h"
@@ -229,13 +230,20 @@ void doMaintenance()
 
 		memset(buf, 0, BUF_SIZE);
 		c = buf;
+
 		while(1) {
 			Serial.print("> ");
-			while( Serial.available() ) {
-				if(strlen(buf) < BUF_SIZE-1)
-					*c++ = Serial.read();
+			
+			while(1) {
+				while( Serial.available() ) {
+					if(strlen(buf) < BUF_SIZE-1) {
+						*c = Serial.read();
+						if( ( *c ) == '\r') break;
+						Serial.write( *c );
+						c++;
+					}
+				}
 			}
-
 			if(strlen(buf) > 0) {
 				switch(buf[0]) {
 					case 'q':	/* exit maintenance mode */;
@@ -246,10 +254,12 @@ void doMaintenance()
 							uint16_t	bv;
 								bv = readVcc();
 								Serial.print("Battery voltage: "); Serial.println(bv / 1000.0 );
+								buf[0] = 0;
 						}
 						break;
-				default:
+					default:
 					Serial.println("unknown command!");
+					buf[0] = 0;
 					break;
 				}
 			}
@@ -277,17 +287,26 @@ void loop()
 
 
 #if ENABLE_MAINTENANCE == 1
+	{
+		int cnt32 = 10;
+		
   		Serial.println("out of sleep");
-  		delay(2);
-  		if(Serial.available()) {
+//  		delay(2);
+  		while(Serial.available() || (cnt32--)) {
   			switch( Serial.read() ) {
   				case '+': /* enter maintenance mode */
   					while(Serial.available())Serial.read();
+  					Serial.println("entering maintanance mode!");
+						
+						/* since we are going to send A LOT of '+', eat them all! */
+						while(Serial.available() && (Serial.read() == '+')) ;
+						
   					doMaintenance();
   					break;
-					default: ;
+					default: Serial.print(".");
 				}
 			}
+	}
 #endif
 
 	
@@ -544,7 +563,7 @@ void loop()
 				do {
 					uint8_t srvip[4];
 						
-						if( gsm_dnsLookup(CF("internet.cyta.gr"),CF(""),CF(""),CF("evrokas.sytes.net"), NULL, srvip)) {
+						if( gsm_dnsLookup(CF( APN ),CF( USERNAME ),CF( PASSWORD ),CF( DBSERVER ), NULL, srvip)) {
 							Dln( CF("successfully resolved domain name"));
 							memcpy(serverip, srvip, 4);
 						} else {
@@ -552,7 +571,7 @@ void loop()
 						}
 				} while(0);
 				
-				if(gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF(""))) {
+				if(gsm_activateBearerProfile(CF( APN ), CF( USERNAME ), CF( PASSWORD ))) {
 					if( http_initiateGetRequest() ) {
 						if( http_send_datablock( db ) ) {
 						} else Serial.println(F("error: could not send data block"));

@@ -1,3 +1,15 @@
+2018-04-06	Evangelos Rokas <evrokas@gmail.com>
+* added conf.h
+* main.cpp: doMaintanance(): fix command line loop
+* main(): add cnt32 variable to wait for a certain number of
+			of Serial.available() calls, in order to sync with incoming
+			'+' message
+			add of APN, USERNAME, PASSWORD and DBSERVER defines (ad-hoc, later
+			they will be changed with variables sitting in the EEPROM memory,
+			to allow for parameter changing via the GSM/GPRS or the Serial
+			interface
+* ver.h.in: added $VERSION_SHORT
+
 2017-10-26  Evangelos Rokas <evrokas@gmail.com>
 * ver.h: added version header file,
 * data.h: added dt field in datablock_t,

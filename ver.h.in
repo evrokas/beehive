@@ -2,7 +2,7 @@
  * ver.h - version info header
  *
  * Beehive Monitoring System - BMS
- * (c) Evangelos Rokas, 2015-16-17
+ * (c) Evangelos Rokas, 2015-16-17-18
  *
  * This software is Free Software and distributed under
  * the terms of GNU General Public License
@@ -13,6 +13,11 @@
 #define __VER_H__
 
 #ifndef FIRMWARE_REVISION
+
+/*
+ * whole git version string: GITLONGVERSION
+ */
+
 #define FIRMWARE_REVISION	"GITVERSION"
 #define FIRMWARE_REVISION_SHORT	"GITSHORTVERSION"
 #endif

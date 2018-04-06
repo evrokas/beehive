@@ -67,7 +67,7 @@
 
 
 /* set this to 1 to enable maintenance mode, otherwise set to 0 */
-#define ENABLE_MAINTENANCE	0
+#define ENABLE_MAINTENANCE	1
 
 /* set to 1 if storage of data is enabled, set to 0 otherwise */
 #define ENABLE_DATAPUSHING	0
