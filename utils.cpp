@@ -173,6 +173,11 @@ uint16_t eepromGetAddr( uint8_t asize )
 	return (nsize);
 }
 
+uint16_t eepromGetLastAddr()
+{
+  return (eepromLastAddress);
+}
+
 
 uint8_t	eepromGetByte( uint16_t aaddr )
 {
@@ -213,14 +218,27 @@ char eepromGetChar( uint16_t aaddr )
   return (char)(eepromGetByte( aaddr ) );
 }
 
-void eepromGetStr(uint16_t aaddr, int acnt, char *astr)
+void eepromSetChar( uint16_t aaddr, char dat)
+{
+	eepromSetByte( aaddr, dat );
+}
+
+void eepromGetStr(uint16_t aaddr, int acnt, char *dat)
 {
   int aa=0;
   
 	while(acnt >= 0) {
-		astr[ aa ] = eepromGetChar( aaddr + aa );
-		acnt--; aa++;
+		*dat = eepromGetChar( aaddr + aa );
+		dat++; acnt--; aa++;
 	}
 }
 		
-  							 
+void eepromSetStr(uint16_t aaddr, int acnt, char *dat)
+{
+  int aa=0;
+
+  while(acnt >= 0) {
+  	eepromSetChar( aaddr + aa, *dat);
+  	aa++; dat++; acnt--;
+	}
+}

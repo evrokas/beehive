@@ -20,10 +20,19 @@ Maintanance mode
 
 In maintanance mode: (each command is followed by \r)
 
+u?								get data server URL
 u<server url>			set URL of data server to <server url>
+
+p?								get data server PORT
 p<server port>		set PORT of data server to <server port>
+
+a?								get APN
 a<APN>						set APN to <APN>
+
+r?								get USER
 r<USER>						set USER to <USER>
+
+s?								get PASS
 s<PASS>						set PASS to <PASS>
 
 i?								get NODE_ID of node

@@ -79,25 +79,31 @@ uint8_t	addrUSER;
 uint8_t	addrPASS;
 uint8_t	addrSERVER;
 uint8_t	addrPORT;
+uint8_t addrLogCycle;
+uint8_t addrNetCycle;
+
 #endif
 
-#if 0
-uint16_t CONF_NODEID = NODE_ID;
-unsigned char APIKEY[9];
-unsigned char APN[33];
-unsigned char 
-#endif
-
+#define APIKEY_SIZE	8
+#define APN_SIZE	24
+#define USER_SIZE	8
+#define PASS_SIZE	8
+#define SERVER_SIZE	24
 
 void initalizeEEPROM()
 {
+	Serial.print(F("Initializing EEPROM memory allocation ... "));
 	addrNodeId	= eepromGetAddr( 2 );
 	addrAPIKEY	= eepromGetAddr( 8 );
-	addrAPN			= eepromGetAddr( 32 );
-	addrUSER		= eepromGetAddr( 16 );
-	addrPASS		= eepromGetAddr( 16 );
-	addrSERVER	= eepromGetAddr( 4 );			/* 255.255.255.255, each byte is stored separately */
+	addrAPN			= eepromGetAddr( APN_SIZE );
+	addrUSER		= eepromGetAddr( USER_SIZE );
+	addrPASS		= eepromGetAddr( PASS_SIZE );
+	addrSERVER	= eepromGetAddr( SERVER_SIZE );			
 	addrPORT		= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
+	addrLogCycle = eepromGetAddr( 2 );
+	addrNetCycle = eepromGetAddr( 2 );
+	Serial.print( eepromGetLastAddr() );
+	Serial.println( F(" bytes") );
 }
 
 uint16_t getNodeId()
@@ -110,7 +116,40 @@ void setNodeId(uint16_t nodeid)
 	eepromSetWord( addrNodeId, nodeid );
 }
 
+void getAPIKEY(char *dat)
+{
+	eepromGetStr(addrAPIKEY, APIKEY_SIZE, dat);
+}
 
+void getUSER(char *dat)
+{
+  eepromGetStr(addrUSER, USER_SIZE, dat);
+}
+
+void getPASS(char *dat)
+{
+  eepromGetStr(addrPASS, PASS_SIZE, dat);
+}
+
+void setLogCycle(uint8_t dat)
+{
+	eepromSetByte( addrLogCycle, dat );
+}
+
+uint8_t getLogCycle()
+{
+	return( eepromGetByte( addrLogCycle ) );
+}
+
+void setNetCycle(uint8_t dat)
+{
+	eepromSetByte( addrNetCycle, dat );
+}
+
+uint8_t getNetCycle()
+{
+  return( eepromGetByte( addrLogCycle ) );
+}
 
 
 void initializeCounters()
@@ -148,10 +187,10 @@ void setup()
 	Dinit;
 	Serial.begin( 9600 );
 
-	Serial.println(F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
-	Serial.println(F("(c) Evangelos Rokas <evrokas@gmail.com>"));
-	Serial.print(F("System Board version ")); Serial.print( BOARD_REVISION );
-	Serial.print(F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
+	Serial.println(	F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
+	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
+	Serial.print(		F("System Board version ")); Serial.print( BOARD_REVISION );
+	Serial.print(		F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
 	
 //	delay(2000);
 
@@ -244,13 +283,13 @@ void setupLoop()
   curMinNetCycle = lastMinNetCycle;
 
 #ifdef DEBUG_SLEEP_CYCLE
-	D("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
-	D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+	Dp("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+	D(curMinLogCycle); Dp(" "); Dln(lastMinLogCycle);
 
-#define DBGSLEEP	D("cntSleepCycle: ");D(cntSleepCycle);D(" curSleepCycle: ");D(curSleepCycle); \
-	D(" maxSleepCycle: ");D(maxSleepCycle);D(" curMinLogCycle: ");D(curMinLogCycle); \
-	D(" lastMinLogCycle: ");D(lastMinLogCycle); D(" curMinNetCycle: ");D(curMinNetCycle); \
-	D(" lastMinNetCycle: ");Dln(lastMinNetCycle);
+#define DBGSLEEP	Dp("cntSleepCycle: ");D(cntSleepCycle);Dp(" curSleepCycle: ");D(curSleepCycle); \
+	Dp(" maxSleepCycle: ");D(maxSleepCycle);Dp(" curMinLogCycle: ");D(curMinLogCycle); \
+	Dp(" lastMinLogCycle: ");D(lastMinLogCycle); Dp(" curMinNetCycle: ");D(curMinNetCycle); \
+	Dp(" lastMinNetCycle: ");Dln(lastMinNetCycle);
 
 #else
 #define DBGSLEEP
@@ -270,13 +309,13 @@ void doMaintenance()
 	char buf[BUF_SIZE];
 
 
-		Serial.print(">");
+		Serial.print( F(">") );
 
 		while(1) {
 			memset(buf, 0, BUF_SIZE);
 			c = buf;
 
-			Serial.print("> ");
+			Serial.print( F("> ") );
 			
 			while(1) {
 				if(Serial.available() ) {
@@ -302,17 +341,71 @@ void doMaintenance()
 			
 			if(strlen(buf) > 0) {
 				switch(buf[0]) {
-					case 'q':	/* exit maintenance mode */;
+					case '?':
+						Serial.println(F("Help message!"));
+						break;
+												
+					case 'X':	/* exit maintenance mode */;
 						return;
 						break;
-					case 'v':
-						{
-							uint16_t	bv;
-								bv = readVcc();
-								Serial.print(F("Battery voltage: ")); Serial.println(bv / 1000.0 );
-								buf[0] = 0;
+
+					case 'P': /* print sleep counter */
+						Serial.print(F("Sleep cycle counter: ")); Serial.print(curSleepCycle);
+						Serial.print(F("  sleep counter: ")); Serial.println( cntSleepCycle );
+						break;
+					case 'V':	/* print battery voltage */
+						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0 );
+						break;
+
+					case 'T':
+						powerPeripherals(1,50);
+						Serial.print(F("Temperature (oC): ")); Serial.println( therm_getTemperature() );
+						powerPeripherals(0,0);
+						break;
+						
+					case 'H':
+						powerPeripherals(1,50);
+						Serial.print(F("Humidity (%%): ")); Serial.println( therm_getHumidity() );
+						powerPeripherals(0,0);
+						break;
+						
+					case 'C':
+						powerRTC(1, 10);
+						Serial.print(F("date time: ")); displayTime();
+						powerRTC(0, 1);
+						break;
+					
+/*
+					case 'u':
+						if(buf[1] == '?') {
+							Serial.print
+*/
+					case 'l':
+						if(buf[1] == '?') {
+							Serial.print(F("Log frequency: ")); Serial.println( maxMinLogCycle );
+							break;
+						} else {
+							uint16_t n;
+								n = atoi( buf+1 );
+								Serial.print(F("New log frequency: ")); Serial.println( n );
+								maxMinLogCycle = n;
+								setLogCycle( n );
 						}
 						break;
+						
+					case 'n':
+						if(buf[1] == '?') {
+							Serial.print(F("Net frequency: ")); Serial.println( maxMinNetCycle );
+							break;
+						} else {
+							uint16_t n;
+								n = atoi( buf+1 );
+								Serial.print(F("New net frequency: ")); Serial.println( n );
+								maxMinNetCycle = n;
+								setNetCycle( n );
+						};
+						break;							
+					
 					case 'i':
 						{
 							if(buf[1] == '?') {
@@ -361,20 +454,20 @@ void loop()
 	{
 		int cnt32 = 10;
 		
-  		Serial.println("out of sleep");
+  		Serial.println( F("out of sleep") );
 //  		delay(2);
   		while(Serial.available() || (cnt32--)) {
   			switch( Serial.read() ) {
   				case '+': /* enter maintenance mode */
   					while(Serial.available())Serial.read();
-  					Serial.println("entering maintanance mode!");
+  					Serial.println( F("entering maintanance mode!") );
 						
 						/* since we are going to send A LOT of '+', eat them all! */
 						while(Serial.available() && (Serial.read() == '+')) ;
 						
   					doMaintenance();
   					break;
-					default: Serial.print(".");
+					default: Serial.print( F(".") );
 				}
 			}
 	}
@@ -387,12 +480,12 @@ void loop()
 		
 #ifdef DEBUG_SLEEP_CYCLE
 #if 0
-  		D("[");D(cntSleepCycle);D("] ");
+  		Dp("[");D(cntSleepCycle);Dp("] ");
   		
-  		D("curSleepCycle ");Dln(curSleepCycle);
+  		Dp("curSleepCycle ");Dln(curSleepCycle);
 #endif
 
-			D("[");D(cntSleepCycle);D("]");
+			Dp("[");D(cntSleepCycle);Dp("]");
 			
 #endif
 
@@ -418,7 +511,7 @@ void loop()
 	
 #ifdef DEBUG_SLEEP_CYCLE
 #if 0
-			D(F("curSleepCycle >= maxSleepCycle "));Dln(curSleepCycle);
+			Dp("curSleepCycle >= maxSleepCycle ");Dln(curSleepCycle);
 #endif
 #endif			
 			db.nodeId = NODE_ID;
@@ -433,9 +526,9 @@ void loop()
 
 #ifdef DEBUG_SLEEP_CYCLE
 #if 0
-			D(F("logCycle remaining: "));D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle)); D(F("\tnetCycle remaining: ")); Dln(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));
+			Dp("logCycle remaining: ");D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle)); Dp("\tnetCycle remaining: "); Dln(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));
 #endif
-			D("{");D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle));D(",");D(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));Dln("}");
+			Dp("{");D(maxMinLogCycle - (curMinLogCycle - lastMinLogCycle));Dp(",");D(maxMinNetCycle - (curMinNetCycle - lastMinNetCycle));Dlnp("}");
 #endif
 
 			doNet = doLog = false;
@@ -448,8 +541,8 @@ void loop()
 					 * do log-ging of data */
 
 #ifdef DEBUG_SLEEP_CYCLE
-			    D( ("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ") );
-			    D(curMinLogCycle); D(" "); Dln(lastMinLogCycle);
+			    Dp("curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
+			    D(curMinLogCycle); Dp(" "); Dln(lastMinLogCycle);
 #endif
 
 			    lastMinLogCycle = curMinLogCycle;
@@ -477,16 +570,16 @@ void loop()
 #define DEB_STUFF
 
 #ifdef DEB_STUFF
-          Serial.print(">>,");
+          Serial.print( F(">>,") );
 
 		    	/* power voltage, before powering peripherals */
-		    	Serial.print(db.batVolt); Serial.print(",");
+		    	Serial.print(db.batVolt); Serial.print( F(",") );
 			
 		    	/* temperature */
-		    	Serial.print(db.bhvTemp); Serial.print(",");
+		    	Serial.print(db.bhvTemp); Serial.print( F(",") );
 			
 					/* humidity */
-		    	Serial.print(db.bhvHumid); Serial.print("\n\r");
+		    	Serial.print(db.bhvHumid); Serial.print( F("\n\r") );
 
 		    	Serial.flush();
 #endif
@@ -495,9 +588,9 @@ void loop()
 #if ENABLE_DATAPUSHING == 1
 
 					if( mem_pushDatablock( &db ) ) {
-						Serial.println("pushed datablock to EEPROM successfully.");
+						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
-						Serial.println("could not push datablock to EEPROM.");
+						Serial.println( F("could not push datablock to EEPROM.") );
 					}
 #endif
 					
@@ -513,13 +606,13 @@ void loop()
 				 * do net-working stuff */
 
 #ifdef DEBUG_SLEEP_CYCLE
-			    D("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
-			    D(curMinNetCycle); D(" "); Dln(lastMinNetCycle);
+			    Dp("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
+			    D(curMinNetCycle); Dp(" "); Dln(lastMinNetCycle);
 #endif
 
 #if 0
 				if( poweredGSM >= 4 ) {
-					Dln("GSM was not ready after 3 tries. Skip NETWORK session");
+					Dlnp("GSM was not ready after 3 tries. Skip NETWORK session");
 					
 					/* module is not ready after 3 cycles, so there might be a problem,
 					 * skip network communication this time */
@@ -535,7 +628,7 @@ void loop()
 				
 				if(!poweredGSM) {
 					poweredGSM++;
-					D("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
+					Dp("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
 					
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
@@ -547,7 +640,7 @@ void loop()
 				
 				while( poweredGSM < 10 ) {
 					if( !gsm_moduleInfo() ) {
-						D( F("GSM module is not ready yet! try ... ") ); Dln( poweredGSM );
+						Dp("GSM module is not ready yet! try ... "); Dln( poweredGSM );
 						/* module is not yet ready, skip this cycle */
 
 						delay(5000);
@@ -572,23 +665,23 @@ void loop()
 				
 #define CF( str )	(char *)( str )
 				
-				Dln( F("GSM module is ready!") );
+				Dlnp("GSM module is ready!");
 				/* so module is ready */
 
-				Dln( F("Doing network stuff") );
+				Dlnp("Doing network stuff");
 
 				/* disable local echo */
 				gsm_sendcmd(CF("ATE0\r\n"));
 
 				if ( gsm_sendPin( CF( "1234" ) ) ) {
-					Dln( F("PIN set OK") );
+					Dlnp("PIN set OK");
 				} else {
-					Dln( F("PIN was NOT set") );
+					Dlnp("PIN was NOT set");
 				}
 
 				if(!gsm_sendrecvcmdtimeout( CF(""), CF("SMS Ready\r\n"), 10)) {
-					Dln("module out of sync....");
-				} else Dln("module in sync....");
+					Dlnp("module out of sync....");
+				} else Dlnp("module in sync....");
 				
 
 				
@@ -635,19 +728,19 @@ void loop()
 					uint8_t srvip[4];
 						
 						if( gsm_dnsLookup(CF( APN ),CF( USERNAME ),CF( PASSWORD ),CF( DBSERVER ), NULL, srvip)) {
-							Dln( CF("successfully resolved domain name"));
+							Dlnp("successfully resolved domain name");
 							memcpy(serverip, srvip, 4);
 						} else {
-							Dln( CF("could not successfully resolve domain name, using old IP address"));
+							Dlnp("could not successfully resolve domain name, using old IP address");
 						}
 				} while(0);
 				
 				if(gsm_activateBearerProfile(CF( APN ), CF( USERNAME ), CF( PASSWORD ))) {
 					if( http_initiateGetRequest() ) {
 						if( http_send_datablock( db ) ) {
-						} else Serial.println(F("error: could not send data block"));
-					} else Serial.println(F("error: could not initiate get request"));
-				} else Serial.println(F("error: could not activate bearer profile"));
+						} else Serial.println( F("error: could not send data block"));
+					} else Serial.println( F("error: could not initiate get request"));
+				} else Serial.println( F("error: could not activate bearer profile"));
 				
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();

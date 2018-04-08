@@ -118,32 +118,32 @@ void displayTime()
   readTime(&second, &minute, &hour, &dayOfWeek, &dayOfMonth, &month,&year);
   // send it to the serial monitor
   if(hour<10)
-    Serial.print("0");
+    Serial.print( F("0") );
     
   Serial.print(hour, DEC);
   // convert the byte variable to a decimal number when displayed
-  Serial.print(":");
+  Serial.print( F(":") );
   if (minute<10)
   {
-    Serial.print("0");
+    Serial.print( F("0") );
   }
   Serial.print(minute, DEC);
-  Serial.print(":");
+  Serial.print( F(":") );
   if (second<10)
   {
-    Serial.print("0");
+    Serial.print( F("0") );
   }
   Serial.print(second, DEC);
-  Serial.print(" ");
+  Serial.print( F(" ") );
   if(dayOfMonth < 10)
-    Serial.print("0");
+    Serial.print( F("0") );
     
   Serial.print(dayOfMonth, DEC);
-  Serial.print("/");
+  Serial.print( F("/") );
   if(month<10)
-    Serial.print("0");
+    Serial.print( F("0") );
   Serial.print(month, DEC);
-  Serial.print("/");
+  Serial.print( F("/") );
   Serial.print(year, DEC);
   Serial.print(F(" Day of week: "));
   switch(dayOfWeek){

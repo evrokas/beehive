@@ -50,7 +50,8 @@
   #define Dinit		Serial.begin( DBAUD )
   #define D(dstr)	Serial.print(dstr)
   #define Dln(dstr)	Serial.println(dstr)
-
+  #define Dp(dstr)	Serial.print( F(dstr) )
+  #define Dlnp(dstr)	Serial.println( F(dstr) );
 #if 1
   #define Dn(dlev,dstr)		if(dlev<=DEBUG_LEVEL){ D(dstr); }
   #define Dnln(dlev,dstr)	if(dlev<=DEBUG_LEVEL){ Dln(dstr); }
@@ -61,6 +62,8 @@
   #define Dinit		;
   #define D(dstr)	;
   #define Dln(dstr)	;
+  #define Dp(dstr)	;
+  #define Dlnp(dstr)	;
 
 #if 1
   #define Dn(dlev,dstr)	;
@@ -99,6 +102,8 @@ unsigned long readVcc();
 void setVccFactor(float avref);
 
 void eepromMemBase( uint16_t amembase );
+uint16_t eepromGetLastAddr();
+
 uint16_t eepromGetAddr( uint8_t asize );
 uint8_t	eepromGetByte( uint16_t aaddr );
 void eepromSetByte( uint16_t aaddr, uint8_t dat );
@@ -106,8 +111,12 @@ uint16_t eepromGetWord( uint16_t aaddr );
 void eepromSetWord( uint16_t aaddr, uint16_t aword );
 uint32_t eepromGetLong( uint16_t aaddr );
 float eepromGetFloat( uint16_t aaddr );
+
 char eepromGetChar( uint16_t aaddr );
-void eepromGetStr(uint16_t aaddr, int acnt, char *astr);
+void eepromSetChar( uint16_t aaddr, char dat );
+
+void eepromGetStr(uint16_t aaddr, int acnt, char *dat);
+void eepromSetStr(uint16_t aaddr, int acnt, char *dat);
 
 
 #ifdef __cplusplus

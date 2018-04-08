@@ -51,10 +51,10 @@ void mem_stats()
 	fprintf(stderr, "<mem stats: cnt=%i\thead=%i\ttail=%i>\n",
 		__cnt_db, __head_db, __tail_db );
 #else
-	Serial.print( "<mem stats: cnt="); Serial.print( __cnt_db );
-	Serial.print( " head=" ); Serial.print(__head_db);
-	Serial.print( " tail=" ); Serial.print(__tail_db);
-	Serial.println(">");
+	Serial.print( F("<mem stats: cnt=") ); Serial.print( __cnt_db );
+	Serial.print( F(" head=") ); Serial.print(__head_db);
+	Serial.print( F(" tail=") ); Serial.print(__tail_db);
+	Serial.println( F(">") );
 #endif
 }
 
@@ -81,9 +81,9 @@ void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "ee_dev_size: %i\t ee_dev_addr=0x%02x\n", __ee_dev_size, __ee_dev_addr);
 #else
-	Serial.print("ee_dev_size: ");
+	Serial.print( F("ee_dev_size: ") );
 	Serial.print(__ee_dev_size, DEC);
-	Serial.print("\tee_dev_addr: 0x");
+	Serial.print( F("\tee_dev_addr: 0x") );
 	Serial.println(__ee_dev_addr, HEX);
 #endif	/* LINUX_NATIVE_APP */
 
@@ -157,11 +157,11 @@ bool mem_write(const void *p, uint8_t psize, uint16_t blockno)
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_write (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress(blockno));
 #else
-	Serial.print("mem_write (blockno: ");
+	Serial.print( F("mem_write (blockno: ") );
 	Serial.print( blockno, DEC );
-	Serial.print("\tlinadd= ");
+	Serial.print( F("\tlinadd= ") );
 	Serial.print( __block2linearaddress(blockno) );
-	Serial.println(")");
+	Serial.println( F(")") );
 #endif
 
 #endif	/* DEBUG_MEM */
@@ -178,11 +178,11 @@ bool mem_read(const void *p, uint8_t psize, uint16_t blockno)
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "mem_read (blockno: %i, linaddr=%i)\n", blockno, __block2linearaddress( blockno ));
 #else
-	Serial.print("mem_read (blockno: ");
+	Serial.print( F("mem_read (blockno: ") );
 	Serial.print( blockno, DEC );
-	Serial.print("\tlinadd= ");
+	Serial.print( F("\tlinadd= ") );
 	Serial.print( __block2linearaddress(blockno) );
-	Serial.println(")");
+	Serial.println( F(")") );
 #endif
 
 #endif	/* DEBUG_MEM */
@@ -200,7 +200,7 @@ bool mem_pushDatablock(datablock_t *db)
 #if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_pushDatablock\n");
 #else	
-	Serial.println("mem_pushDatablock");
+	Serial.println( F("mem_pushDatablock") );
 #endif
 
 #endif	/* DEBUG_MEM */
@@ -226,7 +226,7 @@ bool mem_pushDatablock(datablock_t *db)
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "push: new __head_db: %i\n", __head_db);
 #else
-	Serial.print("push: new __head_db: ");
+	Serial.print( F("push: new __head_db: ") );
 	Serial.println( __head_db, DEC );
 #endif
 
@@ -240,7 +240,7 @@ bool mem_popDatablock(datablock_t *db)
 #if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_popDatablock\n");
 #else
-	Serial.println("mem_popDatablock");
+	Serial.println( F("mem_popDatablock") );
 #endif
 
 	if(!__cnt_db)return false;
@@ -256,7 +256,7 @@ bool mem_popDatablock(datablock_t *db)
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "pop: new __tail_db: %i\n", __tail_db );
 #else
-	Serial.print("pop: new __tail_db: ");
+	Serial.print( F("pop: new __tail_db: ") );
 	Serial.println( __tail_db, DEC );
 #endif
 
