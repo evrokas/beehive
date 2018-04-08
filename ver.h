@@ -15,11 +15,11 @@
 #ifndef FIRMWARE_REVISION
 
 /*
- * whole git version string: commit 62c0f13ad8512f6510ebf6787d8bdfa38b2fd24e
+ * whole git version string: commit 863d033a17c9b339b1b8f52aabeff56aaa23bea9
  */
 
-#define FIRMWARE_REVISION	"8b2fd24e"
-#define FIRMWARE_REVISION_SHORT	"d24e"
+#define FIRMWARE_REVISION	"aa23bea9"
+#define FIRMWARE_REVISION_SHORT	"bea9"
 #endif
 
 #endif

@@ -19,12 +19,12 @@ MONITOR_BAUDRATE = 9600
 
 
 # add conditional for ver.h version header
-ver.h: ver.h.in
-	./mkver.sh
+#ver.h: ver.h.in
+#	./mkver.sh
 
 
 include	$(ARDMK_DIR)/Arduino.mk
 
-CPPFLAGS	+= -DGSM_SERIAL_BAUDRATE=9600
+CPPFLAGS	+= -DGSM_SERIAL_BAUDRATE=9600 -DNEOSW_RX_BUFFER_SIZE=32
 CPPFLAGS	+= $(SRVURL)
 CPPFLAGS	+= $(SRVPORT)

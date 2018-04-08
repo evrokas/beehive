@@ -25,10 +25,18 @@ p<server port>		set PORT of data server to <server port>
 a<APN>						set APN to <APN>
 r<USER>						set USER to <USER>
 s<PASS>						set PASS to <PASS>
-i<nodeid>					set NODE_ID to <nodeid>
+
+i?								get NODE_ID of node
+i<nodeid>					set node NODE_ID to <nodeid>
+
+k?								get APIKEY of node
 k<apikey>					set APIKEY to <apikey>
-l<log freq>				set logging frequency	(5 per hour)
-n<net freq>				set networking frequency (1 per hour)
+
+l?								get logging frequency
+l<log freq>				set logging frequency	(default: 5 per hour)
+
+n?								get networking frequency
+n<net freq>				set networking frequency (default: 1 per hour)
 
 X									exit maintanance mode and resume
 E									reset counter to initial values

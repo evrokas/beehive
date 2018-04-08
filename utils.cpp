@@ -11,10 +11,11 @@
  */
 
 #include <Arduino.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 
 #include "bms.h"
 #include "utils.h"
+#include <avr/eeprom.h>
 
 
 
@@ -175,17 +176,31 @@ uint16_t eepromGetAddr( uint8_t asize )
 
 uint8_t	eepromGetByte( uint16_t aaddr )
 {
-  return ( EEPROM[ aaddr ] );
+//  return ( EEPROM[ aaddr ] );
+  return ( eeprom_read_byte( (uint8_t *)aaddr ) );
+}
+
+void eepromSetByte( uint16_t aaddr, uint8_t dat )
+{
+//	EEPROM[ aaddr ] = dat;
+	eeprom_write_byte( (uint8_t *)aaddr, dat );
 }
 
 uint16_t eepromGetWord( uint16_t aaddr )
 {
-	return (eepromGetByte(  aaddr ) + eepromGetByte( aaddr + 1 ) << 8 );
+	return (eepromGetByte(  aaddr ) + ((uint16_t)eepromGetByte( aaddr + 1 ) << 8) );
 }
+
+void eepromSetWord( uint16_t aaddr, uint16_t dat )
+{
+	eepromSetByte(aaddr, dat & 0xff );
+	eepromSetByte(aaddr+1, (dat >> 8) & 0xff );
+}
+
 
 uint32_t eepromGetLong( uint16_t aaddr )
 {
-	return (eepromGetWord( aaddr ) + eepromGetWord( aaddr + 2 ) << 16 );
+	return (eepromGetWord( aaddr ) + ((uint32_t)(eepromGetWord( aaddr + 2 )) << 16) );
 }
 
 float eepromGetFloat( uint16_t aaddr )
@@ -200,9 +215,11 @@ char eepromGetChar( uint16_t aaddr )
 
 void eepromGetStr(uint16_t aaddr, int acnt, char *astr)
 {
+  int aa=0;
+  
 	while(acnt >= 0) {
-		astr[ acnt ] = eepromGetChar( aaddr + acnt );
-		acnt--;
+		astr[ aa ] = eepromGetChar( aaddr + aa );
+		acnt--; aa++;
 	}
 }
 		

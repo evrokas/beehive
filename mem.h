@@ -17,6 +17,11 @@
 #include "rtc.h"
 //#include "data.h"
 
+
+#define counter_type	uint16_t
+//#define counter_type	uint32_t
+
+
 #define BLOCK_SIZE	32
 
 #ifdef HAVE_DATA_H
@@ -73,12 +78,12 @@ typedef struct {
 extern "C" {
 #endif
 
-extern int32_t	__head_db;		/* head pointer of datablocks */
-extern int32_t	__tail_db;		/* tail pointer of datablocks */
-extern int32_t	__max_db;			/* maximum data block available */
+extern counter_type	__head_db;		/* head pointer of datablocks */
+extern counter_type	__tail_db;		/* tail pointer of datablocks */
+extern counter_type	__max_db;			/* maximum data block available */
 
-extern int32_t	__begin_addr;	/* first EEPROM address to access */
-extern int32_t	__end_addr;		/* last EEPROM address to access */
+extern counter_type	__begin_addr;	/* first EEPROM address to access */
+extern counter_type	__end_addr;		/* last EEPROM address to access */
 
 void __ee_write(uint16_t addr, uint8_t data );
 uint8_t __ee_read(uint16_t addr ); 

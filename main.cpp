@@ -52,13 +52,41 @@ uint16_t lastMinNetCycle;
 
 #endif
 
-uint16_t	addrNodeId;
-uint16_t	addrAPIKEY;
-uint16_t	addrAPN;
-uint16_t	addrUSER;
-uint16_t	addrPASS;
-uint16_t	addrSERVER;
-uint16_t	addrPORT;
+#if 0
+#define d_startaddress	0
+#define d_addrNodeId		(d_startaddress + 0)				// NodeID size 2
+#define d_addrAPIKEY		(d_startaddress + 2)				// APIKEY size 8
+#define d_addrAPN				(d_startaddress + (2+8))		// APN size 32
+#define d_addrUSER			(d_startaddress + (2+8+32))	// USER size 16
+#define d_addrPASS			(d_startaddress + (2+8+32+16))	// PASS size 16
+#define d_addrSERVER		(d_startaddress + (2+8+32+16+16))	// SERVER size 4
+#define d_addrPORT			(d_startaddress + (2+8+32+16+16+4))	// PORT size 2
+#endif
+
+
+#if 1
+/* addr* variables hold the address in EEPROM of the corresponding
+ * variables, but these cost valuable RAM memory, definition could
+ * be in uint16_t, but would cost 2 bytes for each variable, so
+ * it is changed to uint8_t, so only 1 byte is used
+ * IMPORTANT make sure no more than 256 bytes of memory is allocated
+ * this way, because address would overflow */
+ 
+uint8_t	addrNodeId;
+uint8_t	addrAPIKEY;
+uint8_t	addrAPN;
+uint8_t	addrUSER;
+uint8_t	addrPASS;
+uint8_t	addrSERVER;
+uint8_t	addrPORT;
+#endif
+
+#if 0
+uint16_t CONF_NODEID = NODE_ID;
+unsigned char APIKEY[9];
+unsigned char APN[33];
+unsigned char 
+#endif
 
 
 void initalizeEEPROM()
@@ -71,6 +99,18 @@ void initalizeEEPROM()
 	addrSERVER	= eepromGetAddr( 4 );			/* 255.255.255.255, each byte is stored separately */
 	addrPORT		= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
 }
+
+uint16_t getNodeId()
+{
+  return ( eepromGetWord( addrNodeId ) );
+}
+
+void setNodeId(uint16_t nodeid)
+{
+	eepromSetWord( addrNodeId, nodeid );
+}
+
+
 
 
 void initializeCounters()
@@ -103,7 +143,7 @@ void initializeCounters()
 /* setup steps of the project */
 void setup()
 {
-	delay(2000);
+	//delay(2000);
 	
 	Dinit;
 	Serial.begin( 9600 );
@@ -130,10 +170,6 @@ void setup()
       
 	setupPeripheralsControl();
 
-
-//Wire.init();
-//	TWBR = 152;		/* switch to 25KHz I2C interface */
-
 	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
 	powerGPRSGPS( 0 );
@@ -153,6 +189,9 @@ void setup()
 		gsm_init();
 #endif
 
+#if ENABLE_DATAPUSHING == 1
+		mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
+#endif
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	powerRTC( 0, 1 );
@@ -167,6 +206,8 @@ void setup()
 
 //  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
 //  Dln(tmp);
+
+	setNodeId( NODE_ID );
 
 }
 
@@ -217,7 +258,7 @@ void setupLoop()
 
 }
 
-#define BUF_SIZE	32
+#define BUF_SIZE	16
 
 bool doNet=false, doLog=false;
 
@@ -225,25 +266,40 @@ bool doNet=false, doLog=false;
 #if ENABLE_MAINTENANCE == 1
 void doMaintenance()
 {
-	char *c;
+	char *c,cc;
 	char buf[BUF_SIZE];
 
-		memset(buf, 0, BUF_SIZE);
-		c = buf;
+
+		Serial.print(">");
 
 		while(1) {
+			memset(buf, 0, BUF_SIZE);
+			c = buf;
+
 			Serial.print("> ");
 			
 			while(1) {
-				while( Serial.available() ) {
+				if(Serial.available() ) {
+					cc = Serial.read();
+						
+					/* ignore all + symbols */
+					if(cc == '+')continue;
+						
+					/* if \r is received, execute the command */
+					if( ( cc ) == '\r') break;
+						
+					/* otherwise add cc to the buffer and continue */
 					if(strlen(buf) < BUF_SIZE-1) {
-						*c = Serial.read();
-						if( ( *c ) == '\r') break;
-						Serial.write( *c );
-						c++;
+						*c++ = cc;
+
+						Serial.write( cc );
+//					  Serial.println(buf);
 					}
 				}
 			}
+			
+			Serial.print(F("execute command :")); Serial.println( buf );
+			
 			if(strlen(buf) > 0) {
 				switch(buf[0]) {
 					case 'q':	/* exit maintenance mode */;
@@ -253,15 +309,30 @@ void doMaintenance()
 						{
 							uint16_t	bv;
 								bv = readVcc();
-								Serial.print("Battery voltage: "); Serial.println(bv / 1000.0 );
+								Serial.print(F("Battery voltage: ")); Serial.println(bv / 1000.0 );
 								buf[0] = 0;
 						}
 						break;
+					case 'i':
+						{
+							if(buf[1] == '?') {
+								Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+								break;
+							} else {
+								int n;
+									n = atoi( buf+1 );
+									if(n>0 && n < 4096) {
+										Serial.print(F("New Node ID : ")); Serial.println(n);
+										setNodeId( n );
+									}
+							}
+							break;
+						}
+
 					default:
-					Serial.println("unknown command!");
-					buf[0] = 0;
-					break;
-				}
+						Serial.println(F("unknown command!"));
+						break;
+					}
 			}
 			
 		}

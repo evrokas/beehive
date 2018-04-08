@@ -40,6 +40,18 @@
 
 /* setup defines */
 
+/* define the correct RTC, this info is used to correctly
+ * store the __head_db and __tail_db counters in battery
+ * backed memory, in order to ensure proper functioning
+ * of the EEPROM's storage */
+#define RTC_CLOCK_CHIP	1		/* DS3231 (or alike) */
+//#define RTC_CLOCK_CHIP 2		/* DS1307 (or alike) */
+
+
+#define EXT_EEPROM_SIZE		32		/* number of kbits in EEPROM */
+#define EXT_EEPROM_ADDR		0x57	/* I2C address of EEPROM */
+
+
 //#define LP_SLEEP_MODE	SLEEP_2S		/* 8 seconds sleep */
 #define LP_SLEEP_MODE	SLEEP_8S		/* 8 seconds sleep */
 

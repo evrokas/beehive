@@ -27,14 +27,14 @@
 #include "mem.h"
 
 
-int32_t	__head_db;		/* head pointer of datablocks */
-int32_t	__tail_db;		/* tail pointer of datablocks */
-int32_t	__max_db;			/* maximum data block available */
-int16_t __cnt_db;			/* number of data blocks in storage */
+counter_type	__head_db;		/* head pointer of datablocks */
+counter_type	__tail_db;		/* tail pointer of datablocks */
+counter_type	__max_db;			/* maximum data block available */
+counter_type	__cnt_db;			/* number of data blocks in storage */
 
 
-int32_t	__begin_addr;	/* first EEPROM address to access */
-int32_t	__end_addr;		/* last EEPROM address to access */
+counter_type	__begin_addr;	/* first EEPROM address to access */
+counter_type	__end_addr;		/* last EEPROM address to access */
 
 
 uint8_t		__ee_dev_addr;
@@ -97,6 +97,47 @@ void mem_end()
 	__cnt_db = 0;
 }
 
+
+
+#if RTC_CLOCK_CHIP == 1
+#  define RTC_COUNTER_ADDRESS	0x7
+#elif RTC_CLOCK_CHIP == 2
+#  define RTC_COUNTER_ADDRESS	0x8
+#else
+#error Please define RTC_CLOCK_CHIP in bms.h
+#endif
+
+
+/* store counter __head_db and __tail_db in specific memory areas,
+ * these could be the RTC special purpose memory, or other memory */
+void mem_storecounters()
+{
+
+	Wire.beginTransmission( RTC_I2C_ADDRESS );
+	Wire.write( RTC_COUNTER_ADDRESS );
+	Wire.write( __head_db & 0xff );
+	Wire.write( (__head_db >> 8) & 0xff );
+	Wire.write( __tail_db & 0xff );
+	Wire.write( (__tail_db >> 8) & 0xff );
+	Wire.endTransmission();
+}
+
+
+/* read counters __head_db and __tail_db from special purpose memory */
+void mem_readcounters()
+{
+	Wire.beginTransmission( RTC_I2C_ADDRESS );
+	Wire.write( RTC_COUNTER_ADDRESS );
+	Wire.endTransmission();
+	Wire.requestFrom( RTC_I2C_ADDRESS, 4);
+	
+	__head_db = (Wire.read() & 0xff);
+	__head_db |= (Wire.read() << 8) & 0xff;
+	
+	__tail_db = (Wire.read() & 0xff);
+	__tail_db |= (Wire.read() << 8) & 0xff;
+}
+ 
 
 uint32_t	__block2linearaddress(uint16_t blockno)
 {
@@ -166,7 +207,7 @@ bool mem_pushDatablock(datablock_t *db)
 
 	
 	if(__cnt_db >= __max_db)return false;
-	if((__head_db == -1) && (__cnt_db == 0)) {
+	if((__head_db == (counter_type)-1) && (__cnt_db == 0)) {
 		__head_db = 0;
 		__tail_db = 0;
 	}
