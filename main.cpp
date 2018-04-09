@@ -374,7 +374,10 @@ void doMaintenance()
 						Serial.print(F("date time: ")); displayTime();
 						powerRTC(0, 1);
 						break;
-					
+
+					case 'W':
+						Serial.print( F("Firmware version: ")); Serial.println(F( FIRMWARE_VERSION ) );
+						break;
 /*
 					case 'u':
 						if(buf[1] == '?') {

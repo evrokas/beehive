@@ -62,4 +62,6 @@ G									power GSM module
 F									power off GSM module
 B									dump GSM battery
 Q									dump GSM signal quality
-R									register GSM module to network
+R#								when # == 0, deregister GSM module from network,
+									if # == 1, register GSM module to network
+W									dump Firmware string (git version)
