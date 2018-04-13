@@ -100,6 +100,7 @@ void powerRTC(unsigned char onoff, unsigned char mdel);
 unsigned long readVcc();
 
 void setVccFactor(float avref);
+float getVccFactor();
 
 void eepromMemBase( uint16_t amembase );
 uint16_t eepromGetLastAddr();

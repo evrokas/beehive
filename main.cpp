@@ -52,17 +52,6 @@ uint16_t lastMinNetCycle;
 
 #endif
 
-#if 0
-#define d_startaddress	0
-#define d_addrNodeId		(d_startaddress + 0)				// NodeID size 2
-#define d_addrAPIKEY		(d_startaddress + 2)				// APIKEY size 8
-#define d_addrAPN				(d_startaddress + (2+8))		// APN size 32
-#define d_addrUSER			(d_startaddress + (2+8+32))	// USER size 16
-#define d_addrPASS			(d_startaddress + (2+8+32+16))	// PASS size 16
-#define d_addrSERVER		(d_startaddress + (2+8+32+16+16))	// SERVER size 4
-#define d_addrPORT			(d_startaddress + (2+8+32+16+16+4))	// PORT size 2
-#endif
-
 
 #if 1
 /* addr* variables hold the address in EEPROM of the corresponding
@@ -77,20 +66,36 @@ uint8_t	addrAPIKEY;
 uint8_t	addrAPN;
 uint8_t	addrUSER;
 uint8_t	addrPASS;
-uint8_t	addrSERVER;
+uint8_t	addrURL;
 uint8_t	addrPORT;
 uint8_t addrLogCycle;
 uint8_t addrNetCycle;
+uint8_t addrSIMPIN;
+uint8_t addrSIMICCID;
+
 
 #endif
 
-#define APIKEY_SIZE	8
-#define APN_SIZE	24
-#define USER_SIZE	8
-#define PASS_SIZE	8
-#define SERVER_SIZE	24
+#define APIKEY_SIZE		8
+#define APN_SIZE			24
+#define USER_SIZE			8
+#define PASS_SIZE			8
+#define URL_SIZE			24
+#define SIMPIN_SIZE			4
+#define SIMICCID_SIZE		20
 
-void initalizeEEPROM()
+#define EEPROM_MAXSTR	24		/* set to maximum length of the above */
+
+#define E_URL		1
+#define E_APN		2
+#define E_USER	3
+#define E_PASS	4
+#define E_APIKEY		5
+#define E_SIMPIN		6
+#define E_SIMICCID	7
+
+
+void initializeEEPROM()
 {
 	Serial.print(F("Initializing EEPROM memory allocation ... "));
 	addrNodeId	= eepromGetAddr( 2 );
@@ -98,10 +103,13 @@ void initalizeEEPROM()
 	addrAPN			= eepromGetAddr( APN_SIZE );
 	addrUSER		= eepromGetAddr( USER_SIZE );
 	addrPASS		= eepromGetAddr( PASS_SIZE );
-	addrSERVER	= eepromGetAddr( SERVER_SIZE );			
+	addrURL			= eepromGetAddr( URL_SIZE );			
 	addrPORT		= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
 	addrLogCycle = eepromGetAddr( 2 );
 	addrNetCycle = eepromGetAddr( 2 );
+	addrSIMPIN	 = eepromGetAddr( SIMPIN_SIZE );
+	addrSIMICCID	= eepromGetAddr( SIMICCID_SIZE );
+
 	Serial.print( eepromGetLastAddr() );
 	Serial.println( F(" bytes") );
 }
@@ -116,20 +124,40 @@ void setNodeId(uint16_t nodeid)
 	eepromSetWord( addrNodeId, nodeid );
 }
 
-void getAPIKEY(char *dat)
+uint8_t getEEPROMstr(uint8_t ecode, char *dat)
 {
-	eepromGetStr(addrAPIKEY, APIKEY_SIZE, dat);
+	switch( ecode ) {
+		case E_URL: eepromGetStr(addrURL, URL_SIZE, dat); break;
+		case E_APN: eepromGetStr(addrAPN, APN_SIZE, dat); break;
+		case E_USER: eepromGetStr(addrUSER, USER_SIZE, dat); break;
+		case E_PASS: eepromGetStr(addrPASS, PASS_SIZE, dat); break;
+		case E_APIKEY: eepromGetStr(addrAPIKEY, APIKEY_SIZE, dat); break;
+		case E_SIMPIN: eepromGetStr(addrSIMPIN, SIMPIN_SIZE, dat); break;
+		case E_SIMICCID: eepromGetStr(addrSIMICCID, SIMICCID_SIZE, dat); break;
+	default:
+		/* if wrong ecode then return fail */
+		return 0;
+	}
+	return 1;
 }
 
-void getUSER(char *dat)
+uint8_t setEEPROMstr(uint8_t ecode, char *dat)
 {
-  eepromGetStr(addrUSER, USER_SIZE, dat);
+	switch( ecode ) {
+		case E_URL: eepromSetStr(addrURL, URL_SIZE, dat); break;
+		case E_APN: eepromSetStr(addrAPN, APN_SIZE, dat); break;
+		case E_USER: eepromSetStr(addrUSER, USER_SIZE, dat); break;
+		case E_PASS: eepromSetStr(addrPASS, PASS_SIZE, dat); break;
+		case E_APIKEY: eepromSetStr(addrAPIKEY, APIKEY_SIZE, dat); break;
+		case E_SIMPIN: eepromSetStr(addrSIMPIN, SIMPIN_SIZE, dat); break;
+		case E_SIMICCID: eepromSetStr(addrSIMPIN, SIMICCID_SIZE, dat); break;
+	default:
+		/* if wrong ecode, then return fail */
+		return 0;
+	}
+	return 1;
 }
 
-void getPASS(char *dat)
-{
-  eepromGetStr(addrPASS, PASS_SIZE, dat);
-}
 
 void setLogCycle(uint8_t dat)
 {
@@ -150,6 +178,18 @@ uint8_t getNetCycle()
 {
   return( eepromGetByte( addrLogCycle ) );
 }
+
+
+uint16_t getServerPort()
+{
+	return ( eepromGetWord( addrPORT ) );
+}
+
+void setServerPort( uint16_t dat )
+{
+	eepromSetWord( addrPORT, dat );
+}
+
 
 
 void initializeCounters()
@@ -182,7 +222,7 @@ void initializeCounters()
 /* setup steps of the project */
 void setup()
 {
-	//delay(2000);
+	delay(500);
 	
 	Dinit;
 	Serial.begin( 9600 );
@@ -205,6 +245,9 @@ void setup()
  *
  */
 
+ 	initializeEEPROM();
+
+
 	initializeCounters(); 
       
 	setupPeripheralsControl();
@@ -225,11 +268,11 @@ void setup()
 #endif
 
 #if	HAVE_GSM_GPRS == 1
-		gsm_init();
+	gsm_init();
 #endif
 
 #if ENABLE_DATAPUSHING == 1
-		mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
+	mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
 #endif
 
 	powerPeripherals(0,0);	/* disable all peripherals */
@@ -246,8 +289,7 @@ void setup()
 //  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
 //  Dln(tmp);
 
-	setNodeId( NODE_ID );
-
+//	setNodeId( NODE_ID );
 }
 
 
@@ -297,7 +339,7 @@ void setupLoop()
 
 }
 
-#define BUF_SIZE	16
+#define BUF_SIZE	EEPROM_MAXSTR		/* was 16 */
 
 bool doNet=false, doLog=false;
 
@@ -306,7 +348,7 @@ bool doNet=false, doLog=false;
 void doMaintenance()
 {
 	char *c,cc;
-	char buf[BUF_SIZE];
+	char buf[BUF_SIZE+1];
 
 
 		Serial.print( F(">") );
@@ -328,7 +370,7 @@ void doMaintenance()
 					if( ( cc ) == '\r') break;
 						
 					/* otherwise add cc to the buffer and continue */
-					if(strlen(buf) < BUF_SIZE-1) {
+					if(strlen(buf) < BUF_SIZE) {
 						*c++ = cc;
 
 						Serial.write( cc );
@@ -344,45 +386,96 @@ void doMaintenance()
 					case '?':
 						Serial.println(F("Help message!"));
 						break;
-												
-					case 'X':	/* exit maintenance mode */;
-						return;
-						break;
-
-					case 'P': /* print sleep counter */
-						Serial.print(F("Sleep cycle counter: ")); Serial.print(curSleepCycle);
-						Serial.print(F("  sleep counter: ")); Serial.println( cntSleepCycle );
-						break;
-					case 'V':	/* print battery voltage */
-						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0 );
-						break;
-
-					case 'T':
-						powerPeripherals(1,50);
-						Serial.print(F("Temperature (oC): ")); Serial.println( therm_getTemperature() );
-						powerPeripherals(0,0);
-						break;
-						
-					case 'H':
-						powerPeripherals(1,50);
-						Serial.print(F("Humidity (%%): ")); Serial.println( therm_getHumidity() );
-						powerPeripherals(0,0);
-						break;
-						
-					case 'C':
-						powerRTC(1, 10);
-						Serial.print(F("date time: ")); displayTime();
-						powerRTC(0, 1);
-						break;
-
-					case 'W':
-						Serial.print( F("Firmware version: ")); Serial.println(F( FIRMWARE_VERSION ) );
-						break;
-/*
+					
 					case 'u':
 						if(buf[1] == '?') {
-							Serial.print
-*/
+							Serial.print(F("server url: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_URL, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_URL, buf ))
+							Serial.println(F("url set ok!"));
+						break;
+					
+					case 'r':
+						if(buf[1] == '?') {
+							Serial.print(F("server port: "));
+							Serial.println( getServerPort() );
+							break;
+						} else {
+						  uint16_t n;
+
+								n = atoi( buf+1 );
+								setServerPort( n );
+								Serial.print(F("server port set ok!"));
+						}
+						break;
+					
+					case 'a':
+						if(buf[1] == '?') {
+							Serial.print(F("APN: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_APN, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_APN, buf ))
+							Serial.println(F("apn set ok!"));
+						break;
+
+					case 's':
+						if(buf[1] == '?') {
+							Serial.print(F("USER: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_USER, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_USER, buf ))
+							Serial.println(F("user set ok!"));
+						break;
+
+					case 'w':
+						if(buf[1] == '?') {
+							Serial.print(F("PASS: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_PASS, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_PASS, buf ))
+							Serial.println(F("pass set ok!"));
+						break;
+
+					case 'i':
+						if(buf[1] == '?') {
+							Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+							break;
+						} else {
+							int n;
+							
+								n = atoi( buf+1 );
+								if(n>0 && n < 4096) {
+									Serial.print(F("New Node ID : ")); Serial.println(n);
+									setNodeId( n );
+								}
+						}
+						break;
+
+					case 'k':
+						if(buf[1] == '?') {
+							Serial.print(F("APIKEY: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_APIKEY, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_APIKEY, buf ))
+							Serial.println(F("apn set ok!"));
+						break;
+
 					case 'l':
 						if(buf[1] == '?') {
 							Serial.print(F("Log frequency: ")); Serial.println( maxMinLogCycle );
@@ -408,22 +501,78 @@ void doMaintenance()
 								setNetCycle( n );
 						};
 						break;							
-					
-					case 'i':
-						{
-							if(buf[1] == '?') {
-								Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
-								break;
-							} else {
-								int n;
-									n = atoi( buf+1 );
-									if(n>0 && n < 4096) {
-										Serial.print(F("New Node ID : ")); Serial.println(n);
-										setNodeId( n );
-									}
-							}
+
+					case 'p':
+						if(buf[1] == '?') {
+							Serial.print(F("SIM PIN: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_SIMPIN, buf ))
+								Serial.println( buf );
 							break;
+						};
+						if(setEEPROMstr( E_SIMPIN, buf ))
+							Serial.println(F("sim pin set ok!"));
+						break;
+
+					case 'd':
+						if(buf[1] == '?') {
+							Serial.print(F("SIM ICIID: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_SIMICCID, buf ))
+								Serial.println( buf );
+							break;
+						};
+						if(setEEPROMstr( E_SIMICCID, buf ))
+							Serial.println(F("sim iccid set ok!"));
+						break;
+
+					case 'v':
+						if(buf[1] == '?') {
+							Serial.print(F("VCC factor: "));
+							Serial.println( getVccFactor() );
+						} else {
+						  float f;
+						  	
+						  	f = atof( buf+1 );
+						  	Serial.print(F("New VCC factor: "));
+						  	Serial.println( f );
+						  	setVccFactor( f );
 						}
+						break;
+							
+					case 'X':	/* exit maintenance mode */;
+						return;
+						break;
+
+					case 'P': /* print sleep counter */
+						Serial.print(F("Sleep cycle counter: ")); Serial.print(curSleepCycle);
+						Serial.print(F("  sleep counter: ")); Serial.println( cntSleepCycle );
+						break;
+					case 'V':	/* print battery voltage */
+						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0 );
+						break;
+
+					case 'T':
+						powerPeripherals(1,100);
+						Serial.print(F("Temperature (oC): ")); Serial.println( therm_getTemperature() *100 );
+						powerPeripherals(0,0);
+						break;
+						
+					case 'H':
+						powerPeripherals(1,100);
+						Serial.print(F("Humidity (%%): ")); Serial.println( therm_getHumidity() * 100 );
+						powerPeripherals(0,0);
+						break;
+						
+					case 'C':
+						powerRTC(1, 10);
+						Serial.print(F("date time: ")); displayTime();
+						powerRTC(0, 1);
+						break;
+
+					case 'W':
+						Serial.print( F("Firmware version: ")); Serial.println(F( FIRMWARE_REVISION_LONG ) );
+						break;
 
 					default:
 						Serial.println(F("unknown command!"));
@@ -457,7 +606,7 @@ void loop()
 	{
 		int cnt32 = 10;
 		
-  		Serial.println( F("out of sleep") );
+//  		Serial.println( F("out of sleep") );
 //  		delay(2);
   		while(Serial.available() || (cnt32--)) {
   			switch( Serial.read() ) {
@@ -470,7 +619,7 @@ void loop()
 						
   					doMaintenance();
   					break;
-					default: Serial.print( F(".") );
+					default: ; //Serial.print( F(".") );
 				}
 			}
 	}

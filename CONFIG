@@ -22,30 +22,52 @@ In maintanance mode: (each command is followed by \r)
 
 u?								get data server URL
 u<server url>			set URL of data server to <server url>
+*
 
-p?								get data server PORT
-p<server port>		set PORT of data server to <server port>
+r?								get data server PORT
+r<server port>		set PORT of data server to <server port>
+*
 
 a?								get APN
 a<APN>						set APN to <APN>
+*
 
-r?								get USER
-r<USER>						set USER to <USER>
+s?								get USER
+s<USER>						set USER to <USER>
+*
 
-s?								get PASS
-s<PASS>						set PASS to <PASS>
+w?								get PASS
+w<PASS>						set PASS to <PASS>
+*
 
 i?								get NODE_ID of node
 i<nodeid>					set node NODE_ID to <nodeid>
+*
 
 k?								get APIKEY of node
 k<apikey>					set APIKEY to <apikey>
+*
 
 l?								get logging frequency
 l<log freq>				set logging frequency	(default: 5 per hour)
+*
 
 n?								get networking frequency
 n<net freq>				set networking frequency (default: 1 per hour)
+*
+
+p?								get SIM pin
+p<pin>						set SIM pin to <pin>
+*
+
+d?								get SIM CIID
+d<ciid>						set SIM CIID to <ciid>
+*
+
+v?								get VCC correction factor
+v<vcc-corr>				set VCC correction factor
+*
+
 
 X									exit maintanance mode and resume
 E									reset counter to initial values
@@ -65,3 +87,5 @@ Q									dump GSM signal quality
 R#								when # == 0, deregister GSM module from network,
 									if # == 1, register GSM module to network
 W									dump Firmware string (git version)
+A#								when # = 1, activate the module (logging and network function)
+									when # = 0, deactivate the module, put it in sleep mode

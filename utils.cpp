@@ -153,6 +153,10 @@ void setVccFactor(float avref)
 	VREF = avref;
 }
 
+float getVccFactor()
+{
+	return (VREF);
+}
 
 #define EEPROM_SIZE	1024
 

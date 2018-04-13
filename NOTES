@@ -67,3 +67,41 @@ components.
 64 nibbles --> 32 bytes for record
 
 add 4 more nibbles (57-->61) for nodeId value
+
+
+
+
+
+
+
+IMSI = International Mobile Subscriber Identity.  This is a unique
+identifier that defines a subscriber in the wireless world, including the
+country and mobile network to which the subscriber belongs.  It has the
+format MCC-MNC-MSIN.  MCC = Mobile Country Code (e.g.  310 for USA); MNC =
+Mobile Network Code (e.g.  410 for AT&T), MSIN = sequential serial number. 
+All signaling and messaging in GSM and UMTS networks uses the IMSI as the
+primary identifier of a subscriber.  The IMSI is one of the pieces of
+information stored on a SIM card.
+
+
+ICCID = Integrated Circuit Card ID.  This is the identifier of the actual
+SIM card itself - i.e.  an identifier for the SIM chip.  It is possible to
+change the information contained on a SIM (including the IMSI), but the
+identify of the SIM itself remains the same.
+
+IMEI is short for International Mobile Equipment Identity and is a unique
+number given to every single mobile phone, typically found behind the
+battery.  IMEI numbers of cellular phones connected to a GSM network are
+stored in a database (EIR - Equipment Identity Register) containing all
+valid mobile phone equipment.  When a phone is reported stolen or is not
+type approved, the number is marked invalid.
+ 
+MSISDN = Mobile Station ISDN number.  This is the full phone number of a
+subscriber, including the national country code (e.g.  1 for US, 44 for UK,
+etc.).  The purpose of the MSISDN is simply to allow a device to be called. 
+A subscriber can have multiple MSISDNs (e.g.  one phone number for business,
+one for personal calls, one for fax, etc.), but generally only one IMSI. 
+The MSISDN does not need to be stored on the SIM card.  In cases where it is
+stored on the SIM, the main reason is so that the user can use check to see
+what their own MSISDN is (in case they forget).  The MSISDN is never
+signaled to of from the device.
