@@ -72,7 +72,7 @@ uint8_t addrLogCycle;
 uint8_t addrNetCycle;
 uint8_t addrSIMPIN;
 uint8_t addrSIMICCID;
-
+uint8_t addrVCCfactor;
 
 #endif
 
@@ -109,7 +109,8 @@ void initializeEEPROM()
 	addrNetCycle = eepromGetAddr( 2 );
 	addrSIMPIN	 = eepromGetAddr( SIMPIN_SIZE );
 	addrSIMICCID	= eepromGetAddr( SIMICCID_SIZE );
-
+	addrVCCfactor	= eepromGetAddr( 4 );
+	
 	Serial.print( eepromGetLastAddr() );
 	Serial.println( F(" bytes") );
 }
@@ -179,7 +180,6 @@ uint8_t getNetCycle()
   return( eepromGetByte( addrLogCycle ) );
 }
 
-
 uint16_t getServerPort()
 {
 	return ( eepromGetWord( addrPORT ) );
@@ -190,6 +190,15 @@ void setServerPort( uint16_t dat )
 	eepromSetWord( addrPORT, dat );
 }
 
+void setVCC( float dat )
+{
+	eepromSetFloat( addrVCCfactor, dat );
+}
+
+float getVCC()
+{
+  return (eepromGetFloat( addrVCCfactor ));
+}
 
 
 void initializeCounters()
@@ -537,6 +546,7 @@ void doMaintenance()
 						  	Serial.print(F("New VCC factor: "));
 						  	Serial.println( f );
 						  	setVccFactor( f );
+								setVCC( f );
 						}
 						break;
 							
@@ -544,10 +554,19 @@ void doMaintenance()
 						return;
 						break;
 
+					case 'E':	/* reset counter to initial values */
+						/* TODO */
+						break;
+
 					case 'P': /* print sleep counter */
 						Serial.print(F("Sleep cycle counter: ")); Serial.print(curSleepCycle);
 						Serial.print(F("  sleep counter: ")); Serial.println( cntSleepCycle );
 						break;
+					
+					case 'D':	/* dump data values */
+						/* TODO */
+						break;
+
 					case 'V':	/* print battery voltage */
 						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0 );
 						break;
@@ -569,9 +588,44 @@ void doMaintenance()
 						Serial.print(F("date time: ")); displayTime();
 						powerRTC(0, 1);
 						break;
+					
+					case 'G':
+						switch( buf[1] ) {
+							case '0': powerGPRSGPS( 0 ); break;
+							case '1': powerGPRSGPS( 1 ); break;
+						
+							default:
+								Serial.println(F("wrong G command!"));
+						}
+						
+					case 'B': {
+						uint16_t n;
+							Serial.print(F("GSM module battery: "));
+							if( gsm_getBattery( n ) )
+								Serial.println( n );
+							else Serial.println(F("error"));
+						}
+						break;
+					
+					case 'Q': {
+					  uint8_t n;
+					  	Serial.print(F("GSM signal quality: "));
+					  	if( gsm_getSignalQuality( n ) )
+					  		Serial.println( n );
+							else Serial.println( F("error"));
+						}
+						break;
+					
+					case 'R':
+						/* TODO */
+						break;
 
-					case 'W':
+					case 'F':
 						Serial.print( F("Firmware version: ")); Serial.println(F( FIRMWARE_REVISION_LONG ) );
+						break;
+
+					case 'A':
+						/* TODO */
 						break;
 
 					default:
@@ -619,7 +673,10 @@ void loop()
 						
   					doMaintenance();
   					break;
-					default: ; //Serial.print( F(".") );
+					default:
+						//delay(1);
+						Serial.print( F(".") );
+						break;
 				}
 			}
 	}

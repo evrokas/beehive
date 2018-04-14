@@ -212,10 +212,35 @@ uint32_t eepromGetLong( uint16_t aaddr )
 	return (eepromGetWord( aaddr ) + ((uint32_t)(eepromGetWord( aaddr + 2 )) << 16) );
 }
 
+void eepromSetLong( uint16_t aaddr, uint32_t dat )
+{
+  eepromSetWord( aaddr, (dat & 0xffff) );
+  eepromSetWord( aaddr+2, (dat >> 16) & 0xffff );
+}
+
+
 float eepromGetFloat( uint16_t aaddr )
 {
-  return (float)(eepromGetLong( aaddr ) );
+	union {
+		float f;
+		long l;
+	} f_l;
+	f_l.l = eepromGetLong( aaddr );
+	
+	return (f_l.f);
 }
+
+void eepromSetFloat( uint16_t aaddr, float dat )
+{
+	union {
+		float f;
+		long l;
+	} f_l;
+
+	f_l.f = dat;
+	
+  eepromSetLong( aaddr, f_l.l );
+} 
 
 char eepromGetChar( uint16_t aaddr )
 {

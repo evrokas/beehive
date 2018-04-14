@@ -111,8 +111,9 @@ void eepromSetByte( uint16_t aaddr, uint8_t dat );
 uint16_t eepromGetWord( uint16_t aaddr );
 void eepromSetWord( uint16_t aaddr, uint16_t aword );
 uint32_t eepromGetLong( uint16_t aaddr );
+void eepromSetLong( uint16_t aaddr, uint32_t dat );
 float eepromGetFloat( uint16_t aaddr );
-
+void eepromSetFloat( uint16_t aaddr, float dat );
 char eepromGetChar( uint16_t aaddr );
 void eepromSetChar( uint16_t aaddr, char dat );
 
