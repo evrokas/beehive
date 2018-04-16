@@ -20,6 +20,10 @@ Maintanance mode
 
 In maintanance mode: (each command is followed by \r)
 
+In use:
+[uraswiklnpdvXEPDVTHCGBQRFAO]
+
+
 u?								get data server URL
 u<server url>			set URL of data server to <server url>
 *
@@ -69,23 +73,29 @@ v<vcc-corr>				set VCC correction factor
 *
 
 
-X									exit maintanance mode and resume
-E									reset counter to initial values
 
-P									dump sleep counter
-D									dump data variables
+*X								exit maintanance mode and resume
+*E								reset counter to initial values
+
+*P								dump sleep counter
+*D								dump data variables
 
 
-V									dump cpu voltage
-T									dump temperature
-H									dump humidity
-C									dump clock time
-G									power GSM module
-F									power off GSM module
-B									dump GSM battery
-Q									dump GSM signal quality
+*V								dump cpu voltage
+*T								dump temperature
+*H								dump humidity
+*C								dump clock time
+*G#								power GSM module, # == 0 off, # == 1 on
+*B								dump GSM battery
+*Q								dump GSM signal quality
 R#								when # == 0, deregister GSM module from network,
 									if # == 1, register GSM module to network
-W									dump Firmware string (git version)
-A#								when # = 1, activate the module (logging and network function)
-									when # = 0, deactivate the module, put it in sleep mode
+R?								get GSM module registration
+
+F									dump Firmware string (git version)
+An#								n == ?,		show current configuration
+									n == a, 	activation, when # == 1, activate the module (logging and network function)
+														when # == 0, deactivate the module, put it in sleep mode
+									n == l,		DNS lookup, when # == 1 perform DNS lookup
+														when # == 0, do not perform DNS lookup
+*O								dump data pointers (tail and head)

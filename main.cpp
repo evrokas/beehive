@@ -46,6 +46,16 @@ uint16_t maxMinNetCycle;
 uint16_t lastMinNetCycle;
 
 
+#define A_ENABLE			0x01				/* enable module, enable means that it actually performs logging and net traffic,
+																	 * otherwise, it is in a low power state, during which it sleeps for 8 sec and
+																	 * wakes up to see what happens */
+#define A_DNSLOOKUP		0x02				/* enable DNS look up, this is enabled only when APN is given in a form that needs
+																	 * resolving, if it is given in numeric format, do not perform DNS lookup */
+
+uint16_t moduleAflags = 0;
+
+
+
 #ifndef NODE_ID
 
 #define NODE_ID	1088
@@ -114,6 +124,8 @@ void initializeEEPROM()
 	Serial.print( eepromGetLastAddr() );
 	Serial.println( F(" bytes") );
 }
+
+
 
 uint16_t getNodeId()
 {
@@ -201,6 +213,19 @@ float getVCC()
 }
 
 
+void loadVariablesFromEEPROM()
+{
+	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+	setVccFactor( getVCC() );
+	
+	maxMinLogCycle = getLogCycle();
+	maxMinNetCycle = getNetCycle();
+	Serial.print(F("Log cycle: ")); Serial.print(maxMinLogCycle);
+	Serial.print(F("\tNet cycle: ")); Serial.println(maxMinNetCycle);
+}
+
+
+
 void initializeCounters()
 {
  	/* current logging cycle counter */
@@ -215,8 +240,13 @@ void initializeCounters()
 	/* global sleep cycle counter */
 	cntSleepCycle = 0;
 
+
+#if 0
  	maxMinLogCycle = DAILY_LOG_PERIOD;
 	maxMinNetCycle = DAILY_NET_PERIOD;
+#endif
+
+	loadVariablesFromEEPROM();
 
 #if 0
 	/* hardwire log cycles for debugging purposes */
@@ -255,7 +285,6 @@ void setup()
  */
 
  	initializeEEPROM();
-
 
 	initializeCounters(); 
       
@@ -376,8 +405,16 @@ void doMaintenance()
 					if(cc == '+')continue;
 						
 					/* if \r is received, execute the command */
-					if( ( cc ) == '\r') break;
-						
+					if( cc == '\r') break;
+					
+					if( cc == '\h') {/* back up */
+						if(strlen(buf) > 0) {
+							Serial.write( cc );
+							*c = '\0';
+							c--;
+						}
+					}
+					else
 					/* otherwise add cc to the buffer and continue */
 					if(strlen(buf) < BUF_SIZE) {
 						*c++ = cc;
@@ -388,8 +425,10 @@ void doMaintenance()
 				}
 			}
 			
+#if 0
 			Serial.print(F("execute command :")); Serial.println( buf );
-			
+#endif
+	
 			if(strlen(buf) > 0) {
 				switch(buf[0]) {
 					case '?':
@@ -418,7 +457,7 @@ void doMaintenance()
 
 								n = atoi( buf+1 );
 								setServerPort( n );
-								Serial.print(F("server port set ok!"));
+								Serial.println(F("server port set ok!"));
 						}
 						break;
 					
@@ -430,7 +469,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_APN, buf ))
+						if(setEEPROMstr( E_APN, buf+1 ))
 							Serial.println(F("apn set ok!"));
 						break;
 
@@ -617,6 +656,31 @@ void doMaintenance()
 						break;
 					
 					case 'R':
+						if( buf[1] == '?' ) {
+							uint8_t r;
+
+								if( gsm_getRegistration( r ) ) {
+									Serial.print(F("GSM/GPRS module registration: "));
+									switch( r ) {
+										case 0: Serial.println(F("not registered, currently not searching for operator (0)")); break;
+										case 1: Serial.println(F("registrered, home network (1)")); break;
+										case 2: Serial.println(F("not registered, currently seeking for operator (2)")); break;
+										case 3: Serial.println(F("registration denied (3)")); break;
+										case 4: Serial.println(F("unknown (4)")); break;
+										case 5: Serial.println(F("registered, roaming (5)")); break;
+									}
+								} else {
+									Serial.println(F("Could not determine GSM/GPRS module registration status"));
+									break;
+								}
+						} else
+						if(buf[1] == '0' ) {
+							/* deregister module from network */
+						} else
+						if(buf[1] == '1' ) {
+							/* register module in network */
+						}
+						
 						/* TODO */
 						break;
 
@@ -625,7 +689,42 @@ void doMaintenance()
 						break;
 
 					case 'A':
-						/* TODO */
+						switch( buf[1] ) {
+							case '?':
+								Serial.println(F("Current flags:"));
+								if(moduleAflags & A_ENABLE)Serial.println(F("Module enabled"));
+								else Serial.println(F("Module not enabled"));
+								if(moduleAflags & A_DNSLOOKUP)Serial.println(F("DNS lookup active"));
+								else Serial.println(F("DNS lookup not active"));
+								break;
+							case 'a':
+								switch( buf[2] ) {
+									case '0': moduleAflags &= ~A_ENABLE; break;
+									case '1': moduleAflags |= A_ENABLE; break;
+									default:
+										Serial.println(F("wrong parameter!"));
+										break;
+								}
+								break;
+							case 'l':
+								switch( buf[2] ) {
+									case '0': moduleAflags &= ~A_DNSLOOKUP; break;
+									case '1': moduleAflags |= A_DNSLOOKUP; break;
+									default:
+										Serial.println(F("wrong parameter!"));
+										break;
+								}
+								break;
+							default:
+								Serial.println(F("wrong parameter"));
+								break;
+						}
+						break;
+
+					case 'O':
+						/* print tail and head pointers */
+						Serial.print(F("db pointers:\thead: ")); Serial.print( __head_db );
+						Serial.print(F("\ttail: ")); Serial.println( __tail_db );
 						break;
 
 					default:
@@ -723,7 +822,7 @@ void loop()
 			Dp("curSleepCycle >= maxSleepCycle ");Dln(curSleepCycle);
 #endif
 #endif			
-			db.nodeId = NODE_ID;
+			db.nodeId = getNodeId();		//NODE_ID;
 			db.batVolt = readVcc();
 			
 			powerRTC( 1, 10 );

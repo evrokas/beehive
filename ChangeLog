@@ -1,3 +1,17 @@
+2018-04-15	Evangelos Rokas <evrokas@gmail.com>
+* added maintenance mode, documentation in CONFIG file
+* Makefile: added -V -v -v in avrdude command line (more output, no verification)
+					added NEOSW_RX_BUFFER to 32 instead of 64 which is the default (source changed)
+* main.cpp: added EEPROM variables for various info that must be stored during restart,
+						these are saved in the internal EEPROM of the chip,
+						added moduleAflags which is a 16 bit word which holds, module enabled,
+						DNS lookup enabled, etc
+					(loadVariabledFromEEPROM): load some variables from EEPROM, maxMinLogCycle,
+														maxMinNetCycle, Vcc factorial
+* gsm.cpp: changed many calls to their respective *p to make use of the F() directive
+* mem.cpp: mem_storecounter(), mem_readcounter() to store/read db counters to/from the
+					RTC NVRAM (in the case of DS1307) or in the alarm0 register (in the case of DS3231)
+
 2018-04-06	Evangelos Rokas <evrokas@gmail.com>
 * added conf.h
 * main.cpp: doMaintanance(): fix command line loop
