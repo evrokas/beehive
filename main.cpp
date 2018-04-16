@@ -189,7 +189,7 @@ void setNetCycle(uint8_t dat)
 
 uint8_t getNetCycle()
 {
-  return( eepromGetByte( addrLogCycle ) );
+  return( eepromGetByte( addrNetCycle ) );
 }
 
 uint16_t getServerPort()
