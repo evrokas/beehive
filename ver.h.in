@@ -23,4 +23,11 @@
 #define FIRMWARE_REVISION_SHORT	"GITSHORTVERSION"
 #endif
 
+
+#define FIRMWARE_DATE	__DATE__
+
+#define FIRMWARE_UNUM		"UPLOAD_NUM"
+
+
+
 #endif

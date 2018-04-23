@@ -59,7 +59,7 @@ void sapbr_init()
 
 
 #if 1
-	if( gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF("") ) ) {
+	if( gsm_activateBearerProfile(CF("internet"/*.cyta.gr"*/), CF(""), CF("") ) ) {
 		Serial.println("GSM: bearer profile is activated!\n");
 	} else {
 		Serial.println("GSM: bearer profile is *NOT* activated!\n");
@@ -68,13 +68,19 @@ void sapbr_init()
 
 #if 0
 	write_gsm("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\n");
-	write_gsm("AT+SAPBR=3,1,\"APN\",\"internet.cyta.gr\"\n");
+	write_gsm("AT+SAPBR=3,1,\"APN\",\"internet\"\n");
 	write_gsm("AT+SAPBR=3,1,\"USER\",\"\"\n");
 	write_gsm("AT+SAPBR=3,1,\"PWD\",\"\"\n");
 	write_gsm("AT+SAPBR=1,1\n");
 	write_gsm("AT+SAPBR=2,1\n");
 #endif
 
+}
+
+void sapbr_done()
+{
+	write_gsm("AT+CIPSHUT\n");
+	write_gsm("AT+CIPMUX=0\n");
 }
 
 
@@ -92,10 +98,17 @@ mcuTemp is deprecate therefore it is removed.
 void http_send()
 {
 	write_gsm(CF("AT+HTTPINIT\r\n"));
+	delay(5);
 	write_gsm(CF("AT+HTTPPARA=\"CID\",1\r\n"));
-	write_gsm(CF("AT+HTTPPARA=\"URL\",\"http://5.55.150.188:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\n"));
+	delay(5);
+//	write_gsm(CF("AT+HTTPPARA=\"REDIR\",1\r\n"));
+//	delay(5);
+	write_gsm(CF("AT+HTTPPARA=\"URL\",\"http://5.55.117.164:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\r"));
+	delay(5);
 	write_gsm(CF("AT+HTTPACTION=0\r\n"));
+	delay(5);
 	write_gsm(CF("AT+HTTPREAD\r\n"));
+	delay(5);
 }
 
 
@@ -186,6 +199,9 @@ void loop()
 		case ')':
 			sapbr_init();
 			break;
+		case '_':
+			sapbr_done();
+			break;
 		case '$':
 			http_send();
 			break;
@@ -227,10 +243,10 @@ void loop()
 				uint8_t ipa[4];
 							
 					Serial.print("Resolving 'evrokas.sytes.net' ... ");
-					strcpy(dns, "evrokas.sytes.net");
+					strcpy(dns, "erns.sytes.net");
 					memset(ip, 0, sizeof(ip));
 							
-					if(gsm_dnsLookup("internet.cyta.gr", "", "", dns, ip, ipa)) {
+					if(gsm_dnsLookup("internet" /*.cyta.gr"*/, "", "", dns, ip, ipa)) {
 						Serial.println(ip);
 					} else {
 						Serial.println( "Could not resolve host name!");

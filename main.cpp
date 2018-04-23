@@ -15,6 +15,8 @@
 //#include <EEPROM.h>
 
 #include "conf.h"
+#include "ver.h"
+
 #include "bms.h"
 #include "utils.h"
 #include "rtc.h"
@@ -86,23 +88,6 @@ uint8_t addrVCCfactor;
 
 #endif
 
-#define APIKEY_SIZE		8
-#define APN_SIZE			24
-#define USER_SIZE			8
-#define PASS_SIZE			8
-#define URL_SIZE			24
-#define SIMPIN_SIZE			4
-#define SIMICCID_SIZE		20
-
-#define EEPROM_MAXSTR	24		/* set to maximum length of the above */
-
-#define E_URL		1
-#define E_APN		2
-#define E_USER	3
-#define E_PASS	4
-#define E_APIKEY		5
-#define E_SIMPIN		6
-#define E_SIMICCID	7
 
 
 void initializeEEPROM()
@@ -137,7 +122,7 @@ void setNodeId(uint16_t nodeid)
 	eepromSetWord( addrNodeId, nodeid );
 }
 
-uint8_t getEEPROMstr(uint8_t ecode, char *dat)
+char *getEEPROMstr(uint8_t ecode, char *dat)
 {
 	switch( ecode ) {
 		case E_URL: eepromGetStr(addrURL, URL_SIZE, dat); break;
@@ -149,12 +134,12 @@ uint8_t getEEPROMstr(uint8_t ecode, char *dat)
 		case E_SIMICCID: eepromGetStr(addrSIMICCID, SIMICCID_SIZE, dat); break;
 	default:
 		/* if wrong ecode then return fail */
-		return 0;
+		return NULL;
 	}
-	return 1;
+	return dat;
 }
 
-uint8_t setEEPROMstr(uint8_t ecode, char *dat)
+char *setEEPROMstr(uint8_t ecode, char *dat)
 {
 	switch( ecode ) {
 		case E_URL: eepromSetStr(addrURL, URL_SIZE, dat); break;
@@ -166,9 +151,9 @@ uint8_t setEEPROMstr(uint8_t ecode, char *dat)
 		case E_SIMICCID: eepromSetStr(addrSIMPIN, SIMICCID_SIZE, dat); break;
 	default:
 		/* if wrong ecode, then return fail */
-		return 0;
+		return NULL;
 	}
-	return 1;
+	return dat;
 }
 
 
@@ -224,6 +209,35 @@ void loadVariablesFromEEPROM()
 	Serial.print(F("\tNet cycle: ")); Serial.println(maxMinNetCycle);
 }
 
+void dumpEEPROMvariables()
+{
+  char buf[32];
+
+#define CBUF	memset(buf, 0, sizeof( buf ))
+
+	Serial.println(F("EEPROM variables:"));
+	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+	CBUF;
+	Serial.print(F("APIKEY: \"")); Serial.print( getEEPROMstr(E_APIKEY, buf) ); Serial.println(F("\""));
+	CBUF;
+	Serial.print(F("APN: \"")); Serial.print( getEEPROMstr(E_APN, buf) ); Serial.println(F("\""));
+	CBUF;
+	Serial.print(F("USER: \"")); Serial.print( getEEPROMstr(E_USER, buf) ); Serial.println(F("\""));
+	CBUF;
+	Serial.print(F("PASS: \"")); Serial.print( getEEPROMstr(E_PASS, buf) ); Serial.println(F("\""));
+	CBUF;
+	Serial.print(F("URL: \"")); Serial.print( getEEPROMstr(E_URL, buf) ); Serial.println(F("\""));
+	Serial.print(F("PORT: ")); Serial.println( getServerPort() );
+	Serial.print(F("Log Cycle: ")); Serial.println( getLogCycle() );
+	Serial.print(F("Net Cycle: ")); Serial.println( getNetCycle() );
+	CBUF;
+	Serial.print(F("SIM PIN: \"")); Serial.print( getEEPROMstr(E_SIMPIN, buf) ); Serial.println(F("\""));
+	CBUF;
+	Serial.print(F("SIM ICCID: \"")); Serial.print( getEEPROMstr(E_SIMICCID, buf) ); Serial.println(F("\""));
+	Serial.print(F("VCC factor: ")); Serial.println( getVCC() );
+	Serial.println( F("------------") );
+}
+
 
 
 void initializeCounters()
@@ -269,7 +283,8 @@ void setup()
 	Serial.println(	F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
 	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
 	Serial.print(		F("System Board version ")); Serial.print( BOARD_REVISION );
-	Serial.print(		F("  Firmware version ")); Serial.println( FIRMWARE_REVISION );
+	Serial.print(		F("  Firmware version ")); Serial.print( FIRMWARE_REVISION );
+	Serial.print( 	F("  upload no # ")); Serial.println( FIRMWARE_UNUM );
 	
 //	delay(2000);
 
@@ -285,6 +300,8 @@ void setup()
  */
 
  	initializeEEPROM();
+
+ 	dumpEEPROMvariables();
 
 	initializeCounters(); 
       
@@ -315,17 +332,6 @@ void setup()
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 	powerRTC( 0, 1 );
-
-
-//	Dln("\n\n\nHello world. Sleep cycling begins!");
-//	sprintf(tmp, "Sleep duration %d sec, cycles %d", SLEEP_CYCLE, maxSleepCycle);
-//  Dln(tmp);
-
-//  sprintf(tmp, "Log period %d min, Net period %d min", DAILY_LOG_PERIOD, DAILY_NET_PERIOD);
-//  Dln(tmp);
-
-//  sprintf(tmp, "Log freq %d, net freq %d", maxMinLogCycle, maxMinNetCycle);
-//  Dln(tmp);
 
 //	setNodeId( NODE_ID );
 }
@@ -386,7 +392,7 @@ bool doNet=false, doLog=false;
 void doMaintenance()
 {
 	char *c,cc;
-	char buf[BUF_SIZE+1];
+	char buf[BUF_SIZE+1];		/* +1 to allow for \0 at the end of the string */
 
 
 		Serial.print( F(">") );
@@ -407,24 +413,24 @@ void doMaintenance()
 					/* if \r is received, execute the command */
 					if( cc == '\r') break;
 					
-					if( cc == '\h') {/* back up */
+					if( cc == '\h') { /* back up */
 						if(strlen(buf) > 0) {
 							Serial.write( cc );
-							*c = '\0';
 							c--;
+							*c = '\0';
 						}
 					}
 					else
-					/* otherwise add cc to the buffer and continue */
-					if(strlen(buf) < BUF_SIZE) {
-						*c++ = cc;
+						/* otherwise add cc to the buffer and continue */
+						if(strlen(buf) < BUF_SIZE) {
+							*c++ = cc;
 
-						Serial.write( cc );
-//					  Serial.println(buf);
-					}
+							Serial.write( cc );
+//						  Serial.println(buf);
+						}
 				}
 			}
-			
+			Serial.println();	
 #if 0
 			Serial.print(F("execute command :")); Serial.println( buf );
 #endif
@@ -443,7 +449,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_URL, buf ))
+						if(setEEPROMstr( E_URL, buf+1 ))
 							Serial.println(F("url set ok!"));
 						break;
 					
@@ -481,7 +487,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_USER, buf ))
+						if(setEEPROMstr( E_USER, buf+1 ))
 							Serial.println(F("user set ok!"));
 						break;
 
@@ -493,7 +499,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_PASS, buf ))
+						if(setEEPROMstr( E_PASS, buf+1 ))
 							Serial.println(F("pass set ok!"));
 						break;
 
@@ -505,7 +511,7 @@ void doMaintenance()
 							int n;
 							
 								n = atoi( buf+1 );
-								if(n>0 && n < 4096) {
+								if(n>0 && n < MAX_NODE_NUMBER) {
 									Serial.print(F("New Node ID : ")); Serial.println(n);
 									setNodeId( n );
 								}
@@ -520,7 +526,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_APIKEY, buf ))
+						if(setEEPROMstr( E_APIKEY, buf+1 ))
 							Serial.println(F("apn set ok!"));
 						break;
 
@@ -558,7 +564,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_SIMPIN, buf ))
+						if(setEEPROMstr( E_SIMPIN, buf+1 ))
 							Serial.println(F("sim pin set ok!"));
 						break;
 
@@ -570,7 +576,7 @@ void doMaintenance()
 								Serial.println( buf );
 							break;
 						};
-						if(setEEPROMstr( E_SIMICCID, buf ))
+						if(setEEPROMstr( E_SIMICCID, buf+1 ))
 							Serial.println(F("sim iccid set ok!"));
 						break;
 
@@ -743,7 +749,7 @@ void loop()
 {
 //  float f1, f2;
 //  unsigned long f3a, f3b;
-  datablock_t	db;
+  static datablock_t	db;
 
 
 #define DEBUG_SLEEP_CYCLE
@@ -870,9 +876,11 @@ void loop()
 			    powerRTC(0, 0);
 			    doLog = false;
 			    
-					db.rtcDateTime = unixtime( &dt );
-					memcpy((void *)&db.dt, (void *)&dt, sizeof(dt));
-					
+//					db.rtcDateTime = unixtime( &dt );
+//					memcpy((void *)&db.dt, (void *)&dt, sizeof(dt));
+//					datetime2new( &dt, &db.dt );
+					datetime2db( &dt, &db );
+									
 //					Dln("after powering off peripherals");
 
 #define DEB_STUFF
@@ -896,6 +904,7 @@ void loop()
 #if ENABLE_DATAPUSHING == 1
 
 					if( mem_pushDatablock( &db ) ) {
+						mem_stats();
 						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
 						Serial.println( F("could not push datablock to EEPROM.") );
@@ -981,7 +990,7 @@ void loop()
 				/* disable local echo */
 				gsm_sendcmd(CF("ATE0\r\n"));
 
-				if ( gsm_sendPin( CF( "1234" ) ) ) {
+				if ( gsm_sendPin( CF( "7646") ) ) {		//1234" ) ) ) {
 					Dlnp("PIN set OK");
 				} else {
 					Dlnp("PIN was NOT set");

@@ -74,6 +74,28 @@
 #endif /* DEBUG_PRINT */
 
 
+
+#define APIKEY_SIZE		8
+#define APN_SIZE			24
+#define USER_SIZE			8
+#define PASS_SIZE			8
+#define URL_SIZE			24
+#define SIMPIN_SIZE			4
+#define SIMICCID_SIZE		20
+
+#define EEPROM_MAXSTR	24		/* set to maximum length of the above */
+
+#define E_URL		1
+#define E_APN		2
+#define E_USER	3
+#define E_PASS	4
+#define E_APIKEY		5
+#define E_SIMPIN		6
+#define E_SIMICCID	7
+
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -119,6 +141,23 @@ void eepromSetChar( uint16_t aaddr, char dat );
 
 void eepromGetStr(uint16_t aaddr, int acnt, char *dat);
 void eepromSetStr(uint16_t aaddr, int acnt, char *dat);
+
+
+void initializeEEPROM();
+uint16_t getNodeId();
+void setNodeId(uint16_t nodeid);
+char *getEEPROMstr(uint8_t ecode, char *dat);
+char *setEEPROMstr(uint8_t ecode, char *dat);
+void setLogCycle(uint8_t dat);
+uint8_t getLogCycle();
+void setNetCycle(uint8_t dat);
+uint8_t getNetCycle();
+uint16_t getServerPort();
+void setServerPort( uint16_t dat );
+void setVCC( float dat );
+float getVCC();
+void loadVariablesFromEEPROM();
+
 
 
 #ifdef __cplusplus

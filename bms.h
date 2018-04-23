@@ -23,7 +23,6 @@
 #endif
 
 #include <stdint.h>
-#include "ver.h"
 
 /* system board revision string */
 #define BOARD_REVISION		"3"
@@ -82,7 +81,7 @@
 #define ENABLE_MAINTENANCE	1
 
 /* set to 1 if storage of data is enabled, set to 0 otherwise */
-#define ENABLE_DATAPUSHING	0
+#define ENABLE_DATAPUSHING	1
 
 
 
@@ -107,7 +106,6 @@
  * also prevented if one removes all pullup resistors from all
  * modules on the I2C bus, but turning off pullup is much easier */
 #define TURNOFF_I2C_PULLUPS_DURING_SLEEP	1
-
 
 
 /* Timinig constants */

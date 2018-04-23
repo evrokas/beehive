@@ -15,14 +15,11 @@
 
 #include "bms.h"
 #include "rtc.h"
-//#include "data.h"
-
 
 #define counter_type	uint16_t
 //#define counter_type	uint32_t
 
 
-#define BLOCK_SIZE	32
 
 #ifdef HAVE_DATA_H
 /* if compiling with old data.h and data.cpp, then include
@@ -43,31 +40,57 @@
 
 #endif
 
+#define ENTRY_DATA		0x1
+#define ENTRY_GSM			0x2
+#define ENTRY_GPS			0x3
+
+#define ENTRY_ERROR		0x7
+
+#define NODE_BITCOUNT		16
+#define MAX_NODE_NUMBER	65535		/* depends on NODE_BITCOUNT */
+
 
 typedef struct {
-	uint16_t	nodeId;
-	uint16_t	batVolt;
-	uint16_t	bhvTemp;
-	uint16_t	bhvHumid;
-	uint32_t	rtcDateTime;
+	uint16_t	nodeId: 16;		/* node identifier */
 
-#if 1
-	uint8_t		gsmSig;
-	uint16_t	gsmVolt;
-#endif
+	struct {
+		uint8_t	entryType:4;		/* entryType */
+	
+		uint8_t dayOfMonth: 5;
+		uint8_t month: 4;
+		uint8_t year: 7;
+		uint8_t hour: 5;
+		uint8_t minute: 6;
+	};
+	
+//	newdatetime_t	dt;				/* date & time of date acquisition */
 
-#if 1
-	gpsCoordType gpsLon;
-	gpsCoordType gpsLat;	
-#endif
-
-	uint32_t		bhvWeight;
-
-
-#if 1
-	datetime_t	dt;
-#endif
+	union {
+		struct {		/* ENTRY_DATA */
+			uint16_t	batVolt;			/* node battery voltage */
+			uint16_t	bhvTemp;			/* node temperature measurement */
+			uint16_t	bhvHumid;			/* node humidity measurement */
+			uint32_t	bhvWeight;		/* beehive weight measurement */
+		};
+		
+		struct {		/* ENTRY_GSM */
+			uint8_t		gsmSig;				/* GSM signal quality */
+			uint16_t	gsmVolt;			/* GSM voltage */
+		};
+		
+		struct {		/* ENTRY_GPS */
+			gpsCoordType gpsLon;		/* GPS longitude */
+			gpsCoordType gpsLat;		/* GPS latitude */
+		};
+		struct {		/* ENTRY_ERROR */
+			uint8_t dev;						/* device error, temp&humid error, GSM error, GPS error, RTC */
+			uint32_t	dat;					/* error info */
+		};			
+	};	
 } datablock_t;
+
+
+#define BLOCK_SIZE	16
 
 
 #endif	/* HAVE_DATA_H */
@@ -105,8 +128,10 @@ bool mem_pushDatablock(datablock_t *db);
 
 bool mem_popDatablock(datablock_t *db);
 	
+void datetime2db(datetime_t *dt, datablock_t *db);
 
-
+void mem_readcounters();
+void mem_storecounters();
 
 #ifdef __cplusplus
 }	/* extern "C" */

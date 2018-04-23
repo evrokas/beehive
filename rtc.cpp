@@ -214,7 +214,7 @@ long secondstime(datetime_t *dt)
 const static uint8_t daysInMonth [] PROGMEM = { 31,28,31,30,31,30,31,31,30,31,30,31 };
     
 // number of days since 2000/01/01, valid for 2001..2099
-static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d)
+uint16_t date2days(uint16_t y, uint8_t m, uint8_t d)
 {
 	if (y >= 2000)
   	y -= 2000;
@@ -228,8 +228,21 @@ static uint16_t date2days(uint16_t y, uint8_t m, uint8_t d)
 	return days + 365 * y + (y + 3) / 4 - 1;
 }
     
-static long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s)
+long time2long(uint16_t days, uint8_t h, uint8_t m, uint8_t s)
 {
 	return ((days * 24L + h) * 60 + m) * 60 + s;
 }
+
+
+/* convert datetime_t to newdatetime_t */
+void datetime2new(datetime_t *dt, newdatetime_t *ndt)
+{
+	ndt->year = dt->year%100;
+	ndt->month = dt->month;
+	ndt->dayOfMonth = dt->dayOfMonth;
+	ndt->hour = dt->hour;
+	ndt->minute = dt->minute;
+}
+
+
 

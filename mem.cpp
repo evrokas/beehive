@@ -25,6 +25,7 @@
  
 #include "bms.h"
 #include "mem.h"
+#include "utils.h"
 
 
 counter_type	__head_db;		/* head pointer of datablocks */
@@ -64,10 +65,16 @@ void mem_stats()
  
 void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 {
+	if(sizeof( datablock_t ) != BLOCK_SIZE ) {
+		Serial.println( F("MEM SYSTEM ERROR: datablock_t size is not equal to BLOCK_SIZE") );
+	}
+
 	__ee_init(dev_addr, dev_size);
 	
-	__head_db = -1;
-	__tail_db = 0;
+//	__head_db = -1;
+//	__tail_db = 0;
+	mem_readcounters();
+
 	__max_db = __ee_dev_size / BLOCK_SIZE;
 
 	__cnt_db = 0;
@@ -80,11 +87,14 @@ void mem_init(uint32_t dev_size, uint8_t dev_addr = 0x50)
 
 #if LINUX_NATIVE_APP == 1
 	fprintf(stderr, "ee_dev_size: %i\t ee_dev_addr=0x%02x\n", __ee_dev_size, __ee_dev_addr);
+	mem_stats();
 #else
 	Serial.print( F("ee_dev_size: ") );
 	Serial.print(__ee_dev_size, DEC);
 	Serial.print( F("\tee_dev_addr: 0x") );
 	Serial.println(__ee_dev_addr, HEX);
+
+	mem_stats();
 #endif	/* LINUX_NATIVE_APP */
 
 #endif	/* DEBUG_MEM */
@@ -96,7 +106,6 @@ void mem_end()
 
 	__cnt_db = 0;
 }
-
 
 
 #if RTC_CLOCK_CHIP == 1
@@ -136,6 +145,10 @@ void mem_readcounters()
 	
 	__tail_db = (Wire.read() & 0xff);
 	__tail_db |= (Wire.read() << 8) & 0xff;
+	
+	
+	__cnt_db = (__max_db + (__head_db - __tail_db)) % __max_db;
+	
 }
  
 
@@ -205,6 +218,8 @@ bool mem_pushDatablock(datablock_t *db)
 
 #endif	/* DEBUG_MEM */
 
+	powerRTC(1, 10);
+	mem_readcounters();
 	
 	if(__cnt_db >= __max_db)return false;
 	if((__head_db == (counter_type)-1) && (__cnt_db == 0)) {
@@ -220,7 +235,10 @@ bool mem_pushDatablock(datablock_t *db)
 	/* increase __head_db taking care of overflow */
 	__head_db = (__head_db + 1) % __max_db;
 	
-
+	
+	mem_storecounters();
+	powerRTC(0, 1);
+	
 #if DEBUG_MEM
 
 #if LINUX_NATIVE_APP == 1
@@ -243,6 +261,9 @@ bool mem_popDatablock(datablock_t *db)
 	Serial.println( F("mem_popDatablock") );
 #endif
 
+	powerRTC(1, 10);
+	mem_readcounters();
+
 	if(!__cnt_db)return false;
 	
 	mem_read(db, sizeof( datablock_t ), __tail_db);
@@ -250,6 +271,9 @@ bool mem_popDatablock(datablock_t *db)
 	__tail_db = (__tail_db + 1) % __max_db;
 	__cnt_db--;
 
+
+	mem_storecounters();
+	powerRTC(0, 1);
 
 #if DEBUG_MEM
 
@@ -262,6 +286,15 @@ bool mem_popDatablock(datablock_t *db)
 
 #endif	/* DEBUG_MEM */
 
-		
 	return true;
+}
+
+
+void datetime2db(datetime_t *dt, datablock_t *db)
+{
+	db->year = dt->year%100;
+	db->month = dt->month;
+	db->dayOfMonth = dt->dayOfMonth;
+	db->hour = dt->hour;
+	db->minute = dt->minute;
 }
