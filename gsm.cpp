@@ -414,7 +414,7 @@ bool http_initiateGetRequest()
 		}
 
 		/* set HTTP USER AGENT */
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPPARA=\"UA\",\"BEEHIVE SIM MODULE\r\n" ), F ("OK\r\n"), 2 ) ) {
+		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPPARA=\"UA\",\"BEEHIVE SIM MODULE\"\r\n" ), F ("OK\r\n"), 2 ) ) {
 			gsm_sendcmdp( F ("AT+HTTPTERM\r\n" ) );
 			return false;
 		}

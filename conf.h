@@ -6,8 +6,8 @@
 #ifndef __CONF_H__
 #define __CONF_H__
 
-//#define APN				"internet.cyta.gr"			/* CYTA */
-#define APN				"internet"								/* COSMOTE */
+#define APN				"internet.cyta.gr"			/* CYTA */
+//#define APN				"internet"								/* COSMOTE */
 #define USERNAME	""
 #define PASSWORD	""
 #define DBSERVER	"erns.sytes.net"

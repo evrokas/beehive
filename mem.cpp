@@ -298,3 +298,46 @@ void datetime2db(datetime_t *dt, datablock_t *db)
 	db->hour = dt->hour;
 	db->minute = dt->minute;
 }
+
+void dumpDBrecord(datablock_t *db)
+{
+	Serial.print(F("typ:"));
+	switch(db->entryType) {
+		case ENTRY_DATA: Serial.print(F("dat\t")); break;
+		case ENTRY_GSM: Serial.print(F("gsm\t")); break;
+		case ENTRY_GPS: Serial.print(F("gps\t")); break;
+		case ENTRY_ERROR: Serial.print(F("err\t")); break;
+		default:
+			Serial.print(F("unk\t")); break;
+	}
+
+	Serial.print(F("nid:"));Serial.print( db->nodeId );
+	Serial.print(F("\tdate:"));Serial.print( db->dayOfMonth );
+	Serial.print(F("-"));Serial.print(db->month);
+	Serial.print(F("-"));Serial.print(db->year);
+	Serial.print(F(" "));Serial.print(db->hour);
+	Serial.print(F(":"));Serial.print(db->minute);
+
+	Serial.print(F("nid:"));Serial.print( db->nodeId );
+	
+	switch(db->entryType) {
+		case ENTRY_DATA:
+			Serial.print(F("\tVcc:"));Serial.print(db->batVolt);
+			Serial.print(F("\tTem:"));Serial.print(db->bhvTemp);
+			Serial.print(F("\tHum:"));Serial.print(db->bhvHumid);
+			Serial.print(F("\tWei:"));Serial.println(db->bhvWeight);
+			break;
+		
+		case ENTRY_GSM:
+			break;
+		
+		case ENTRY_GPS:
+			break;
+		
+		default:
+			break;
+	}
+
+	Serial.println(F(";"));
+}
+			

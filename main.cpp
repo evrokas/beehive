@@ -56,6 +56,8 @@ uint16_t lastMinNetCycle;
 
 uint16_t moduleAflags = 0;
 
+#define isModuleEnabled			(moduleAflags & A_ENABLE)
+#define isDNSLookupEnabled	(moduleAflags & A_DNSLOOKUP)
 
 
 #ifndef NODE_ID
@@ -85,7 +87,7 @@ uint8_t addrNetCycle;
 uint8_t addrSIMPIN;
 uint8_t addrSIMICCID;
 uint8_t addrVCCfactor;
-
+uint8_t addrAflags;
 #endif
 
 
@@ -105,6 +107,7 @@ void initializeEEPROM()
 	addrSIMPIN	 = eepromGetAddr( SIMPIN_SIZE );
 	addrSIMICCID	= eepromGetAddr( SIMICCID_SIZE );
 	addrVCCfactor	= eepromGetAddr( 4 );
+	addrAflags = eepromGetAddr( 2 );
 	
 	Serial.print( eepromGetLastAddr() );
 	Serial.println( F(" bytes") );
@@ -121,6 +124,17 @@ void setNodeId(uint16_t nodeid)
 {
 	eepromSetWord( addrNodeId, nodeid );
 }
+
+uint16_t getAflags()
+{
+	return ( eepromGetWord( addrAflags ) );
+}
+
+void setAflags(uint16_t dat)
+{
+	eepromSetWord( addrAflags, dat);
+}
+
 
 char *getEEPROMstr(uint8_t ecode, char *dat)
 {
@@ -200,6 +214,8 @@ float getVCC()
 
 void loadVariablesFromEEPROM()
 {
+	moduleAflags = getAflags();
+	
 	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
 	setVccFactor( getVCC() );
 	
@@ -235,6 +251,14 @@ void dumpEEPROMvariables()
 	CBUF;
 	Serial.print(F("SIM ICCID: \"")); Serial.print( getEEPROMstr(E_SIMICCID, buf) ); Serial.println(F("\""));
 	Serial.print(F("VCC factor: ")); Serial.println( getVCC() );
+
+	Serial.print(F("Module flags: "));
+		if(isModuleEnabled)Serial.print(F("ModEn\t"));
+			else Serial.print(F("ModDis\t"));
+		if(isDNSLookupEnabled)Serial.print(F("DNSEn\t"));
+			else Serial.print(F("DNSDis\t"));
+	Serial.println();
+	
 	Serial.println( F("------------") );
 }
 
@@ -282,9 +306,10 @@ void setup()
 
 	Serial.println(	F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
 	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
-	Serial.print(		F("System Board version ")); Serial.print( BOARD_REVISION );
-	Serial.print(		F("  Firmware version ")); Serial.print( FIRMWARE_REVISION );
-	Serial.print( 	F("  upload no # ")); Serial.println( FIRMWARE_UNUM );
+	Serial.print(		F("System Board version ")); Serial.print( F(BOARD_REVISION) );
+	Serial.print(		F("  Firmware version ")); Serial.println( F(FIRMWARE_REVISION) );
+	Serial.print(   F("Date: ")); Serial.print( F(FIRMWARE_DATE) );
+	Serial.print( 	F("  upload no # ")); Serial.println( F(FIRMWARE_UNUM) );
 	
 //	delay(2000);
 
@@ -901,18 +926,21 @@ void loop()
 #endif
 
 
+					/* put here code to store in EEPROM memory data blocks until
+					 * net cycle is reached, and data are forwarded to internet server */
+
 #if ENABLE_DATAPUSHING == 1
 
+					powerRTC(1, 10);
 					if( mem_pushDatablock( &db ) ) {
 						mem_stats();
 						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
 						Serial.println( F("could not push datablock to EEPROM.") );
 					}
+					powerRTC(0, 1);
 #endif
 					
-					/* put here code to store in EEPROM memory data blocks until
-					 * net cycle is reached, and data are forwarded to internet server */
 			}
   
 			if(abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle)
@@ -927,22 +955,6 @@ void loop()
 			    D(curMinNetCycle); Dp(" "); Dln(lastMinNetCycle);
 #endif
 
-#if 0
-				if( poweredGSM >= 4 ) {
-					Dlnp("GSM was not ready after 3 tries. Skip NETWORK session");
-					
-					/* module is not ready after 3 cycles, so there might be a problem,
-					 * skip network communication this time */
-					poweredGSM = 0;
-					powerGPRSGPS( 0 );
-
-					lastMinNetCycle = curMinNetCycle;
-					curSleepCycle = 0;	/* reset sleep cycle */
-
-					continue;
-				}
-#endif
-				
 				if(!poweredGSM) {
 					poweredGSM++;
 					Dp("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
@@ -953,8 +965,6 @@ void loop()
 
 				}
 
-				//poweredGSM++;
-				
 				while( poweredGSM < 10 ) {
 					if( !gsm_moduleInfo() ) {
 						Dp("GSM module is not ready yet! try ... "); Dln( poweredGSM );
@@ -990,7 +1000,8 @@ void loop()
 				/* disable local echo */
 				gsm_sendcmd(CF("ATE0\r\n"));
 
-				if ( gsm_sendPin( CF( "7646") ) ) {		//1234" ) ) ) {
+//				if ( gsm_sendPin( CF( "7646") ) ) {		//1234" ) ) ) {
+				if ( gsm_sendPin( CF( "1234" ) ) ) {
 					Dlnp("PIN set OK");
 				} else {
 					Dlnp("PIN was NOT set");
@@ -1002,9 +1013,9 @@ void loop()
 				
 
 				
-#define REG_TIMEOUT	30
+#define REG_TIMEOUT	10
 		
-				do {
+				{
 					uint8_t r, cc=0;
 						do {
 							gsm_getRegistration( r );
@@ -1023,9 +1034,10 @@ void loop()
 							doNet = 0;
 							continue;
 						}
-				} while(0);
+				};
 				
 				
+#if 0
 				do {
 					uint16_t ii;
 					uint8_t iii;
@@ -1040,6 +1052,8 @@ void loop()
 							db.gsmSig = iii;
 						}
 				} while(0);
+#endif
+
 
 				do {
 					uint8_t srvip[4];

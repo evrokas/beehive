@@ -59,7 +59,8 @@ void sapbr_init()
 
 
 #if 1
-	if( gsm_activateBearerProfile(CF("internet"/*.cyta.gr"*/), CF(""), CF("") ) ) {
+//	if( gsm_activateBearerProfile(CF("internet"), CF(""), CF("") ) ) {
+	if( gsm_activateBearerProfile(CF("internet.cyta.gr"), CF(""), CF("") ) ) {
 		Serial.println("GSM: bearer profile is activated!\n");
 	} else {
 		Serial.println("GSM: bearer profile is *NOT* activated!\n");
@@ -103,7 +104,7 @@ void http_send()
 	delay(5);
 //	write_gsm(CF("AT+HTTPPARA=\"REDIR\",1\r\n"));
 //	delay(5);
-	write_gsm(CF("AT+HTTPPARA=\"URL\",\"http://5.55.117.164:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\r"));
+	write_gsm(CF("AT+HTTPPARA=\"URL\",\"http://5.55.115.133:8088/data.php?action=add&apikey=abcdefgh&nodeId=1088&mcuTemp=60&batVolt=3.998&bhvTemp=31.345&bhvHumid=45.432&rtcDateTime=13-03-17_16:53&gsmSig=45&gsmVolt=4.023&gpsLon=12.345232&gpsLat=45.123433&bhvWeight=45.567\"\r\n"));
 	delay(5);
 	write_gsm(CF("AT+HTTPACTION=0\r\n"));
 	delay(5);
@@ -148,12 +149,12 @@ void setup()
   Serial.println("\n\nTinyGSM example.");
   mil1 = millis();
   
+  mem_init( 32, /*256,*/ (0x57) );
   
   powerPeripherals( 0,0 );
   powerGPRSGPS( 0 );
   powerRTC( 0, 1 );
 
-  mem_init( 32, /*256,*/ (0x57) );
 }
 
 
@@ -242,12 +243,17 @@ void loop()
 				char dns[32];
 				uint8_t ipa[4];
 							
-					Serial.print("Resolving 'evrokas.sytes.net' ... ");
+					Serial.print("Resolving 'erns.sytes.net' ... ");
 					strcpy(dns, "erns.sytes.net");
 					memset(ip, 0, sizeof(ip));
 							
-					if(gsm_dnsLookup("internet" /*.cyta.gr"*/, "", "", dns, ip, ipa)) {
+//					if(gsm_dnsLookup("internet", "", "", dns, ip, ipa)) {
+					if(gsm_dnsLookup("internet.cyta.gr", "", "", dns, ip, ipa)) {
 						Serial.println(ip);
+						Serial.println(ipa[0]);
+						Serial.println(ipa[1]);
+						Serial.println(ipa[2]);
+						Serial.println(ipa[3]);
 					} else {
 						Serial.println( "Could not resolve host name!");
 					}
