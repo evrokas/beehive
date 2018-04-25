@@ -127,6 +127,7 @@ bool mem_read(const void *p, uint8_t psize);
 bool mem_pushDatablock(datablock_t *db);
 
 bool mem_popDatablock(datablock_t *db);
+bool mem_readDatablock(uint16_t index, datablock_t *db);
 	
 void datetime2db(datetime_t *dt, datablock_t *db);
 

@@ -289,6 +289,41 @@ bool mem_popDatablock(datablock_t *db)
 	return true;
 }
 
+/* read data block at index */
+bool mem_readDataBlocki(uint16_t index, datablock_t *db)
+{
+#if defined(LINUX_NATIVE_APP)
+	fprintf(stderr, "mem_readDatablocki\n");
+#else
+	Serial.println( F("mem_readDatablocki") );
+#endif
+
+#if 0
+	powerRTC(1, 10);
+	mem_readcounters();
+	powerRTC(0, 10);
+
+	if(!__cnt_db)return false;
+#endif
+	
+
+	mem_read(db, sizeof( datablock_t ), index);
+
+
+
+#if 0
+	__tail_db = (__tail_db + 1) % __max_db;
+	__cnt_db--;
+
+
+	mem_storecounters();
+	powerRTC(0, 1);
+#endif
+
+	return true;
+}
+
+
 
 void datetime2db(datetime_t *dt, datablock_t *db)
 {
@@ -329,9 +364,13 @@ void dumpDBrecord(datablock_t *db)
 			break;
 		
 		case ENTRY_GSM:
+			Serial.print(F("\tGSM sig:"));Serial.print(db->gsmSig);
+			Serial.print(F("\tGSM bat:"));Serial.print(db->gsmVolt);
 			break;
 		
 		case ENTRY_GPS:
+			Serial.print(F("\tGPS lat:"));Serial.print(db->gpsLon,6);
+			Serial.print(F("\tGPS lat:"));Serial.print(db->gpsLat,6);
 			break;
 		
 		default:

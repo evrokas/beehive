@@ -211,50 +211,48 @@ void gsm_relayOutput( Stream &ast )
 
 
 
-bool gsm_activateBearerProfile(char *apn, char *user, char *pass)
+bool gsm_activateBearerProfile()
 {
 	DEF_CLEAR_TEMPBUF;
+	char *c;
+	
 //AT+SAPBR=3,1,"CONTYPE","GPRS"
 //AT+SAPBR=3,1,"APN","myq"
 //AT+SAPBR=3,1,"USER",""
 //AT+SAPBR=3,1,"PWD",""
 
-#if 0
-		if(!gsm_sendrecvcmdtimeout( CF("AT+CIPSHUT\r\n"), CF("SHUT OK\r\n"), 2) )
-			return false;
-#else
+		/* reset interface */
 		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK\r\n"), 2) )
 			return false;
-#endif
 	
 		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPMUX=0\r\n"), F("OK\r\n"), 2 ) )
 			return false;
 
-
 		/* set parameters */
     if(!gsm_sendrecvcmdtimeoutp( F( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , F( "OK\r\n") , 2 ) )
     	return false;
+
+		c = _tempbuf;
     
-		strcpy_P(_tempbuf, PF("AT+SAPBR=3,1,\"APN\",\"") );
-		strcat(_tempbuf, apn );
-		strcat_P(_tempbuf, PF("\"\r\n") );
-		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK\r\n" ), 2 ) )
+		gsm_sendcmdp( F("AT+SAPBR=3,1,\"APN\",\"") );
+		transmitEEPROMstr(E_APN, gsmserial);
+		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n") , F( "OK\r\n" ), 2 ) )
 			return false;
 		
-		strcpy_P(_tempbuf, PF("AT+SAPBR=3,1,\"USER\",\"") );
-		strcat(_tempbuf, user );
-		strcat_P(_tempbuf, PF("\"\r\n") );
-		if(!gsm_sendrecvcmdtimeout( CF( _tempbuf ), CF( "OK" ), 2 ) )
+
+		gsm_sendcmdp( F("AT_SAPBR=3,1,\"USER\",\"") );
+		transmitEEPROMstr(E_USER, gsmserial);
+		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK\r\n" ), 2 ) )
 			return false;
 		
-		strcpy_P(_tempbuf, PF("AT+SAPBR=3,1,\"PWD\",\"") );
-		strcat(_tempbuf, pass );
-		strcat_P(_tempbuf, PF("\"\r\n") );
-		if(!gsm_sendrecvcmdtimeout( CF(_tempbuf ), CF( "OK\r\n" ), 2 ) )
+
+		gsm_sendcmdp( F("AT+SAPBR=3,1,\"PWD\",\"") );
+		transmitEEPROMstr(E_PASS, gsmserial);
+		if(!gsm_sendrecvcmdtimeoutp( F("\"\r\n"), F( "OK\r\n" ), 2 ) )
 			return false;
 			
     /* actual connection */
-    if(!gsm_sendrecvcmdtimeoutp(F("AT+SAPBR=1,1\r\n"), F("OK\r\n"), 85) )
+    if(!gsm_sendrecvcmdtimeoutp( F("AT+SAPBR=1,1\r\n"), F("OK\r\n"), 85) )
     return false;
 
     /* so we are connected! */
@@ -305,8 +303,7 @@ bool gsm_deactivateBearerProfile()
   return true;
 }
 
-bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, 
-	char *ipstr, uint8_t *ipaddr)
+bool gsm_dnsLookup(uint8_t *ipaddr)
 {
 	DEF_CLEAR_TEMPBUF;
 	char *c, *cc;
@@ -327,13 +324,19 @@ bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns,
 			
 		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPMUX=0\r\n"), F("OK\r\n"), 2 ) )
 			return false;
+	
+		c = _tempbuf;
 		
 		gsm_sendcmdp( F( "AT+CSTT=\"") );
-		gsm_sendcmd( apn );
+		
+		transmitEEPROMstr(E_APN, gsmserial);
 		gsm_sendcmdp( F("\",\"") );
-		gsm_sendcmd( user );
+		
+		transmitEEPROMstr(E_USER, gsmserial);
 		gsm_sendcmdp( F("\",\"") );
-		gsm_sendcmd( pass );
+
+		transmitEEPROMstr(E_PASS, gsmserial);
+		
 		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK\r\n" ), 2 ) )
 			return false;
 
@@ -350,7 +353,12 @@ bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns,
 			return false;
 		
 		gsm_sendcmdp( F( "AT+CDNSGIP=\"" ) );
-		gsm_sendcmd( dns );
+		
+		CLEAR_TEMPBUF;
+		c = getEEPROMstr(E_URL, c);
+//		gsm_sendcmd( dns );
+		gsm_sendcmd( c );
+
 		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F("+CDNSGIP:"), 20 ) )
 			return false;
 		
@@ -373,10 +381,6 @@ bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns,
 		/* find last \" */
 		cc = strchr( c, '\"');
 		*cc = 0;		// null terminate string there
-
-		/* set ipstr only if ipstr pointer is non null */
-		if(ipstr)
-			strcpy(ipstr, c);
 
 #define STRTOD(_v,_s)	_v=0;while(isdigit( *_s )) { _v=_v*10+(*_s - '0');_s++; }
 	

@@ -170,6 +170,34 @@ char *setEEPROMstr(uint8_t ecode, char *dat)
 	return dat;
 }
 
+bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
+{
+	uint8_t i,m, sta;
+	char c;
+	
+	switch( ecode ) {
+		case E_URL: m = URL_SIZE; sta = addrURL; break;
+		case E_APN: m = APN_SIZE; sta = addrAPN; break;
+		case E_USER: m = USER_SIZE; sta = addrUSER; break;
+		case E_PASS: m = PASS_SIZE; sta = addrPASS; break;
+		case E_APIKEY: m = APIKEY_SIZE; sta = addrAPIKEY; break;
+		case E_SIMPIN: m = SIMPIN_SIZE; sta = addrSIMPIN; break;
+		case E_SIMICCID: m = SIMICCID_SIZE; sta = addrSIMICCID; break;
+		default: return (false);	//m = 0; break;
+	}
+	
+	i=0;
+	while(m) {
+		c = eepromGetByte( sta + i );
+		if(!c)break;	/* end of string */
+
+		strm.write(c);
+		i++;m--;
+	}
+
+	return (true);
+}
+	
 
 void setLogCycle(uint8_t dat)
 {
@@ -250,7 +278,7 @@ void dumpEEPROMvariables()
 	Serial.print(F("SIM PIN: \"")); Serial.print( getEEPROMstr(E_SIMPIN, buf) ); Serial.println(F("\""));
 	CBUF;
 	Serial.print(F("SIM ICCID: \"")); Serial.print( getEEPROMstr(E_SIMICCID, buf) ); Serial.println(F("\""));
-	Serial.print(F("VCC factor: ")); Serial.println( getVCC() );
+	Serial.print(F("VCC factor: ")); Serial.println( getVCC(), 3 );
 
 	Serial.print(F("Module flags: "));
 		if(isModuleEnabled)Serial.print(F("ModEn\t"));
@@ -495,9 +523,14 @@ void doMaintenance()
 					case 'a':
 						if(buf[1] == '?') {
 							Serial.print(F("APN: "));
+#if 1
+							transmitEEPROMstr( E_APN, Serial );
+							Serial.println();
+#else
 							memset(buf, 0, BUF_SIZE+1);
 							if(getEEPROMstr( E_APN, buf ))
 								Serial.println( buf );
+#endif
 							break;
 						};
 						if(setEEPROMstr( E_APN, buf+1 ))
@@ -608,7 +641,7 @@ void doMaintenance()
 					case 'v':
 						if(buf[1] == '?') {
 							Serial.print(F("VCC factor: "));
-							Serial.println( getVccFactor() );
+							Serial.println( getVccFactor(), 3 );
 						} else {
 						  float f;
 						  	
@@ -1058,7 +1091,7 @@ void loop()
 				do {
 					uint8_t srvip[4];
 						
-						if( gsm_dnsLookup(CF( APN ),CF( USERNAME ),CF( PASSWORD ),CF( DBSERVER ), NULL, srvip)) {
+						if( gsm_dnsLookup( srvip )) {
 							Dlnp("successfully resolved domain name");
 							memcpy(serverip, srvip, 4);
 						} else {
@@ -1066,7 +1099,7 @@ void loop()
 						}
 				} while(0);
 				
-				if(gsm_activateBearerProfile(CF( APN ), CF( USERNAME ), CF( PASSWORD ))) {
+				if( gsm_activateBearerProfile() ) {
 					if( http_initiateGetRequest() ) {
 						if( http_send_datablock( db ) ) {
 						} else Serial.println( F("error: could not send data block"));
@@ -1090,22 +1123,6 @@ void loop()
 				
 				lastMinNetCycle = curMinNetCycle;
 				curSleepCycle = 0;	/* reset sleep cycle */
-
-
-
-//				gsm_sendrecvcmd("ATI\n", tmpb);
-//				Dln(tmpb);
-			    
-			    /* 
-			     * put
-			     * code
-			     * for 
-			     * GSM/GPRS 
-			     * network 
-			     * connection
-			     */
-			    
-
 			}	/* in net cycle  */
 		
 		}	/* Sleep Cycle */

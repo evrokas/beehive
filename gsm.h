@@ -37,10 +37,8 @@ extern "C" {
 
     void gsm_relayOutput( Stream &ast );
     
-    bool gsm_activateBearerProfile(char *apn, char *user, char *pass);
-    
+    bool gsm_activateBearerProfile();
     uint8_t	gsm_getBearerStatus();
-    
     bool gsm_deactivateBearerProfile();
     
 
@@ -68,7 +66,7 @@ extern "C" {
 		bool gsm_getSignalQuality(uint8_t &asqual);
 	
 		bool gsm_getDateTime(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month, uint16_t &year);
-		bool gsm_dnsLookup(char *apn, char *user, char *pass, char *dns, char *ipstr, uint8_t *ipaddr);
+		bool gsm_dnsLookup(uint8_t *ipaddr);
 
 		extern uint8_t serverip[4];
 		
