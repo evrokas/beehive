@@ -240,7 +240,7 @@ bool gsm_activateBearerProfile()
 			return false;
 		
 
-		gsm_sendcmdp( F("AT_SAPBR=3,1,\"USER\",\"") );
+		gsm_sendcmdp( F("AT+SAPBR=3,1,\"USER\",\"") );
 		transmitEEPROMstr(E_USER, gsmserial);
 		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK\r\n" ), 2 ) )
 			return false;

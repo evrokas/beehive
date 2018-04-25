@@ -187,12 +187,11 @@ bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
 	}
 	
 	i=0;
-	while(m) {
+	for(i=0;i<m;i++) {
 		c = eepromGetByte( sta + i );
 		if(!c)break;	/* end of string */
 
 		strm.write(c);
-		i++;m--;
 	}
 
 	return (true);
@@ -261,24 +260,40 @@ void dumpEEPROMvariables()
 
 	Serial.println(F("EEPROM variables:"));
 	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
-	CBUF;
-	Serial.print(F("APIKEY: \"")); Serial.print( getEEPROMstr(E_APIKEY, buf) ); Serial.println(F("\""));
-	CBUF;
-	Serial.print(F("APN: \"")); Serial.print( getEEPROMstr(E_APN, buf) ); Serial.println(F("\""));
-	CBUF;
-	Serial.print(F("USER: \"")); Serial.print( getEEPROMstr(E_USER, buf) ); Serial.println(F("\""));
-	CBUF;
-	Serial.print(F("PASS: \"")); Serial.print( getEEPROMstr(E_PASS, buf) ); Serial.println(F("\""));
-	CBUF;
-	Serial.print(F("URL: \"")); Serial.print( getEEPROMstr(E_URL, buf) ); Serial.println(F("\""));
+	
+	Serial.print(F("APIKEY: \"")); 
+	transmitEEPROMstr(E_APIKEY, Serial);
+	Serial.println(F("\""));
+	
+	Serial.print(F("APN: \"")); 
+	transmitEEPROMstr(E_APN, Serial);
+	Serial.println(F("\""));
+	
+	Serial.print(F("USER: \""));
+	transmitEEPROMstr(E_USER, Serial);
+	Serial.println(F("\""));
+	
+	Serial.print(F("PASS: \""));
+	transmitEEPROMstr(E_PASS, Serial);
+	Serial.println(F("\""));
+	
+	Serial.print(F("URL: \""));
+	transmitEEPROMstr(E_URL, Serial);
+	Serial.println(F("\""));
+	
 	Serial.print(F("PORT: ")); Serial.println( getServerPort() );
 	Serial.print(F("Log Cycle: ")); Serial.println( getLogCycle() );
 	Serial.print(F("Net Cycle: ")); Serial.println( getNetCycle() );
-	CBUF;
-	Serial.print(F("SIM PIN: \"")); Serial.print( getEEPROMstr(E_SIMPIN, buf) ); Serial.println(F("\""));
-	CBUF;
-	Serial.print(F("SIM ICCID: \"")); Serial.print( getEEPROMstr(E_SIMICCID, buf) ); Serial.println(F("\""));
-	Serial.print(F("VCC factor: ")); Serial.println( getVCC(), 3 );
+
+	Serial.print(F("SIM PIN: \""));
+	transmitEEPROMstr(E_SIMPIN, Serial);	
+	Serial.println(F("\""));
+	
+	Serial.print(F("SIM ICCID: \""));
+	transmitEEPROMstr(E_SIMICCID, Serial);
+	Serial.println(F("\""));
+
+	Serial.print(F("VCC factor: ")); Serial.println( getVCC(), 5 );
 
 	Serial.print(F("Module flags: "));
 		if(isModuleEnabled)Serial.print(F("ModEn\t"));
@@ -332,7 +347,7 @@ void setup()
 	Dinit;
 	Serial.begin( 9600 );
 
-	Serial.println(	F("Beehive Monitoring System (c) 2015,16,17,18. All Rights reserved"));
+	Serial.println(	F("Beehive Monitoring System (c) 2015-18. All Rights reserved"));
 	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
 	Serial.print(		F("System Board version ")); Serial.print( F(BOARD_REVISION) );
 	Serial.print(		F("  Firmware version ")); Serial.println( F(FIRMWARE_REVISION) );
@@ -658,7 +673,12 @@ void doMaintenance()
 						break;
 
 					case 'E':	/* reset counter to initial values */
-						/* TODO */
+						__tail_db = 0;
+						__head_db = 0;
+						powerRTC(1, 10);
+						mem_storecounters();
+						powerRTC(0, 1);
+						Serial.println(F("EEPROM head and tail counters have been reset!"));
 						break;
 
 					case 'P': /* print sleep counter */
@@ -667,7 +687,11 @@ void doMaintenance()
 						break;
 					
 					case 'D':	/* dump data values */
-						/* TODO */
+						powerRTC(1, 10);
+						mem_readcounters();
+						powerRTC(0, 1);
+						Serial.print(F("head: "));Serial.print(__head_db);
+						Serial.print(F("\ttail: ")); Serial.println(__tail_db);
 						break;
 
 					case 'V':	/* print battery voltage */
@@ -934,13 +958,9 @@ void loop()
 			    powerRTC(0, 0);
 			    doLog = false;
 			    
-//					db.rtcDateTime = unixtime( &dt );
-//					memcpy((void *)&db.dt, (void *)&dt, sizeof(dt));
-//					datetime2new( &dt, &db.dt );
 					datetime2db( &dt, &db );
-									
-//					Dln("after powering off peripherals");
 
+									
 #define DEB_STUFF
 
 #ifdef DEB_STUFF
@@ -963,11 +983,13 @@ void loop()
 					 * net cycle is reached, and data are forwarded to internet server */
 
 #if ENABLE_DATAPUSHING == 1
+					db.entryType = ENTRY_DATA;
+
 
 					powerRTC(1, 10);
 					if( mem_pushDatablock( &db ) ) {
 						mem_stats();
-						Serial.println( F("pushed datablock to EEPROM successfully.") );
+//						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
 						Serial.println( F("could not push datablock to EEPROM.") );
 					}
@@ -982,10 +1004,28 @@ void loop()
 			if(doNet)	{	//abs(curMinNetCycle - lastMinNetCycle) >= maxMinNetCycle) {
 				/* maxMinNetCycle minutes have passed since last cycle
 				 * do net-working stuff */
-
+				unsigned long mil1=0, mil2=0;
+				
 #ifdef DEBUG_SLEEP_CYCLE
 			    Dp("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
 			    D(curMinNetCycle); Dp(" "); Dln(lastMinNetCycle);
+#endif
+
+#if 0
+				powerRTC(1, 10);
+				mem_readcounters();
+				
+				Serial.print(F("Entries in EEPROM: ")); Serial.println(__cnt_db);
+				if(__cnt_db > 0) {
+				  int i;
+				  datablock_t dd;
+
+				  	for(i=0;i<__cnt_db;i++) {
+				  		if(mem_readDatablocki(i, &dd))
+				  			dumpDBrecord(&dd, i);
+						}
+				}
+				powerRTC(0, 1);
 #endif
 
 				if(!poweredGSM) {
@@ -995,7 +1035,7 @@ void loop()
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
 						powerGPRSGPS( 1 );
-
+						mil1 = millis();
 				}
 
 				while( poweredGSM < 10 ) {
@@ -1101,8 +1141,28 @@ void loop()
 				
 				if( gsm_activateBearerProfile() ) {
 					if( http_initiateGetRequest() ) {
-						if( http_send_datablock( db ) ) {
-						} else Serial.println( F("error: could not send data block"));
+
+						powerRTC(1, 10);
+						mem_readcounters();
+				
+						Serial.print(F("Entries in EEPROM: ")); Serial.println(__cnt_db);
+						if(__cnt_db > 0) {
+							int i;
+							datablock_t dd;
+
+							while(mem_popDatablock(&dd)) {
+				  			//dumpDBrecord(&dd, i);
+								if(!http_send_datablock( dd ))
+				  				Serial.println( F("error: could not send data block"));
+							}
+						}
+						powerRTC(0, 1);
+
+
+
+						//if( http_send_datablock( db ) ) {
+						//} else Serial.println( F("error: could not send data block"));
+
 					} else Serial.println( F("error: could not initiate get request"));
 				} else Serial.println( F("error: could not activate bearer profile"));
 				
@@ -1120,6 +1180,10 @@ void loop()
 
 				powerGPRSGPS( 0 );
 				poweredGSM = 0;
+				mil2 = millis();
+				
+				Serial.print( F("GSM module was powered on for (msecs): "));
+				Serial.println( mil2 - mil1 );
 				
 				lastMinNetCycle = curMinNetCycle;
 				curSleepCycle = 0;	/* reset sleep cycle */

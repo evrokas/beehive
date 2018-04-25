@@ -215,10 +215,9 @@ bool mem_pushDatablock(datablock_t *db)
 #else	
 	Serial.println( F("mem_pushDatablock") );
 #endif
-
+	dumpDBrecord(db);
 #endif	/* DEBUG_MEM */
 
-	powerRTC(1, 10);
 	mem_readcounters();
 	
 	if(__cnt_db >= __max_db)return false;
@@ -237,7 +236,6 @@ bool mem_pushDatablock(datablock_t *db)
 	
 	
 	mem_storecounters();
-	powerRTC(0, 1);
 	
 #if DEBUG_MEM
 
@@ -261,7 +259,7 @@ bool mem_popDatablock(datablock_t *db)
 	Serial.println( F("mem_popDatablock") );
 #endif
 
-	powerRTC(1, 10);
+//	powerRTC(1, 10);
 	mem_readcounters();
 
 	if(!__cnt_db)return false;
@@ -273,7 +271,7 @@ bool mem_popDatablock(datablock_t *db)
 
 
 	mem_storecounters();
-	powerRTC(0, 1);
+//	powerRTC(0, 1);
 
 #if DEBUG_MEM
 
@@ -290,12 +288,13 @@ bool mem_popDatablock(datablock_t *db)
 }
 
 /* read data block at index */
-bool mem_readDataBlocki(uint16_t index, datablock_t *db)
+bool mem_readDatablocki(uint16_t index, datablock_t *db)
 {
 #if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_readDatablocki\n");
 #else
 	Serial.println( F("mem_readDatablocki") );
+	Serial.print(F("size of datablock_t : "));Serial.println( sizeof( datablock_t ));
 #endif
 
 #if 0
@@ -306,9 +305,10 @@ bool mem_readDataBlocki(uint16_t index, datablock_t *db)
 	if(!__cnt_db)return false;
 #endif
 	
-
+	
+//	powerRTC(1, 10);
 	mem_read(db, sizeof( datablock_t ), index);
-
+//	powerRTC(0, 1);
 
 
 #if 0
@@ -334,8 +334,14 @@ void datetime2db(datetime_t *dt, datablock_t *db)
 	db->minute = dt->minute;
 }
 
-void dumpDBrecord(datablock_t *db)
+void dumpDBrecord(datablock_t *db, int recno)
 {
+	if(recno != -1) {
+		Serial.print(F("#"));
+		Serial.print(recno);
+		Serial.print("\t");
+	}
+	
 	Serial.print(F("typ:"));
 	switch(db->entryType) {
 		case ENTRY_DATA: Serial.print(F("dat\t")); break;
@@ -353,8 +359,6 @@ void dumpDBrecord(datablock_t *db)
 	Serial.print(F(" "));Serial.print(db->hour);
 	Serial.print(F(":"));Serial.print(db->minute);
 
-	Serial.print(F("nid:"));Serial.print( db->nodeId );
-	
 	switch(db->entryType) {
 		case ENTRY_DATA:
 			Serial.print(F("\tVcc:"));Serial.print(db->batVolt);

@@ -76,6 +76,7 @@ typedef struct {
 		struct {		/* ENTRY_GSM */
 			uint8_t		gsmSig;				/* GSM signal quality */
 			uint16_t	gsmVolt;			/* GSM voltage */
+			unsigned long int  gsmPowerDur;	/* number of milliseconds GSM module was powered on */
 		};
 		
 		struct {		/* ENTRY_GPS */
@@ -107,6 +108,7 @@ extern counter_type	__max_db;			/* maximum data block available */
 
 extern counter_type	__begin_addr;	/* first EEPROM address to access */
 extern counter_type	__end_addr;		/* last EEPROM address to access */
+extern counter_type __cnt_db;
 
 void __ee_write(uint16_t addr, uint8_t data );
 uint8_t __ee_read(uint16_t addr ); 
@@ -127,12 +129,15 @@ bool mem_read(const void *p, uint8_t psize);
 bool mem_pushDatablock(datablock_t *db);
 
 bool mem_popDatablock(datablock_t *db);
-bool mem_readDatablock(uint16_t index, datablock_t *db);
+bool mem_readDatablocki(uint16_t index, datablock_t *db);
 	
 void datetime2db(datetime_t *dt, datablock_t *db);
 
 void mem_readcounters();
 void mem_storecounters();
+
+void dumpDBrecord(datablock_t *db, int recno = -1);
+
 
 #ifdef __cplusplus
 }	/* extern "C" */

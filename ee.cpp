@@ -22,7 +22,7 @@ extern uint32_t	__ee_dev_size;
 
 /* set this to 1 to use dummy routines that do not actually
  * write or read anything from EEPROM, otherwise set to 0 */
-#define USE_DUMMY_ROUTINES	1
+#define USE_DUMMY_ROUTINES	0
 
 
 #if LINUX_NATIVE_APP == 1

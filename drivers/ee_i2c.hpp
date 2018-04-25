@@ -66,7 +66,14 @@ uint8_t __ee_readblock(uint16_t addr, char *data, uint8_t datalen)
  
   Wire.requestFrom(__ee_dev_addr, datalen);
  
-  if (Wire.available()) data[i++] = Wire.read();
+
+//  Serial.print(F("__ee_readblock len:"));Serial.println(datalen);
+  
+  for(i=0;i<datalen;i++)
+		if (Wire.available()) {
+  		data[i] = Wire.read();
+//  		Serial.print(data[i]);
+		}
  
   return i;
 }
@@ -80,8 +87,10 @@ void __ee_writeblock(uint16_t addr, char *data, uint8_t datalen)
   Wire.write((uint16_t)(addr >> 8));   // MSB
   Wire.write((uint16_t)(addr & 0xFF)); // LSB
 
+//  Serial.print(F("__ee_writeblock len:"));Serial.println(datalen);
   for(i=0;i<datalen;i++) {
   	Wire.write(data[i]);
+//  	Serial.print(data[i]);
 	}
   Wire.endTransmission();
  
