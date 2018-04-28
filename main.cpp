@@ -96,7 +96,7 @@ void initializeEEPROM()
 {
 	Serial.print(F("Initializing EEPROM memory allocation ... "));
 	addrNodeId	= eepromGetAddr( 2 );
-	addrAPIKEY	= eepromGetAddr( 8 );
+	addrAPIKEY	= eepromGetAddr( APIKEY_SIZE );
 	addrAPN			= eepromGetAddr( APN_SIZE );
 	addrUSER		= eepromGetAddr( USER_SIZE );
 	addrPASS		= eepromGetAddr( PASS_SIZE );
@@ -254,10 +254,6 @@ void loadVariablesFromEEPROM()
 
 void dumpEEPROMvariables()
 {
-  char buf[32];
-
-#define CBUF	memset(buf, 0, sizeof( buf ))
-
 	Serial.println(F("EEPROM variables:"));
 	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
 	
@@ -642,27 +638,37 @@ void doMaintenance()
 						break;
 
 					case 'd':
-						if(buf[1] == '?') {
-							Serial.print(F("SIM ICIID: "));
-							memset(buf, 0, BUF_SIZE+1);
-							if(getEEPROMstr( E_SIMICCID, buf ))
-								Serial.println( buf );
-							break;
-						};
-						if(setEEPROMstr( E_SIMICCID, buf+1 ))
-							Serial.println(F("sim iccid set ok!"));
+						switch (buf[1]) {
+							case '?':
+								Serial.print(F("SIM ICIID: "));
+								memset(buf, 0, BUF_SIZE+1);
+								if(getEEPROMstr( E_SIMICCID, buf ))
+									Serial.println( buf );
+								break;
+							case '*':
+								if(gsm_getICCID( buf )) {
+									Serial.print(F("SIM ICCID: "));
+									Serial.println( buf );
+								}
+								break;
+							case '+':
+								break;
+							default:
+								if(setEEPROMstr( E_SIMICCID, buf+1 ))
+									Serial.println(F("sim iccid set ok!"));
+						}
 						break;
 
 					case 'v':
 						if(buf[1] == '?') {
 							Serial.print(F("VCC factor: "));
-							Serial.println( getVccFactor(), 3 );
+							Serial.println( getVccFactor(), 5 );
 						} else {
 						  float f;
 						  	
 						  	f = atof( buf+1 );
 						  	Serial.print(F("New VCC factor: "));
-						  	Serial.println( f );
+						  	Serial.println( f, 5 );
 						  	setVccFactor( f );
 								setVCC( f );
 						}
@@ -687,15 +693,39 @@ void doMaintenance()
 						break;
 					
 					case 'D':	/* dump data values */
-						powerRTC(1, 10);
+						if(buf[1]) {
+							int c;
+							datablock_t d;
+							
+								powerRTC(1, 10);
+								mem_readcounters();
+
+								c = atoi( buf+1 );
+								mem_readDatablocki((__tail_db + c) % __max_db, &d);
+								powerRTC(0, 1);
+
+
+								dumpDBrecord(&d);
+						} else {
+							powerRTC(1, 10);
+							mem_readcounters();
+							powerRTC(0, 1);
+							Serial.print(F("head: "));Serial.print(__head_db);
+							Serial.print(F("\ttail: ")); Serial.println(__tail_db);
+						}
+						break;
+
+					case 'U':	/* flush data values */
+						powerRTC(1,10);
 						mem_readcounters();
+						__tail_db = __head_db;
+						mem_storecounters();
 						powerRTC(0, 1);
-						Serial.print(F("head: "));Serial.print(__head_db);
-						Serial.print(F("\ttail: ")); Serial.println(__tail_db);
+						Serial.println(F("__tail_db == __head_db"));
 						break;
 
 					case 'V':	/* print battery voltage */
-						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0 );
+						Serial.print(F("Battery voltage: ")); Serial.println(readVcc() / 1000.0, 3 );
 						break;
 
 					case 'T':
@@ -991,7 +1021,7 @@ void loop()
 						mem_stats();
 //						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
-						Serial.println( F("could not push datablock to EEPROM.") );
+						Serial.println( F("could not push dat datablock to EEPROM.") );
 					}
 					powerRTC(0, 1);
 #endif
@@ -1009,23 +1039,6 @@ void loop()
 #ifdef DEBUG_SLEEP_CYCLE
 			    Dp("curMinNetCycle - lastMinNetCycle >= MaxMinNetCycle ");
 			    D(curMinNetCycle); Dp(" "); Dln(lastMinNetCycle);
-#endif
-
-#if 0
-				powerRTC(1, 10);
-				mem_readcounters();
-				
-				Serial.print(F("Entries in EEPROM: ")); Serial.println(__cnt_db);
-				if(__cnt_db > 0) {
-				  int i;
-				  datablock_t dd;
-
-				  	for(i=0;i<__cnt_db;i++) {
-				  		if(mem_readDatablocki(i, &dd))
-				  			dumpDBrecord(&dd, i);
-						}
-				}
-				powerRTC(0, 1);
 #endif
 
 				if(!poweredGSM) {
@@ -1086,7 +1099,7 @@ void loop()
 				
 
 				
-#define REG_TIMEOUT	10
+#define REG_TIMEOUT	30
 		
 				{
 					uint8_t r, cc=0;
@@ -1110,11 +1123,12 @@ void loop()
 				};
 				
 				
-#if 0
+#if 1
 				do {
 					uint16_t ii;
 					uint8_t iii;
 					
+						db.entryType = ENTRY_GSM;
 						if( gsm_getBattery( ii ) ) {
 //							Serial.print("Battery level: " ); Serial.println( ii );
 							db.gsmVolt = ii;
@@ -1124,6 +1138,20 @@ void loop()
 //							Serial.print("Signal quality: " ); Serial.println( iii );
 							db.gsmSig = iii;
 						}
+						
+						db.gsmPowerDur = millis() - mil1;
+						
+#if ENABLE_DATAPUSHING == 1
+					powerRTC(1, 10);
+					if( mem_pushDatablock( &db ) ) {
+						mem_stats();
+//						Serial.println( F("pushed datablock to EEPROM successfully.") );
+					} else {
+						Serial.println( F("could not push gsm datablock to EEPROM.") );
+					}
+					powerRTC(0, 1);
+#endif
+
 				} while(0);
 #endif
 
@@ -1141,25 +1169,18 @@ void loop()
 				
 				if( gsm_activateBearerProfile() ) {
 					if( http_initiateGetRequest() ) {
+						datablock_t dd;
 
-						powerRTC(1, 10);
-						mem_readcounters();
-				
-						Serial.print(F("Entries in EEPROM: ")); Serial.println(__cnt_db);
-						if(__cnt_db > 0) {
-							int i;
-							datablock_t dd;
+							powerRTC(1, 10);
 
 							while(mem_popDatablock(&dd)) {
-				  			//dumpDBrecord(&dd, i);
-								if(!http_send_datablock( dd ))
+								if(!http_send_datablock( dd )) {
 				  				Serial.println( F("error: could not send data block"));
+				  				break;
+								}
 							}
-						}
-						powerRTC(0, 1);
-
-
-
+							powerRTC(0, 1);
+						
 						//if( http_send_datablock( db ) ) {
 						//} else Serial.println( F("error: could not send data block"));
 

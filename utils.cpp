@@ -254,20 +254,18 @@ void eepromSetChar( uint16_t aaddr, char dat)
 
 void eepromGetStr(uint16_t aaddr, int acnt, char *dat)
 {
-  int aa=0;
+  int aa;
   
-	while(acnt >= 0) {
-		*dat = eepromGetChar( aaddr + aa );
-		dat++; acnt--; aa++;
+	for(aa=0;aa<acnt;aa++) {
+		*dat++ = eepromGetChar( aaddr + aa );
 	}
 }
 		
 void eepromSetStr(uint16_t aaddr, int acnt, char *dat)
 {
-  int aa=0;
+  int aa;
 
-  while(acnt >= 0) {
-  	eepromSetChar( aaddr + aa, *dat);
-  	aa++; dat++; acnt--;
+	for(aa=0;aa<acnt;aa++) {
+  	eepromSetChar( aaddr + aa, *dat++);
 	}
 }

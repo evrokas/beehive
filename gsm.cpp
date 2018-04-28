@@ -13,6 +13,7 @@
 
 #include <Arduino.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "utils.h"
 #include "rtc.h"
 #include "gsm.h"
@@ -48,24 +49,25 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 /* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 {
-	while(timeout && !gsmserial.available()) {
+	char *c = buf;
+	
+	while((timeout) && (!gsmserial.available()) ) {
 		delay(800);
 		timeout -= 1;
 	}
+  
+  if(!timeout)return false;
     
-	if(gsmserial.available()) {
-		/* while still room in buf and available characters from serial */
-		while(buflen && gsmserial.available()) {
-			*buf++ = gsmserial.read();
-			buflen--;
-		}
+	/* while still room in buf and available characters from serial */
+	while( (buflen) && (gsmserial.available()) ) {
+		*buf++ = gsmserial.read();
+		buflen--;
+	}
     
-//		Serial.print( buf );
+	Serial.println( c );
         
-		/* return with current buf */
-		return true;
-	} else
-		return false;	/* return no read */
+	/* return with current buf */
+	return true;
 }
 
 
@@ -74,7 +76,6 @@ void gsm_init()
 	gsmserial.begin( GSM_SERIAL_BAUDRATE );
 }
 
-#if 1
 bool gsm_sendrecvcmd(char *cmd, char *expstr)
 {
 	DEF_CLEAR_TEMPBUF;
@@ -108,8 +109,6 @@ bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper 
 			} else return false;
 		} else return false;
 }
-
-#endif
 
 bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 {
@@ -201,21 +200,14 @@ void gsm_sendcmdp(const __FlashStringHelper *cmd)
 }
 
 		
-
-
 void gsm_relayOutput( Stream &ast )
 {
 	while( gsmserial.available() )ast.write( gsmserial.read() );
 }
 
 
-
-
 bool gsm_activateBearerProfile()
 {
-	DEF_CLEAR_TEMPBUF;
-	char *c;
-	
 //AT+SAPBR=3,1,"CONTYPE","GPRS"
 //AT+SAPBR=3,1,"APN","myq"
 //AT+SAPBR=3,1,"USER",""
@@ -232,8 +224,6 @@ bool gsm_activateBearerProfile()
     if(!gsm_sendrecvcmdtimeoutp( F( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , F( "OK\r\n") , 2 ) )
     	return false;
 
-		c = _tempbuf;
-    
 		gsm_sendcmdp( F("AT+SAPBR=3,1,\"APN\",\"") );
 		transmitEEPROMstr(E_APN, gsmserial);
 		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n") , F( "OK\r\n" ), 2 ) )
@@ -482,7 +472,8 @@ bool http_send_datablock(datablock_t &db)
 		
 
 /* doSEND to 1, for old behavior, to 2 for new behavior */
-#define doSEND	1
+//#define doSEND	1
+#define doSEND	2
 
 #if doSEND == 1
 
@@ -497,17 +488,20 @@ bool http_send_datablock(datablock_t &db)
 #define SENDs(key, svalue) \
 						gsm_sendcmdp(F("&")); \
 						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
 						gsm_sendcmd( svalue );
 
 #define SENDi(key, ivalue) \
 						gsm_sendcmdp(F("&")); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmd( itoa( ivalue ), _tempbuf, 10);
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );
 
 #define SENDf(key, fvalue, fsig) \
 						gsm_sendcmdp(F("&")); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmd( gcvt( fvalue, fsig, _tempbuf ) );
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( dtostrf( fvalue, 1, fsig, _tempbuf ) );
 
 #endif
 
@@ -550,19 +544,19 @@ bool http_send_datablock(datablock_t &db)
 #endif
 
 #if doSEND == 2
-		SENDs(F("apikey"), getEEPROMstr( E_APIKEY ) );
-		SENDn(F("nodeId"), getNodeId());
-		SENDn(F("mcuTemp"), 100);
+		SENDs(F("apikey"), getEEPROMstr( E_APIKEY, cbuf ) );
+		SENDi(F("nodeId"), getNodeId());
+		SENDi(F("mcuTemp"), 100);
 		SENDf(F("batVolt"), db.batVolt/ 1000.0, 3);
 		SENDf(F("bhvTemp"), db.bhvTemp / 100.0, 2);
 		SENDf(F("bhvHumid"), db.bhvHumid / 100.0, 2);
 		SENDf(F("bhvWeight"), db.bhvWeight / 1000.0, 3);
-		c = sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
-			db.dt.dayOfMonth, 
-			db.dt.month, 
-			db.dt.year, 
-			db.dt.hour, 
-			db.dt.minute);
+		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
+			db.dayOfMonth, 
+			db.month, 
+			db.year, 
+			db.hour, 
+			db.minute);
 		SENDs(F("rtcDateTime"), cbuf );
 #endif
 
@@ -603,22 +597,12 @@ bool http_send_datablock(datablock_t &db)
 
 		c = _tempbuf;
 
-#if 0
-		while( (*c != ',') || (*c != 0)  ) c++;
-		c++;
-#endif
-		
 		c = strstr(c, "200" );
 		if(!c) {
 			Serial.println( F("response was not 200") );
 			http_terminateRequest();
 			return false;
 		}
-		
-#if 0
-		while( (*c != ',') || (*c != 0) ) c++;
-		c++;
-#endif
 		
 		c = strchr(c, ',');
 		if(!c) {
@@ -718,6 +702,23 @@ bool gsm_sendPin(char *aspin)
 		}
 		
 	return true;
+}
+
+bool gsm_getICCID(char *aiccid) {
+	DEF_CLEAR_TEMPBUF;
+
+		gsm_flushInput();
+		gsm_sendcmdp( F("AT+CCID\r\n") );
+		READGSM(2);
+		//if(!READGSM(2))
+			//return false;
+		Serial.println(_tempbuf);
+		
+		for(int a=0;a<20;a++) {
+			*aiccid++ = _tempbuf[a];
+		}
+	
+		return (true);
 }
 
 

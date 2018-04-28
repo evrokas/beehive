@@ -259,7 +259,6 @@ bool mem_popDatablock(datablock_t *db)
 	Serial.println( F("mem_popDatablock") );
 #endif
 
-//	powerRTC(1, 10);
 	mem_readcounters();
 
 	if(!__cnt_db)return false;
@@ -271,7 +270,6 @@ bool mem_popDatablock(datablock_t *db)
 
 
 	mem_storecounters();
-//	powerRTC(0, 1);
 
 #if DEBUG_MEM
 
@@ -297,28 +295,7 @@ bool mem_readDatablocki(uint16_t index, datablock_t *db)
 	Serial.print(F("size of datablock_t : "));Serial.println( sizeof( datablock_t ));
 #endif
 
-#if 0
-	powerRTC(1, 10);
-	mem_readcounters();
-	powerRTC(0, 10);
-
-	if(!__cnt_db)return false;
-#endif
-	
-	
-//	powerRTC(1, 10);
 	mem_read(db, sizeof( datablock_t ), index);
-//	powerRTC(0, 1);
-
-
-#if 0
-	__tail_db = (__tail_db + 1) % __max_db;
-	__cnt_db--;
-
-
-	mem_storecounters();
-	powerRTC(0, 1);
-#endif
 
 	return true;
 }

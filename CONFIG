@@ -21,7 +21,7 @@ Maintanance mode
 In maintanance mode: (each command is followed by \r)
 
 In use:
-[uraswiklnpdvXEPDVTHCGBQRFAO]
+[uraswiklnpdvXEPDUVTHCGBQRFAO]
 
 
 u?								get data server URL
@@ -65,6 +65,8 @@ p<pin>						set SIM pin to <pin>
 *
 
 d?								get SIM CIID
+d*								read SIM CIID and display
+d+								read SIM CIID and store it in EEPROM
 d<ciid>						set SIM CIID to <ciid>
 *
 
@@ -78,8 +80,8 @@ v<vcc-corr>				set VCC correction factor
 *E								reset counter to initial values
 
 *P								dump sleep counter
-*D								dump data variables
-
+*D								dump data variables __head_db and __tail_db
+*U								flush data variables (actually set __tail_db equal to __head_db)
 
 *V								dump cpu voltage
 *T								dump temperature
