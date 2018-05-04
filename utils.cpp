@@ -50,13 +50,12 @@ void twi_enable_pullups()
 
 void setupPeripheralsControl()
 {
-	DDRC |=		B00000001;
+	DDRC |=		B00000001;	/* peripheral control (bit 0, 1 = on, 0 = off) */
 	PORTC &=	B11111111;	/* last -1- should be 1 in order for peripherals to be off */
 
-	DDRB |=		B11000000;
-	PORTB &=	B10111111;
+	DDRB |=		B11000000;	/* GSM and RTC control (bit 7 (1 = off, 0 = on) and bit 6 (1 = on, 0 = off respectively) */
+	PORTB &=	B10111111;	/* turn GSM off, RTC off */
 }
-
 
 void powerPeripherals(unsigned char onoff, unsigned char mdel)
 {
@@ -114,6 +113,15 @@ void powerRTC(unsigned char onoff, unsigned char mdel)
 	}
 	delay( mdel );
 }
+
+/* combined power on/off of peripherals and RTC */
+void powerPER_RTC(unsigned char onoff, unsigned char mdel)
+{
+	powerPeripherals(onoff, 0);
+	powerRTC(onoff, mdel);
+}
+
+		
 
 float	VREF = 1.035;
 uint32_t InternalReferenceVoltage = (uint32_t)(1100);

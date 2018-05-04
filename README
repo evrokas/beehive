@@ -118,3 +118,16 @@ Content-Length:23
 {"postkey":"postvalue"}
 Hope this helps the next person stuck on it.
 
+
+
+
+30-4-2018
+TODO:
+* Enable interrupt on change of Serial RX, so to wake up from sleep
+when external module is attached to the serial port.
+
+* when waiting for module to register, perform a 3 step procedure,
+initiate a variable for 10 secs (this is the most likely the module
+will registerd), if in this interval module is not registered, set a flag,
+and increase the interval by 10 secs, and go to sleep, for a specified
+time frame, after this, try again for network communication

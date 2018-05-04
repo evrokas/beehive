@@ -64,15 +64,15 @@ p?								get SIM pin
 p<pin>						set SIM pin to <pin>
 *
 
-d?								get SIM CIID
-d*								read SIM CIID and display
+*d?								get SIM CIID
+*d*								read SIM CIID and display
 d+								read SIM CIID and store it in EEPROM
-d<ciid>						set SIM CIID to <ciid>
-*
+*d<ciid>					set SIM CIID to <ciid>
 
-v?								get VCC correction factor
-v<vcc-corr>				set VCC correction factor
-*
+
+*v?								get VCC correction factor
+*v<vcc-corr>			set VCC correction factor
+
 
 
 

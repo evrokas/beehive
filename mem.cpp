@@ -121,7 +121,6 @@ void mem_end()
  * these could be the RTC special purpose memory, or other memory */
 void mem_storecounters()
 {
-
 	Wire.beginTransmission( RTC_I2C_ADDRESS );
 	Wire.write( RTC_COUNTER_ADDRESS );
 	Wire.write( __head_db & 0xff );
@@ -133,12 +132,13 @@ void mem_storecounters()
 
 
 /* read counters __head_db and __tail_db from special purpose memory */
-void mem_readcounters()
+bool mem_readcounters()
 {
 	Wire.beginTransmission( RTC_I2C_ADDRESS );
 	Wire.write( RTC_COUNTER_ADDRESS );
 	Wire.endTransmission();
-	Wire.requestFrom( RTC_I2C_ADDRESS, 4);
+	
+	if(Wire.requestFrom( RTC_I2C_ADDRESS, 4) != 4)return false;
 	
 	__head_db = (Wire.read() & 0xff);
 	__head_db |= (Wire.read() << 8) & 0xff;
@@ -149,15 +149,17 @@ void mem_readcounters()
 	
 	__cnt_db = (__max_db + (__head_db - __tail_db)) % __max_db;
 	
+
+  return (true);
 }
  
 
-uint32_t	__block2linearaddress(uint16_t blockno)
+uint32_t	inline __block2linearaddress(uint16_t blockno)
 {
 	return ( blockno * BLOCK_SIZE );
 }
 
-uint16_t __linearaddress2block(uint32_t linaddress)
+uint16_t inline __linearaddress2block(uint32_t linaddress)
 {
 	return (linaddress / BLOCK_SIZE );
 }
@@ -217,8 +219,10 @@ bool mem_pushDatablock(datablock_t *db)
 #endif
 	dumpDBrecord(db);
 #endif	/* DEBUG_MEM */
-
+	Dlnp("before mem_readcounters()");
 	mem_readcounters();
+
+	Dlnp("after mem_readcounters()");
 	
 	if(__cnt_db >= __max_db)return false;
 	if((__head_db == (counter_type)-1) && (__cnt_db == 0)) {
@@ -226,6 +230,8 @@ bool mem_pushDatablock(datablock_t *db)
 		__tail_db = 0;
 	}
 
+	Dlnp( "before mem_write" );
+	
 	mem_write(db, sizeof( datablock_t ), __head_db );
 
 //	if(__cnt_db == 0)__tail_db = __head_db;
@@ -234,8 +240,10 @@ bool mem_pushDatablock(datablock_t *db)
 	/* increase __head_db taking care of overflow */
 	__head_db = (__head_db + 1) % __max_db;
 	
-	
+	Dlnp( "after mem_write") ;
 	mem_storecounters();
+	
+	Dlnp ("after mem_storecounters() ");
 	
 #if DEBUG_MEM
 
@@ -261,7 +269,7 @@ bool mem_popDatablock(datablock_t *db)
 
 	mem_readcounters();
 
-	if(!__cnt_db)return false;
+	if(__tail_db == __head_db)return false;
 	
 	mem_read(db, sizeof( datablock_t ), __tail_db);
 

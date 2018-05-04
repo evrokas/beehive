@@ -22,6 +22,7 @@ MONITOR_BAUDRATE = 9600
 #ver.h: ver.h.in
 #	./mkver.sh
 
+#CXXFLAGS_STD	= -std=c++0x
 
 include	$(ARDMK_DIR)/Arduino.mk
 
@@ -29,3 +30,5 @@ CPPFLAGS	+= -DGSM_SERIAL_BAUDRATE=9600				# -DNEOSW_RX_BUFFER_SIZE=64
 CPPFLAGS	+= $(SRVURL)
 CPPFLAGS	+= $(SRVPORT)
 AVRDUDE_OPTS=-V -v -v
+
+#CXXFLAGS	+= -felide-constructors

@@ -29,11 +29,11 @@ void __ee_end()
 
 void __ee_write(uint16_t addr, uint8_t data ) 
 {
-  Wire.beginTransmission(__ee_dev_addr);
-  Wire.write((uint16_t)(addr >> 8));   // MSB
-  Wire.write((uint16_t)(addr & 0xFF)); // LSB
-  Wire.write(data);
-  Wire.endTransmission();
+	Fastwire::beginTransmission(__ee_dev_addr);
+  Fastwire::write((uint16_t)(addr >> 8));   // MSB
+  Fastwire::write((uint16_t)(addr & 0xFF)); // LSB
+  Fastwire::write(data);
+  Fastwire::endTransmission();
  
   delay(5);
 }
@@ -43,14 +43,14 @@ uint8_t __ee_read(uint16_t addr )
 {
   uint8_t rdata = 0xFF;
  
-  Wire.beginTransmission(__ee_dev_addr);
-  Wire.write((uint16_t)(addr >> 8));   // MSB
-  Wire.write((uint16_t)(addr & 0xFF)); // LSB
-  Wire.endTransmission();
+  Fastwire::beginTransmission(__ee_dev_addr);
+  Fastwire::write((uint16_t)(addr >> 8));   // MSB
+  Fastwire::write((uint16_t)(addr & 0xFF)); // LSB
+  Fastwire::endTransmission();
  
-  Wire.requestFrom((int)__ee_dev_addr,1);
+  Fastwire::requestFrom((int)__ee_dev_addr,1);
  
-  if (Wire.available()) rdata = Wire.read();
+  if (Fastwire::available()) rdata = Fastwire::read();
  
   return rdata;
 }
@@ -59,12 +59,12 @@ uint8_t __ee_readblock(uint16_t addr, char *data, uint8_t datalen)
 {
   uint8_t i=0,l;
   
-  Wire.beginTransmission(__ee_dev_addr);
-  Wire.write((uint16_t)(addr >> 8));   // MSB
-  Wire.write((uint16_t)(addr & 0xFF)); // LSB
-  Wire.endTransmission();
+  Fastwire::beginTransmission(__ee_dev_addr);
+  Fastwire::write((uint16_t)(addr >> 8));   // MSB
+  Fastwire::write((uint16_t)(addr & 0xFF)); // LSB
+  Fastwire::endTransmission();
  
-  l = Wire.requestFrom(__ee_dev_addr, datalen);
+  l = Fastwire::requestFrom(__ee_dev_addr, datalen);
   
  	if(l != datalen) {
  		Serial.println(F("could not read requested number of bytes from I2C"));
@@ -74,8 +74,8 @@ uint8_t __ee_readblock(uint16_t addr, char *data, uint8_t datalen)
 //  Serial.print(F("__ee_readblock len:"));Serial.println(datalen);
   
   for(i=0;i<datalen;i++)
-		if (Wire.available()) {
-  		data[i] = Wire.read();
+		if (Fastwire::available()) {
+  		data[i] = Fastwire::read();
 //  		Serial.print(data[i]);
 		}
  
@@ -87,16 +87,16 @@ void __ee_writeblock(uint16_t addr, char *data, uint8_t datalen)
 {
 	uint8_t i;
 
-  Wire.beginTransmission(__ee_dev_addr);
-  Wire.write((uint16_t)(addr >> 8));   // MSB
-  Wire.write((uint16_t)(addr & 0xFF)); // LSB
+  Fastwire::beginTransmission(__ee_dev_addr);
+  Fastwire::write((uint16_t)(addr >> 8));   // MSB
+  Fastwire::write((uint16_t)(addr & 0xFF)); // LSB
 
 //  Serial.print(F("__ee_writeblock len:"));Serial.println(datalen);
   for(i=0;i<datalen;i++) {
-  	Wire.write(data[i]);
+  	Fastwire::write(data[i]);
 //  	Serial.print(data[i]);
 	}
-  Wire.endTransmission();
+  Fastwire::endTransmission();
  
   delay(5);
 }

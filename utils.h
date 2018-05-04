@@ -118,6 +118,9 @@ void powerGPRSGPS(unsigned char onoff);
 /* function to power RTC on/off */
 void powerRTC(unsigned char onoff, unsigned char mdel);
 
+/* function to combine power on/off of periperals and RTC */
+void powerPER_RTC(unsigned char onoff, unsigned char mdel);
+
 /* function to read power line voltage */
 unsigned long readVcc();
 
