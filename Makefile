@@ -27,8 +27,18 @@ MONITOR_BAUDRATE = 9600
 include	$(ARDMK_DIR)/Arduino.mk
 
 CPPFLAGS	+= -DGSM_SERIAL_BAUDRATE=9600				# -DNEOSW_RX_BUFFER_SIZE=64
+CPPFLAGS	+= -DNEOSWSERIAL_EXTERNAL_PCINT
+
 CPPFLAGS	+= $(SRVURL)
 CPPFLAGS	+= $(SRVPORT)
 AVRDUDE_OPTS=-V -v -v
 
 #CXXFLAGS	+= -felide-constructors
+
+pmon:
+	putty -load serial
+
+
+upl:
+	./mkver.sh
+	$(MAKE) upload

@@ -27,6 +27,9 @@
 //#include "data.h"
 #include "mem.h"
 
+#include <avr/wdt.h>
+
+#include <NeoSWSerial.h>
 
 /* counter of sleep cycles */
 uint32_t cntSleepCycle;
@@ -186,10 +189,9 @@ bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
 		default: return (false);	//m = 0; break;
 	}
 	
-	i=0;
 	for(i=0;i<m;i++) {
 		c = eepromGetByte( sta + i );
-		if(!c)break;	/* end of string */
+		if(c == 0)break;	/* end of string */
 
 		strm.write(c);
 	}
@@ -335,6 +337,8 @@ void initializeCounters()
 }
 
 
+void setupLoop();
+
 /* setup steps of the project */
 void setup()
 {
@@ -380,7 +384,7 @@ void setup()
 //	powerPeripherals(1,1);
 
 		/* GSM is turned off by initialize function */
-//	powerGPRSGPS( 0 );
+	powerGPRSGPS( 0 );
 
 	/* always have RTC(!) */
 	rtc_init();
@@ -407,15 +411,59 @@ void setup()
 //	powerRTC( 0, 1 );
 
 //	setNodeId( NODE_ID );
+
+	setupLoop();
 }
 
+
+volatile uint8_t rx_interrupt = 0;
+
+
+extern "C" {
+
+ISR(PCINT2_vect)
+{
+	rx_interrupt++;
+
+	NeoSWSerial::rxISR( PIND );
+}
+
+
+ISR(PCINT0_vect)
+{
+	NeoSWSerial::rxISR( PINB );
+}
+
+ISR(PCINT1_vect)
+{
+	NeoSWSerial::rxISR( PINC );
+}
+
+};
 
 /* this is where the actual sleep of the mcu takes place, try
  * to keep this as small as possible */
 void mySleep()
 {
+//	wdt_disable();
+
 	Serial.flush();
+
+
+	/* setup to wake on pin change on D0 (RX) */
+	cli();
+
+	
+	PCMSK2	|= bit( PCINT16 );
+	PCIFR		|= bit( PCIF2 );
+	PCICR		|= bit( PCIE2 );
+	//Interrupts();
+	sei();
+	
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
+	
+	PCICR		&= ~bit( PCIE2 );
+	
 	Wire.begin();
 
 //	Serial.begin( 9600 );	
@@ -423,8 +471,20 @@ void mySleep()
 	/* increase sleep cycle counter */
 	cntSleepCycle++;
 	
-	TWBR = 152;		/* switch to 25KHz I2C interface */
+	Wire.setClock( 100000 );	//TWBR = 32;		// 100Khz 2152;		/* switch to 25KHz I2C interface */
+	
+	
+//	wdt_enable( WDTO_2S );
+	
 }
+
+#if 0
+ISR(WDT_vect)
+{
+	Serial.println(F("watchdog reset"));
+	wdt_reset();
+}
+#endif
 
 
 uint8_t poweredGSM=0;
@@ -479,7 +539,7 @@ void doMaintenance()
 			Serial.print( F("> ") );
 			
 			while(1) {
-				if(Serial.available() ) {
+				if(Serial.available()) {
 					cc = Serial.read();
 						
 					/* ignore all + symbols */
@@ -839,7 +899,7 @@ void doMaintenance()
 								if(moduleAflags & A_DNSLOOKUP)Serial.println(F("DNS lookup active"));
 								else Serial.println(F("DNS lookup not active"));
 								break;
-							case 'a':
+							case 'a':	/* module enable */
 								switch( buf[2] ) {
 									case '0': moduleAflags &= ~A_ENABLE; break;
 									case '1': moduleAflags |= A_ENABLE; break;
@@ -848,7 +908,7 @@ void doMaintenance()
 										break;
 								}
 								break;
-							case 'l':
+							case 'l':	/* DNS lookup enable/disable */
 								switch( buf[2] ) {
 									case '0': moduleAflags &= ~A_DNSLOOKUP; break;
 									case '1': moduleAflags |= A_DNSLOOKUP; break;
@@ -890,7 +950,7 @@ void loop()
 
 #define DEBUG_SLEEP_CYCLE
 
-	setupLoop();
+//	setupLoop();
 
 	/* enter endless loop */
   	while(1) {
@@ -899,11 +959,27 @@ void loop()
 
 #if ENABLE_MAINTENANCE == 1
 	{
-		int cnt32 = 10;
+//		int cnt32 = 10;
 		
 //  		Serial.println( F("out of sleep") );
 //  		delay(2);
-  		while(Serial.available() || (cnt32--)) {
+/*
+			rx_interrupt = 0;
+  		while(rx_interrupt || Serial.available() || (cnt32--)) {
+  			if(rx_interrupt)
+  				while(!Serial.available());
+*/
+
+			/* if rx_interrupt was set, then read corrupted character,
+			 * wait for 500msec for second character and check if it was '+' */
+			if(rx_interrupt) {
+				Serial.read();
+				delay(500);
+				rx_interrupt = 0;
+				
+				if(Serial.available()) {
+
+  				
   			switch( Serial.read() ) {
   				case '+': /* enter maintenance mode */
   					while(Serial.available())Serial.read();
@@ -919,6 +995,7 @@ void loop()
 						Serial.print( F(".") );
 						break;
 				}
+			}
 			}
 	}
 #endif
@@ -967,10 +1044,10 @@ void loop()
 			db.nodeId = getNodeId();		//NODE_ID;
 			db.batVolt = readVcc();
 			
-			powerPER_RTC(1, 10);	//powerRTC( 1, 10 );
+			powerPER_RTC(1, 100);	//powerRTC( 1, 10 );
 //			displayTime();
 			rtc_getTime(&dt);
-			powerPER_RTC(0, 0);		//powerRTC( 0, 1 );
+			powerPER_RTC(0, 100);		//powerRTC( 0, 1 );
 			
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 
@@ -1004,14 +1081,19 @@ void loop()
 
 			    //powerRTC(1, 10);
 			    //powerPeripherals(1,50);
-			    powerPER_RTC(1, 10);
+			    powerPER_RTC(1, 250);
+			    Serial.println(F("before read temp"));
+			    
 			    db.bhvTemp = therm_getTemperature() * 100;
+			    
+			    Serial.println(F("after read temp"));
+			    
 			    db.bhvHumid = therm_getHumidity() * 100;
 					db.bhvWeight = 75432;
 								    
 			    //powerPeripherals(0,0);
 			    //powerRTC(0, 0);
-			    powerPER_RTC(0, 0);
+//			    powerPER_RTC(0, 0);
 			    doLog = false;
 			    
 					datetime2db( &dt, &db );
@@ -1042,7 +1124,7 @@ void loop()
 					db.entryType = ENTRY_DATA;
 
 
-					powerPER_RTC(1, 10);	//powerRTC(1, 10);
+//					powerPER_RTC(1, 10);	//powerRTC(1, 10);
 					if( mem_pushDatablock( &db ) ) {
 						mem_stats();
 //						Serial.println( F("pushed datablock to EEPROM successfully.") );
@@ -1162,7 +1244,7 @@ void loop()
 					if( http_initiateGetRequest() ) {
 						datablock_t dd;
 
-							powerPER_RTC(1, 10);		//powerRTC(1, 100);
+							powerPER_RTC(1, 250);		//powerRTC(1, 100);
 
 							while(mem_popDatablock(&dd)) {
 								if(!http_send_datablock( dd )) {

@@ -616,6 +616,7 @@ bool http_send_datablock(datablock_t &db)
 
 
 #if doSEND == 2
+		memset(cbuf, 0, sizeof( cbuf ));
 		SENDs(F("apikey"), getEEPROMstr( E_APIKEY, cbuf ) );
 		SENDi(F("nodeId"), getNodeId());
 //		SENDi(F("mcuTemp"), 100);
@@ -629,7 +630,7 @@ bool http_send_datablock(datablock_t &db)
 				SENDf(F("bhvWeight"), db.bhvWeight / 1000.0, 3);
 				break;
 			case ENTRY_GSM:
-				SENDsp(F("etype"), F("gsm"));
+				SENDsp(F("eType"), F("gsm"));
 				SENDi(F("gsmSig"), db.gsmSig);
 				SENDf(F("gsmVolt"), db.gsmVolt / 1000.0, 3);
 				SENDul(F("gsmPDur"), db.gsmPowerDur);
@@ -643,12 +644,14 @@ bool http_send_datablock(datablock_t &db)
 			default: break;
 		}
 		
+#if 1
 		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
 			db.dayOfMonth, 
 			db.month, 
 			db.year, 
 			db.hour, 
 			db.minute);
+#endif
 		SENDs(F("rtcDateTime"), cbuf );
 #endif
 
@@ -1068,6 +1071,7 @@ uint8_t &year)
 	return true;
 }
 
+#if 0
 
 bool http_getRequest(char *url, char *args, uint16_t &datalen)
 {
@@ -1149,3 +1153,4 @@ bool http_getRequest(char *url, char *args, uint16_t &datalen)
 			
 	return (result);
 }
+#endif

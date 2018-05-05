@@ -105,7 +105,7 @@
  * pullup resistors to the modules of the I2C bus. This could be
  * also prevented if one removes all pullup resistors from all
  * modules on the I2C bus, but turning off pullup is much easier */
-#define TURNOFF_I2C_PULLUPS_DURING_SLEEP	1
+#define TURNOFF_I2C_PULLUPS_DURING_SLEEP	0
 
 
 /* Timinig constants */

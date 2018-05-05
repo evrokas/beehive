@@ -134,17 +134,28 @@ void mem_storecounters()
 /* read counters __head_db and __tail_db from special purpose memory */
 bool mem_readcounters()
 {
+	//Serial.print(F("PORTB bits: ")); Serial.println( PORTB, BIN );
+	
+	//Wire.begin();
+	
 	Wire.beginTransmission( RTC_I2C_ADDRESS );
+
+		Serial.println(F("wire.begintransmission()"));
 	Wire.write( RTC_COUNTER_ADDRESS );
+
+		Serial.println(F("wire.write( RTC_COUNTER_ADRESS )" ));
 	Wire.endTransmission();
+
+		Serial.println(F("wire.endtransmission()"));
+	Wire.requestFrom( RTC_I2C_ADDRESS, 4);
+
+		Serial.println(F("wire.requestfrom()"));
 	
-	if(Wire.requestFrom( RTC_I2C_ADDRESS, 4) != 4)return false;
+	__head_db = Wire.read();
+	__head_db |= (int)Wire.read() << 8;
 	
-	__head_db = (Wire.read() & 0xff);
-	__head_db |= (Wire.read() << 8) & 0xff;
-	
-	__tail_db = (Wire.read() & 0xff);
-	__tail_db |= (Wire.read() << 8) & 0xff;
+	__tail_db = Wire.read();
+	__tail_db |= (int)Wire.read() << 8;
 	
 	
 	__cnt_db = (__max_db + (__head_db - __tail_db)) % __max_db;
@@ -338,18 +349,18 @@ void dumpDBrecord(datablock_t *db, int recno)
 	}
 
 	Serial.print(F("nid:"));Serial.print( db->nodeId );
-	Serial.print(F("\tdate:"));Serial.print( db->dayOfMonth );
-	Serial.print(F("-"));Serial.print(db->month);
+	Serial.print(F("\tdate:")); if(db->dayOfMonth < 10) Serial.print(F("0")); Serial.print( db->dayOfMonth );
+	Serial.print(F("-"));if(db->month < 10) Serial.print(F("0")); Serial.print(db->month);
 	Serial.print(F("-"));Serial.print(db->year);
-	Serial.print(F(" "));Serial.print(db->hour);
-	Serial.print(F(":"));Serial.print(db->minute);
+	Serial.print(F(" "));if(db->hour < 10) Serial.print(F("0")); Serial.print(db->hour);
+	Serial.print(F(":"));if(db->minute < 10) Serial.print(F("0")); Serial.print(db->minute);
 
 	switch(db->entryType) {
 		case ENTRY_DATA:
 			Serial.print(F("\tVcc:"));Serial.print(db->batVolt);
 			Serial.print(F("\tTem:"));Serial.print(db->bhvTemp);
 			Serial.print(F("\tHum:"));Serial.print(db->bhvHumid);
-			Serial.print(F("\tWei:"));Serial.println(db->bhvWeight);
+			Serial.print(F("\tWei:"));Serial.print(db->bhvWeight);
 			break;
 		
 		case ENTRY_GSM:
