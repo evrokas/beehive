@@ -623,20 +623,20 @@ bool http_send_datablock(datablock_t &db)
 
 		switch(db.entryType) {
 			case ENTRY_DATA:
-				SENDsp(F("eType"), F("dat"));
+				SENDsp(F("entryType"), F("dat"));
 				SENDf(F("batVolt"), db.batVolt/ 1000.0, 3);
 				SENDf(F("bhvTemp"), db.bhvTemp / 100.0, 2);
 				SENDf(F("bhvHumid"), db.bhvHumid / 100.0, 2);
 				SENDf(F("bhvWeight"), db.bhvWeight / 1000.0, 3);
 				break;
 			case ENTRY_GSM:
-				SENDsp(F("eType"), F("gsm"));
+				SENDsp(F("entryType"), F("gsm"));
 				SENDi(F("gsmSig"), db.gsmSig);
 				SENDf(F("gsmVolt"), db.gsmVolt / 1000.0, 3);
 				SENDul(F("gsmPDur"), db.gsmPowerDur);
 				break;
 			case ENTRY_GPS:
-				SENDsp(F("etype"), F("gps"));
+				SENDsp(F("entrytype"), F("gps"));
 				SENDf(F("gsmLon"), db.gpsLon, 6);
 				SENDf(F("gsmLat"), db.gpsLat, 6);
 				break;
