@@ -23,6 +23,38 @@
 //#include "data.h"
 #include "mem.h"
 
+#define SENDs(key, svalue) \
+						gsm_sendcmdp(F("&")); \
+						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( svalue );
+
+#define SENDsp(key, svalue) \
+						gsm_sendcmdp(F("&")); \
+						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp( svalue );
+
+#define SENDi(key, ivalue) \
+						gsm_sendcmdp(F("&")); \
+						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );
+
+#define SENDul(key, ivalue) \
+						gsm_sendcmdp(F("&")); \
+						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( ultoa( ivalue, _tempbuf, 10) );
+
+#define SENDf(key, fvalue, fsig) \
+						gsm_sendcmdp(F("&")); \
+						gsm_sendcmdp(key); \
+						gsm_sendcmdp(F("=")); \
+						gsm_sendcmd( dtostrf( fvalue, 1, fsig, _tempbuf ) );
+
+
+
 extern "C" {
 
     void gsm_init(void);
@@ -47,6 +79,7 @@ extern "C" {
     
     uint16_t http_getRequest(char *url, char *args);
     bool http_send_datablock(datablock_t &db);
+    bool http_send_getconf_request();
     
     bool gsm_moduleInfo();
 

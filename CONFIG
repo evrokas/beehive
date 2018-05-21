@@ -100,4 +100,5 @@ An#								n == ?,		show current configuration
 														when # == 0, deactivate the module, put it in sleep mode
 									n == l,		DNS lookup, when # == 1 perform DNS lookup
 														when # == 0, do not perform DNS lookup
+									n == d,		DST, daylight savings time flag
 *O								dump data pointers (tail and head)

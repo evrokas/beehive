@@ -89,7 +89,7 @@
  * for various chips, may have to remove hard coding and replace it
  * in the EEPROM */
  
-#define VCC_CORRECTION_FACTOR	0.9854
+//#define VCC_CORRECTION_FACTOR	0.9854
 
 /* pins for software serial for GPS communication */
 #define GPS_RX_PIN	6
@@ -105,7 +105,7 @@
  * pullup resistors to the modules of the I2C bus. This could be
  * also prevented if one removes all pullup resistors from all
  * modules on the I2C bus, but turning off pullup is much easier */
-#define TURNOFF_I2C_PULLUPS_DURING_SLEEP	1
+#define TURNOFF_I2C_PULLUPS_DURING_SLEEP	0
 
 
 /* Timinig constants */

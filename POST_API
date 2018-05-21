@@ -17,3 +17,18 @@ gsmVolt
 gpsLon
 gpsLat
 bhvWeight
+
+
+
+command:
+reqpno		request packet number
+
+response:
+[packno]	packet number
+
+
+command:
+getconf&nodeId=[nodeid]			request configuration parameters
+
+response:
+nodeid,apn,user,pass,url,port,logcycle,netcycle,dst

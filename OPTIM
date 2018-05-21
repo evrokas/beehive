@@ -1,0 +1,4 @@
+functions to optimize:
+http_send_datablock()
+mem_readcounters()
+readVcc()

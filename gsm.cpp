@@ -52,22 +52,33 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 /* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 {
-	char *c = buf;
-	
+	timeout *= 2;
 	while((timeout) && (!gsmserial.available()) ) {
-		delay(800);
-		timeout -= 1;
+		delay(500);
+		timeout--;;
 	}
   
   if(!timeout)return false;
     
-	/* while still room in buf and available characters from serial */
-	while( (buflen) && (gsmserial.available()) ) {
-		*buf++ = gsmserial.read();
-		buflen--;
+
+  while(timeout) {
+  	/* while still room in buf and available characters from serial */
+  	while( (buflen) && (gsmserial.available()) ) {
+			*buf = gsmserial.read();
+
+
+//			Serial.print( *buf );
+
+
+			buf++;
+			buflen--;
+		}
+		
+		timeout--;
+		delay(500);
 	}
     
-	Serial.println( c );
+//	Serial.println( c );
         
 	/* return with current buf */
 	return true;
@@ -83,7 +94,7 @@ bool gsm_sendrecvcmd(char *cmd, char *expstr)
 {
 	DEF_CLEAR_TEMPBUF;
 
-		while(gsm_available())gsm_read();
+//		while(gsm_available())gsm_read();
 	  
 		gsm_sendcmd( cmd );
     
@@ -100,7 +111,7 @@ bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper 
 {
 	DEF_CLEAR_TEMPBUF;
 
-		while(gsm_available())gsm_read();
+//		while(gsm_available()) Serial.print( gsm_read() );
 	  
 		gsm_sendcmdp( cmd );
     
@@ -119,7 +130,7 @@ bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 	uint32_t mils;
 	char *tb;
   
-		while(gsm_available())gsm_read();
+//		while(gsm_available())gsm_read();
 
 		gsm_sendcmd( cmd );
 
@@ -130,6 +141,8 @@ bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 			while(gsm_available()) {
 				if(strlen(_tempbuf) < TEMP_BUF_LEN-1) {
 					*tb++ = gsm_read();
+
+//					Serial.println( _tempbuf );
 				} else {
 					return false;
 				}
@@ -151,7 +164,7 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 	uint32_t mils;
 	char *tb;
   
-		while(gsm_available())gsm_read();
+//		while(gsm_available())Serial.print( gsm_read() );
 
 		gsm_sendcmdp( cmd );
 
@@ -162,6 +175,7 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 			while(gsm_available()) {
 				if(strlen(_tempbuf) < TEMP_BUF_LEN-1) {
 					*tb++ = gsm_read();
+//					Serial.println( _tempbuf );
 				} else {
 					return false;
 				}
@@ -178,7 +192,7 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 }
 
 
-#define SERIAL_DUMPCMD
+//#define SERIAL_DUMPCMD
 
 void gsm_sendcmd(char *cmd)
 {
@@ -381,7 +395,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP START" ), 5 ) )
 			return false;
 		
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIICR\r\n" ), F( "OK" ), 5 ) )
+		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIICR\r\n" ), F( "OK"; ), 5 ) )
 			return false;
 		
 		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP GPRSACT" ), 5 ) )
@@ -493,6 +507,15 @@ void http_terminateRequest()
 uint8_t serverip[4];
 
 
+void transmitServerIP()
+{
+	char cbuf[20];
+
+		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
+		gsm_sendcmd( cbuf );
+}
+
+
 bool http_send_datablock(datablock_t &db)
 {
 	DEF_CLEAR_TEMPBUF;
@@ -502,120 +525,22 @@ bool http_send_datablock(datablock_t &db)
 //		Serial.println( F("trying to send data block") );
 
 
-		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
+//		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
 
-		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
-
+//		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
 
 		gsm_sendcmdp( F( "AT+HTTPPARA=\"URL\",\"http://") );
-		gsm_sendcmd( cbuf );
+//		gsm_sendcmd( cbuf );
+		transmitServerIP();
 
-#if 0
-//		gsm_sendcmd( SERVER_URL );
-		CLEAR_TEMPBUF;
-		if( getEEPROMstr(E_URL, _tempbuf) )
-			gsm_sendcmd( _tempbuf );
-		else gsm_sendcmdp( F("<unknown url>") );
-#endif
-	
 		gsm_sendcmdp( F( ":" ) );
-		
 
-//		gsm_sendcmd( SERVER_PORT );
 		CLEAR_TEMPBUF;
 		gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );
-
 
 		gsm_sendcmdp( F( "/data.php?action=add" ) );
 		
 
-/* doSEND to 1, for old behavior, to 2 for new behavior */
-//#define doSEND	1
-#define doSEND	2
-
-#if doSEND == 1
-
-#define SEND(arg, fmt, value)	\
-													sprintf(_tempbuf, fmt, arg, value); \
-													gsm_sendcmd( _tempbuf )	;
-
-//													Serial.println( _tempbuf ); 
-#endif
-
-#if doSEND == 2
-#define SENDs(key, svalue) \
-						gsm_sendcmdp(F("&")); \
-						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
-						gsm_sendcmd( svalue );
-
-#define SENDsp(key, svalue) \
-						gsm_sendcmdp(F("&")); \
-						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
-						gsm_sendcmdp( svalue );
-
-#define SENDi(key, ivalue) \
-						gsm_sendcmdp(F("&")); \
-						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
-						gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );
-
-#define SENDul(key, ivalue) \
-						gsm_sendcmdp(F("&")); \
-						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
-						gsm_sendcmd( ultoa( ivalue, _tempbuf, 10) );
-
-#define SENDf(key, fvalue, fsig) \
-						gsm_sendcmdp(F("&")); \
-						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
-						gsm_sendcmd( dtostrf( fvalue, 1, fsig, _tempbuf ) );
-
-#endif
-
-
-#if doSEND == 1
-		SEND( CF("apikey"), "&%s=%s", "abcdefgh" );
-		SEND( CF("nodeId"), "&%s=%d", db.nodeId );
-		SEND( CF("mcuTemp"), "&%s=%d", 100 );	//db.mcuTemp );  
-
-		c = dtostrf(((float)db.batVolt/1000.0), 0, 3, cbuf );
-		SEND( CF("batVolt"), "&%s=%s", cbuf );
-		
-		c = dtostrf(((float)db.bhvTemp/100.0), 0, 2, cbuf );
-		SEND( CF("bhvTemp"), "&%s=%s", cbuf );
-
-
-		c = dtostrf(((float)db.bhvHumid/100.0), 0, 2, cbuf );
-		SEND( CF("bhvHumid"), "&%s=%s", cbuf );
-
-		c = dtostrf(((float)db.bhvWeight/1000.0), 0, 3, cbuf );
-		SEND( CF("bhvWeight"), "&%s=%s", cbuf );
-
-#if 0
-		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
-			db.dt.dayOfMonth, 
-			db.dt.month, 
-			db.dt.year, 
-			db.dt.hour, 
-			db.dt.minute);
-#endif
-
-		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
-			db.dayOfMonth, 
-			db.month, 
-			db.year, 
-			db.hour, 
-			db.minute);
-//		Serial.println(cbuf);
-		SEND( CF("rtcDateTime"), "&%s=%s", cbuf );
-#endif
-
-
-
-#if doSEND == 2
 		memset(cbuf, 0, sizeof( cbuf ));
 		SENDs(F("apikey"), getEEPROMstr( E_APIKEY, cbuf ) );
 		SENDi(F("nodeId"), getNodeId());
@@ -644,57 +569,30 @@ bool http_send_datablock(datablock_t &db)
 			default: break;
 		}
 		
-#if 1
+
 		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
 			db.dayOfMonth, 
 			db.month, 
 			db.year, 
 			db.hour, 
 			db.minute);
-#endif
+
 		SENDs(F("rtcDateTime"), cbuf );
-#endif
-
-
-		
-#if 0
-//		SEND( CF("rtcDateTime"), "&%s=%s", "22-9-17_10:51" );
-		SEND( CF("gsmSig"), "&%s=%d", db.gsmSig );
-
-		c = dtostrf(((float)db.gsmVolt/1000.0), 0, 3, cbuf );
-		SEND( CF("gsmVolt"), "&%s=%s", cbuf );
-		
-		db.gpsLon=34.123456;
-		db.gpsLat=32.123456;
-		SEND( CF("gpsLon"), "&%s=%s", "32.32" );	//db.gpsLon );
-		SEND( CF("gpsLat"), "&%s=%s", "45.45" );	//db.gpsLat );
-#endif
-		
 
 		gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 );
 		
-
-#if 0
-		while(1) {
-			if( gsm_available() )
-				Serial.write( gsm_read() );
-			if(Serial.available() )
-				gsm_write( Serial.read() );
-		}
-#endif
-
 		gsm_sendrecvcmdtimeoutp( F ( "AT+HTTPACTION=0\r\n" ), F( "+HTTPACTION:" ), 15 );
 
 		CLEAR_TEMPBUF;
 		READGSM( 5 );
 		Serial.print( F("action: ") );Serial.println( _tempbuf );
 		
-
 		c = _tempbuf;
 
 		c = strstr(c, "200" );
 		if(!c) {
 			Serial.println( F("response was not 200") );
+			Serial.println( _tempbuf );
 			http_terminateRequest();
 			return false;
 		}
@@ -719,12 +617,127 @@ bool http_send_datablock(datablock_t &db)
 #endif
 
 #if 1
+		delay( 200 );
 		while( gsm_available() ) {
 			Serial.write( gsm_read() );
 		}
 #endif
 			
 	
+	return (true);
+}
+
+void gsm_interactiveMode()
+{
+  char c;
+		Serial.println(F("Interactive mode (enter '~' to continue)"));
+		while(1) {
+			if( gsm_available() )
+				Serial.write( gsm_read() );
+
+			if(Serial.available() ) {
+				c = Serial.read();
+				if(c == '~')break;
+				gsm_write( c );
+			}
+		}
+}
+
+	
+bool http_send_getconf_request()
+{
+	DEF_CLEAR_TEMPBUF;
+	char	*c;
+	uint16_t dlen;
+
+//		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
+
+//		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
+
+		gsm_sendcmdp( F( "AT+HTTPPARA=\"URL\",\"http://") );
+
+		transmitServerIP();
+		
+//		gsm_sendcmd( cbuf );
+
+		gsm_sendcmdp( F( ":" ) );
+
+		CLEAR_TEMPBUF;
+		gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );
+
+		gsm_sendcmdp( F( "/data.php?action=getconf" ) );
+
+		SENDi(F("nodeId"), getNodeId());
+		
+		gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 );
+		
+		gsm_sendrecvcmdtimeoutp( F ( "AT+HTTPACTION=0\r\n" ), F( "+HTTPACTION:" ), 15 );
+
+		CLEAR_TEMPBUF;
+		READGSM( 5 );
+		Serial.print( F("action: ") );Serial.println( _tempbuf );
+		
+		c = _tempbuf;
+
+		c = strstr(c, "200" );
+		if(!c) {
+			Serial.println( F("response was not 200") );
+			http_terminateRequest();
+			return false;
+		}
+		
+		c = strchr(c, ',');
+		if(!c) {
+			Serial.println( F("could not find received bytes length") );
+			http_terminateRequest();
+			return false;
+		}
+		
+		Serial.print(F("response text: "));Serial.println( _tempbuf );
+		
+		dlen = atoi(++c);
+		Serial.print( F("Received bytes: ") ); Serial.println( dlen );
+//		delay(200);
+
+		
+
+		//gsm_interactiveMode();
+
+		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPREAD\r\n"), F("+HTTPREAD: "), 2 ) )
+		{
+			return true;
+		}
+		
+		CLEAR_TEMPBUF;
+		READGSM( 5 );
+		Serial.print(F(">>")); Serial.println( _tempbuf );
+
+		do {
+			uint16_t nid;
+			uint16_t lc, nc;
+			char *uc = _tempbuf;
+
+			
+			while( *uc++ != '\n');					/* eat characters read after +HTTPREAD */
+			while( !isdigit( *uc ) )uc++;		/* eat all characters until 1 digit */
+			
+			STRTOD( nid, uc ); uc++;
+			STRTOD( lc, uc ); uc++;
+			STRTOD( nc, uc );
+			
+			Serial.print(F("NodeId: ")); Serial.println( nid );
+			Serial.print(F("Log cycle: ")); Serial.println( lc );
+			Serial.print(F("Net cycle: ")); Serial.println( nc );
+		} while( 0 );
+		
+		
+#if 0
+		while( gsm_available() ) {
+			Serial.write( gsm_read() );
+		}
+#endif
+
+
 	return (true);
 }
 
@@ -792,6 +805,7 @@ bool gsm_sendPin()
 			Serial.println( F("Error setting SIM PIN") );
 			return false;
 		}
+		gsm_sendcmdp( F("AT\r\n") );
 		
 #if 0
 		gsm_sendcmdp( F("\r\n") );
@@ -811,7 +825,7 @@ bool gsm_getICCID(char *aiccid)
 
 		gsm_sendcmdp( F("AT+CCID\r\n") );
 		
-		if(!READGSM(5))return false;
+		if(!READGSM(2))return false;
 		
 		Serial.println(_tempbuf);
 		

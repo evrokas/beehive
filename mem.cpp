@@ -43,7 +43,7 @@ uint32_t	__ee_dev_size;
 
 
 // set DEBUG_MEM to 1 in order to emit the debugging messages
-#define DEBUG_MEM	1
+//#define DEBUG_MEM	1
 
 
 void mem_stats()
@@ -140,16 +140,16 @@ bool mem_readcounters()
 	
 	Wire.beginTransmission( RTC_I2C_ADDRESS );
 
-		Serial.println(F("wire.begintransmission()"));
+//		Serial.println(F("wire.begintransmission()"));
 	Wire.write( RTC_COUNTER_ADDRESS );
 
-		Serial.println(F("wire.write( RTC_COUNTER_ADRESS )" ));
+//		Serial.println(F("wire.write( RTC_COUNTER_ADRESS )" ));
 	Wire.endTransmission();
 
-		Serial.println(F("wire.endtransmission()"));
+//		Serial.println(F("wire.endtransmission()"));
 	Wire.requestFrom( RTC_I2C_ADDRESS, 4);
 
-		Serial.println(F("wire.requestfrom()"));
+//		Serial.println(F("wire.requestfrom()"));
 	
 	__head_db = Wire.read();
 	__head_db |= (int)Wire.read() << 8;
@@ -230,19 +230,14 @@ bool mem_pushDatablock(datablock_t *db)
 #endif
 	dumpDBrecord(db);
 #endif	/* DEBUG_MEM */
-	Dlnp("before mem_readcounters()");
 	mem_readcounters();
 
-	Dlnp("after mem_readcounters()");
-	
 	if(__cnt_db >= __max_db)return false;
 	if((__head_db == (counter_type)-1) && (__cnt_db == 0)) {
 		__head_db = 0;
 		__tail_db = 0;
 	}
 
-	Dlnp( "before mem_write" );
-	
 	mem_write(db, sizeof( datablock_t ), __head_db );
 
 //	if(__cnt_db == 0)__tail_db = __head_db;
@@ -251,10 +246,7 @@ bool mem_pushDatablock(datablock_t *db)
 	/* increase __head_db taking care of overflow */
 	__head_db = (__head_db + 1) % __max_db;
 	
-	Dlnp( "after mem_write") ;
 	mem_storecounters();
-	
-	Dlnp ("after mem_storecounters() ");
 	
 #if DEBUG_MEM
 

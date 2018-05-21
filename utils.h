@@ -24,6 +24,18 @@
 #define __sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
+#define PeripheralPort	PORTC
+#define PeripheralPin		0
+
+#define GSMPort					PORTB
+#define GSMBit					7
+
+#define RTCPort					PORTV
+#define RTCBit					6
+
+
+
+
 #define DEBUG_ACCEL	1
 
 #define DEBUG_PRINT	1
@@ -119,7 +131,7 @@ void powerGPRSGPS(unsigned char onoff);
 void powerRTC(unsigned char onoff, unsigned char mdel);
 
 /* function to combine power on/off of periperals and RTC */
-void powerPER_RTC(unsigned char onoff, unsigned char mdel);
+//void powerPER_RTC(unsigned char onoff, unsigned char mdel);
 
 /* function to read power line voltage */
 unsigned long readVcc();
@@ -161,6 +173,8 @@ void setServerPort( uint16_t dat );
 void setVCC( float dat );
 float getVCC();
 void loadVariablesFromEEPROM();
+
+uint8_t i2c_clearBus();
 
 
 

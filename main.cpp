@@ -57,17 +57,14 @@ uint16_t lastMinNetCycle;
 #define A_DNSLOOKUP		0x02				/* enable DNS look up, this is enabled only when APN is given in a form that needs
 																	 * resolving, if it is given in numeric format, do not perform DNS lookup */
 
+#define A_DST					0x04				/* Daylight Savings Time bit, if 1, add 1 hour to time */
+
+
 uint16_t moduleAflags = 0;
 
 #define isModuleEnabled			(moduleAflags & A_ENABLE)
 #define isDNSLookupEnabled	(moduleAflags & A_DNSLOOKUP)
-
-
-#ifndef NODE_ID
-
-#define NODE_ID	1088
-
-#endif
+#define isDSTEnabled				(moduleAflags & A_DST)
 
 
 #if 1
@@ -298,6 +295,8 @@ void dumpEEPROMvariables()
 			else Serial.print(F("ModDis\t"));
 		if(isDNSLookupEnabled)Serial.print(F("DNSEn\t"));
 			else Serial.print(F("DNSDis\t"));
+		if(isDSTEnabled)Serial.print(F("DSTEn\t"));
+			else Serial.print(F("DSTDis\t"));
 	Serial.println();
 	
 	Serial.println( F("------------") );
@@ -378,10 +377,10 @@ void setup()
 	initializeCounters(); 
       
 	/* power peripherals on, GSM off */
-	powerPER_RTC(1, 10 );
+//	powerPER_RTC(1, 10 );
 	
 //	powerRTC( 1, 10 );
-//	powerPeripherals(1,1);
+	powerPeripherals(1,1);
 
 		/* GSM is turned off by initialize function */
 	powerGPRSGPS( 0 );
@@ -405,9 +404,9 @@ void setup()
 	mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
 #endif
 
-	powerPER_RTC(0, 0);
+//	powerPER_RTC(0, 0);
 	
-//	powerPeripherals(0,0);	/* disable all peripherals */
+	powerPeripherals(0,0);	/* disable all peripherals */
 //	powerRTC( 0, 1 );
 
 //	setNodeId( NODE_ID );
@@ -494,10 +493,12 @@ datetime_t dt;
 void setupLoop()
 {
 //	powerRTC( 1, 10 );
-	powerPER_RTC(1, 10 );
+//	powerPER_RTC(1, 10 );
+	powerPeripherals(1, 10);
   rtc_getTime(&dt);
 //  powerRTC( 0, 1 );
-	powerPER_RTC(0, 1 );
+//	powerPER_RTC(0, 1 );
+	powerPeripherals(0, 0);
 
   lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
   curMinLogCycle = lastMinLogCycle;
@@ -756,11 +757,13 @@ void doMaintenance()
 						__tail_db = 0;
 						__head_db = 0;
 						
-						powerPER_RTC(1, 10);
+						//powerPER_RTC(1, 10);
 						//powerRTC(1, 10);
+						powerPeripherals(1, 10);
 						mem_storecounters();
 						//powerRTC(0, 1);
-						powerPER_RTC(0, 0);
+						//powerPER_RTC(0, 0);
+						powerPeripherals(0, 0);
 						Serial.println(F("EEPROM head and tail counters have been reset!"));
 						break;
 
@@ -775,22 +778,26 @@ void doMaintenance()
 							datablock_t d;
 							
 								//powerRTC(1, 10);
-								powerPER_RTC(1, 10);
+								//powerPER_RTC(1, 10);
+								powerPeripherals(1, 10);
 								mem_readcounters();
 
 								c = atoi( buf+1 );
 								mem_readDatablocki((__tail_db + c) % __max_db, &d);
-								powerPER_RTC(0, 0);
+								//powerPER_RTC(0, 0);
 								//powerRTC(0, 1);
+								powerPeripherals(0, 0);
 
 
 								dumpDBrecord(&d);
 						} else {
 							//powerRTC(1, 10);
-							powerPER_RTC(1, 10);
+							//powerPER_RTC(1, 10);
+							powerPeripherals(1, 10);
 							mem_readcounters();
 							//powerRTC(0, 1);
-							powerPER_RTC(0, 0);
+							//powerPER_RTC(0, 0);
+							powerPeripherals(0, 0);
 							
 							Serial.print(F("head: "));Serial.print(__head_db);
 							Serial.print(F("\ttail: ")); Serial.println(__tail_db);
@@ -799,12 +806,14 @@ void doMaintenance()
 
 					case 'U':	/* flush data values */
 						//powerRTC(1,10);
-						powerPER_RTC(1, 10);
+						//powerPER_RTC(1, 10);
+						powerPeripherals(1, 10);
 						mem_readcounters();
 						__tail_db = __head_db;
 						mem_storecounters();
 						//powerRTC(0, 1);
-						powerPER_RTC(0, 0);
+						//powerPER_RTC(0, 0);
+						powerPeripherals(0, 0);
 						Serial.println(F("__tail_db == __head_db"));
 						break;
 
@@ -813,21 +822,27 @@ void doMaintenance()
 						break;
 
 					case 'T':
-						powerPeripherals(1,100);
+						//powerPER_RTC(1,100);
+						powerPeripherals(1, 100);
 						Serial.print(F("Temperature (oC): ")); Serial.println( therm_getTemperature() *100 );
-						powerPeripherals(0,0);
+						//powerPER_RTC(0,0);
+						powerPeripherals(0, 0);
 						break;
 						
 					case 'H':
-						powerPeripherals(1,100);
+						//powerPER_RTC(1,100);
+						powerPeripherals(1, 100);
 						Serial.print(F("Humidity (%%): ")); Serial.println( therm_getHumidity() * 100 );
-						powerPeripherals(0,0);
+						//powerPER_RTC(0,0);
+						powerPeripherals(0, 0);
 						break;
 						
 					case 'C':
-						powerPER_RTC(1, 10);	//powerRTC(1, 10);
+						//powerPER_RTC(1, 10);	//powerRTC(1, 10);
+						powerPeripherals(1, 10);
 						Serial.print(F("date time: ")); displayTime();
-						powerPER_RTC(0, 0);		//powerRTC(0, 1);
+						//powerPER_RTC(0, 0);		//powerRTC(0, 1);
+						powerPeripherals(0, 0);
 						break;
 					
 					case 'G':
@@ -838,6 +853,7 @@ void doMaintenance()
 							default:
 								Serial.println(F("wrong G command!"));
 						}
+						break;
 						
 					case 'B': {
 						uint16_t n;
@@ -1044,10 +1060,12 @@ void loop()
 			db.nodeId = getNodeId();		//NODE_ID;
 			db.batVolt = readVcc();
 			
-			powerPER_RTC(1, 100);	//powerRTC( 1, 10 );
+			powerPeripherals(1, 100);
+			//powerPER_RTC(1, 100);	//powerRTC( 1, 10 );
 //			displayTime();
 			rtc_getTime(&dt);
-			powerPER_RTC(0, 100);		//powerRTC( 0, 1 );
+			powerPeripherals(0, 0);
+			//powerPER_RTC(0, 100);		//powerRTC( 0, 1 );
 			
 			curMinLogCycle = curMinNetCycle = rtc_getMinutes(&dt);
 
@@ -1080,8 +1098,8 @@ void loop()
 #endif
 
 			    //powerRTC(1, 10);
-			    //powerPeripherals(1,50);
-			    powerPER_RTC(1, 250);
+			    powerPeripherals(1,50);
+			    //powerPER_RTC(1, 250);
 			    Serial.println(F("before read temp"));
 			    
 			    db.bhvTemp = therm_getTemperature() * 100;
@@ -1131,8 +1149,9 @@ void loop()
 					} else {
 						Serial.println( F("could not push dat datablock to EEPROM.") );
 					}
-					powerPER_RTC(0, 0);		//powerRTC(0, 1);
 #endif
+					//powerPER_RTC(0, 0);		//powerRTC(0, 1);
+					powerPeripherals(0, 0);
 					
 			}
   
@@ -1151,7 +1170,7 @@ void loop()
 
 				if(!poweredGSM) {
 					poweredGSM++;
-					Dp("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
+//					Dp("Trying to power-up GSM/GPRS module - try "); Dln( poweredGSM );
 					
 					/* only apply power on the first time */
 					if(poweredGSM == 1)
@@ -1159,35 +1178,42 @@ void loop()
 						mil1 = millis();
 				}
 
-				while( poweredGSM < 10 ) {
+#define MAX_POWEREDGSM	20
+
+				while( poweredGSM < MAX_POWEREDGSM ) {
 					if( !gsm_moduleInfo() ) {
-						Dp("GSM module is not ready yet! try ... "); Dln( poweredGSM );
+//						Dp("GSM module is not ready yet! try ... "); Dln( poweredGSM );
 
 						/* module is not yet ready, delay for some time (about 2 secs) */
-						delay(2000);
+						delay(500);
 					} else break;	/* module ready! */
 					
 					poweredGSM++;
 				}
 
-				if(poweredGSM == 10) {
+				if(poweredGSM >= MAX_POWEREDGSM) {
 					// module was not ready, so skip this session
 					poweredGSM = 0;
 					powerGPRSGPS( 0 );
 
+					/* skipping session, we have 2 options, to try in the next
+					 * open windows for NetCycle, or setup an earlier point,
+					 * ie in 5 minutes, so we can try. But must set a counter,
+					 * so this earlier point to be tries max ie 3 times, otherwise
+					 * mark Net comms unavailable and try next NetCycle */ 
 					lastMinNetCycle = curMinNetCycle;
 					curSleepCycle = 0;	/* reset sleep cycle */
 
 					continue; /* to the main while() loop */
 				}
 				
-#define CF( str )	(char *)( str )
+//#define CF( str )	(char *)( str )
 //				Dln( poweredGSM );
 				
-				Dlnp("GSM module is ready!");
+//				Dlnp("GSM module is ready!");
 				/* so module is ready */
 
-				Dlnp("Doing network stuff");
+//				Dlnp("Doing network stuff");
 
 				/* disable local echo */
 				gsm_sendcmdp( F("ATE0\r\n") );
@@ -1199,27 +1225,31 @@ void loop()
 					Dlnp("PIN was NOT set");
 				}
 
-				if(!gsm_sendrecvcmdtimeoutp( F(""), F("SMS Ready\r\n"), 10)) {
+				if(!gsm_sendrecvcmdtimeoutp( F(""), F("SMS Ready\r\n"), 20)) {
 					Dlnp("module out of sync....");
 				} else Dlnp("module in sync....");
 				
-
+				gsm_flushInput();
 				
-#define REG_TIMEOUT	30
+#define REG_TIMEOUT	15
 		
 				{
-					uint8_t r, cc=0;
+					uint8_t r;
+					unsigned long mtimeout;
+					
+						mtimeout = millis() + REG_TIMEOUT * 1000;	/* timeout is 15 seconds */
 						do {
 							gsm_getRegistration( r );
 							if((r == 1) || (r == 5))break;
 							delay( 200 );
-							cc++;
-						} while( cc < REG_TIMEOUT );		/* set a timeout here, 15 secs */
+						} while( millis() < mtimeout );		/* set a timeout here, 15 secs */
 				
-						if( cc == REG_TIMEOUT ) { 
+						if( (r != 1) && (r != 5) ) { 
 							poweredGSM = 0;
 							powerGPRSGPS( 0 );
 
+
+							/* reset NetCycle */
 							lastMinNetCycle = curMinNetCycle;
 							curSleepCycle = 0;	/* reset sleep cycle */
 
@@ -1244,15 +1274,16 @@ void loop()
 					if( http_initiateGetRequest() ) {
 						datablock_t dd;
 
-							powerPER_RTC(1, 250);		//powerRTC(1, 100);
-
+							//powerPER_RTC(1, 25);		//powerRTC(1, 100);
+							powerPeripherals(1, 25);
 							while(mem_popDatablock(&dd)) {
 								if(!http_send_datablock( dd )) {
 				  				Serial.println( F("error: could not send data block"));
 				  				break;
 								}
 							}
-							powerPER_RTC(0, 0);		//powerRTC(0, 1);
+							//powerPER_RTC(0, 0);		//powerRTC(0, 1);
+							powerPeripherals(0, 0);
 						
 							do {
 								uint16_t ii;
@@ -1274,6 +1305,11 @@ void loop()
 								if( http_send_datablock( dd ) ) {
 								} else Serial.println( F("error: could not send gsm block"));
 							} while(0);
+
+							
+							http_send_getconf_request();
+							
+
 							
 					} else Serial.println( F("error: could not initiate get request"));
 				} else Serial.println( F("error: could not activate bearer profile"));

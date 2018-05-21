@@ -11,6 +11,7 @@ VERSION=`echo $VERSTR | head -c 9 -`
 VERSION_SHORT=`echo $VERSTR | head -c 5 -`
 
 echo version long: $VERSTR
+
 #echo version: $VERSION
 #echo version short: $VERSION_SHORT
 
@@ -18,3 +19,5 @@ cat $VERIN | sed s/GITLONGVERSION/$VERSTR/g - |  \
 						sed s/GITVERSION/$VERSION/g - | \
 						sed s/GITSHORTVERSION/$VERSION_SHORT/g - | \
 						sed s/UPLOAD_NUM/$UNUM/g - > $VER
+
+echo upload count: $UNUM
