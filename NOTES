@@ -109,3 +109,38 @@ The MSISDN does not need to be stored on the SIM card.  In cases where it is
 stored on the SIM, the main reason is so that the user can use check to see
 what their own MSISDN is (in case they forget).  The MSISDN is never
 signaled to of from the device.
+
+
+
+
+
+Changes to the current sleep counting algorithm
+
+1. Currently the sleep algorithm is as follows:
+	a. set sleep_counter to 0, set max_sleep_counter to 7
+	b. go for sleep for 8 seconds
+	c. if sleep_counter reached max_sleep_counter, then
+			read time from RTC, if 1 minute has passed,
+			check to see if log or net session should be executed
+			If yes, do one or either, and then GO TO step (a)
+	d. if sleep_counter hasn't reached max_sleep_counter, increase
+			increase sleep_counter and go to step (b)
+
+The above has the following problem, the mcu sleeps for 7 cycles, and
+then it wakes up and reads time from RTC, if one minute has passed, then
+checks to see if log or net sessions must be executed. This uses power
+for the RTC on every minute. Also, in the current implementation if during the
+7 cycles no minute has passed (7 * 8 = 56 seconds), actions must wait for another
+56 seconds in order to be executed. (but this can be easily fixed, actually code
+is in the codebase, but its commented out...)
+
+2. A new implementation could be:
+	a. set sleep_counter to 0, estimate how many 8 second intervals are needed
+			for log and net sessions respectively, set max_sleep_counter to the smaller
+			value. This ensures that the earliest session will be executed on time.
+	b. go for sleep for 8 seconds
+	c. if sleep_counter reached max_sleep counter, then read time from RTC and decide
+			about the log and net sessions.
+
+This approach saves a reading from the RTC on every minute, and it only does the
+reading after the counted sleep cycles have passed. therefore saving power.

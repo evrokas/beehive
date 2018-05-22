@@ -318,19 +318,8 @@ void initializeCounters()
 	/* global sleep cycle counter */
 	cntSleepCycle = 0;
 
-
-#if 0
- 	maxMinLogCycle = DAILY_LOG_PERIOD;
-	maxMinNetCycle = DAILY_NET_PERIOD;
-#endif
-
 	loadVariablesFromEEPROM();
 
-#if 0
-	/* hardwire log cycles for debugging purposes */
-	maxMinLogCycle = 2;
-	maxMinNetCycle = 4;
-#endif
 
 	maxSleepCycle = CYCLES_SLEEP_COUNT;
 }
@@ -377,9 +366,6 @@ void setup()
 	initializeCounters(); 
       
 	/* power peripherals on, GSM off */
-//	powerPER_RTC(1, 10 );
-	
-//	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
 
 		/* GSM is turned off by initialize function */
@@ -404,12 +390,8 @@ void setup()
 	mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
 #endif
 
-//	powerPER_RTC(0, 0);
 	
 	powerPeripherals(0,0);	/* disable all peripherals */
-//	powerRTC( 0, 1 );
-
-//	setNodeId( NODE_ID );
 
 	setupLoop();
 }
@@ -459,7 +441,9 @@ void mySleep()
 	//Interrupts();
 	sei();
 	
+	/* go to sleep... */
 	LowPower.powerDown(LP_SLEEP_MODE, ADC_OFF, BOD_OFF);
+	/* ... wake up! */
 	
 	PCICR		&= ~bit( PCIE2 );
 	
@@ -470,7 +454,7 @@ void mySleep()
 	/* increase sleep cycle counter */
 	cntSleepCycle++;
 	
-	Wire.setClock( 100000 );	//TWBR = 32;		// 100Khz 2152;		/* switch to 25KHz I2C interface */
+	Wire.setClock( 100000 );		/* switch to 100KHz I2C interface */
 	
 	
 //	wdt_enable( WDTO_2S );
@@ -492,12 +476,8 @@ datetime_t dt;
 
 void setupLoop()
 {
-//	powerRTC( 1, 10 );
-//	powerPER_RTC(1, 10 );
 	powerPeripherals(1, 10);
   rtc_getTime(&dt);
-//  powerRTC( 0, 1 );
-//	powerPER_RTC(0, 1 );
 	powerPeripherals(0, 0);
 
   lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
@@ -757,12 +737,8 @@ void doMaintenance()
 						__tail_db = 0;
 						__head_db = 0;
 						
-						//powerPER_RTC(1, 10);
-						//powerRTC(1, 10);
 						powerPeripherals(1, 10);
 						mem_storecounters();
-						//powerRTC(0, 1);
-						//powerPER_RTC(0, 0);
 						powerPeripherals(0, 0);
 						Serial.println(F("EEPROM head and tail counters have been reset!"));
 						break;
@@ -777,26 +753,18 @@ void doMaintenance()
 							int c;
 							datablock_t d;
 							
-								//powerRTC(1, 10);
-								//powerPER_RTC(1, 10);
 								powerPeripherals(1, 10);
 								mem_readcounters();
 
 								c = atoi( buf+1 );
 								mem_readDatablocki((__tail_db + c) % __max_db, &d);
-								//powerPER_RTC(0, 0);
-								//powerRTC(0, 1);
 								powerPeripherals(0, 0);
 
 
 								dumpDBrecord(&d);
 						} else {
-							//powerRTC(1, 10);
-							//powerPER_RTC(1, 10);
 							powerPeripherals(1, 10);
 							mem_readcounters();
-							//powerRTC(0, 1);
-							//powerPER_RTC(0, 0);
 							powerPeripherals(0, 0);
 							
 							Serial.print(F("head: "));Serial.print(__head_db);
@@ -805,14 +773,10 @@ void doMaintenance()
 						break;
 
 					case 'U':	/* flush data values */
-						//powerRTC(1,10);
-						//powerPER_RTC(1, 10);
 						powerPeripherals(1, 10);
 						mem_readcounters();
 						__tail_db = __head_db;
 						mem_storecounters();
-						//powerRTC(0, 1);
-						//powerPER_RTC(0, 0);
 						powerPeripherals(0, 0);
 						Serial.println(F("__tail_db == __head_db"));
 						break;
@@ -822,26 +786,20 @@ void doMaintenance()
 						break;
 
 					case 'T':
-						//powerPER_RTC(1,100);
 						powerPeripherals(1, 100);
 						Serial.print(F("Temperature (oC): ")); Serial.println( therm_getTemperature() *100 );
-						//powerPER_RTC(0,0);
 						powerPeripherals(0, 0);
 						break;
 						
 					case 'H':
-						//powerPER_RTC(1,100);
 						powerPeripherals(1, 100);
 						Serial.print(F("Humidity (%%): ")); Serial.println( therm_getHumidity() * 100 );
-						//powerPER_RTC(0,0);
 						powerPeripherals(0, 0);
 						break;
 						
 					case 'C':
-						//powerPER_RTC(1, 10);	//powerRTC(1, 10);
 						powerPeripherals(1, 10);
 						Serial.print(F("date time: ")); displayTime();
-						//powerPER_RTC(0, 0);		//powerRTC(0, 1);
 						powerPeripherals(0, 0);
 						break;
 					
@@ -895,6 +853,7 @@ void doMaintenance()
 						if(buf[1] == '0' ) {
 							/* deregister module from network */
 						} else
+
 						if(buf[1] == '1' ) {
 							/* register module in network */
 						}
@@ -933,6 +892,17 @@ void doMaintenance()
 										break;
 								}
 								break;
+								
+							case 'd': /* DST Day-light savings time */
+								switch( buf[2] ) {
+									case '0': moduleAflags &= ~A_DST; break;
+									case '1': moduleAflags |= A_DST; break;
+									default:
+										Serial.println(F("wrong parameter!"));
+										break;
+								}
+								break;
+								
 							default:
 								Serial.println(F("wrong parameter"));
 								break;
@@ -1142,15 +1112,12 @@ void loop()
 					db.entryType = ENTRY_DATA;
 
 
-//					powerPER_RTC(1, 10);	//powerRTC(1, 10);
 					if( mem_pushDatablock( &db ) ) {
-						mem_stats();
-//						Serial.println( F("pushed datablock to EEPROM successfully.") );
+//						mem_stats();
 					} else {
 						Serial.println( F("could not push dat datablock to EEPROM.") );
 					}
 #endif
-					//powerPER_RTC(0, 0);		//powerRTC(0, 1);
 					powerPeripherals(0, 0);
 					
 			}
