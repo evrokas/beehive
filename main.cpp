@@ -17,6 +17,7 @@
 #include "conf.h"
 #include "ver.h"
 
+#include "pstr.h"
 #include "bms.h"
 #include "utils.h"
 #include "rtc.h"
@@ -49,6 +50,9 @@ uint16_t lastMinLogCycle;
 uint16_t curMinNetCycle;
 uint16_t maxMinNetCycle;
 uint16_t lastMinNetCycle;
+
+uint16_t	timeoutLogCycle;
+uint16_t	timeoutNetCycle;
 
 
 #define A_ENABLE			0x01				/* enable module, enable means that it actually performs logging and net traffic,
@@ -242,7 +246,7 @@ void loadVariablesFromEEPROM()
 {
 	moduleAflags = getAflags();
 	
-	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+	Serial.print(RCF( pNodeId )); Serial.println( getNodeId() );
 	setVccFactor( getVCC() );
 	
 	maxMinLogCycle = getLogCycle();
@@ -254,7 +258,7 @@ void loadVariablesFromEEPROM()
 void dumpEEPROMvariables()
 {
 	Serial.println(F("EEPROM variables:"));
-	Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+	Serial.print(RCF( pNodeId )); Serial.println( getNodeId() );
 	
 	Serial.print(F("APIKEY: \"")); 
 	transmitEEPROMstr(E_APIKEY, Serial);
@@ -317,6 +321,10 @@ void initializeCounters()
 
 	/* global sleep cycle counter */
 	cntSleepCycle = 0;
+
+
+	timeoutLogCycle = 0;
+	timeoutNetCycle = 0;
 
 
 #if 0
@@ -489,6 +497,15 @@ ISR(WDT_vect)
 uint8_t poweredGSM=0;
 datetime_t dt;
 
+void updateTimeouts()
+{
+  timeoutLogCycle = cntSleepCycle + 60 * getLogCycle() / 8;
+  timeoutNetCycle = cntSleepCycle + 60 * getNetCycle() / 8;
+  
+  Dp("log timeout: "); D( timeoutLogCycle ); Dp("\tnet timeout: "); Dln( timeoutNetCycle );
+}
+
+
 
 void setupLoop()
 {
@@ -503,6 +520,10 @@ void setupLoop()
   lastMinLogCycle = lastMinNetCycle = rtc_getMinutes(&dt);
   curMinLogCycle = lastMinLogCycle;
   curMinNetCycle = lastMinNetCycle;
+
+  updateTimeouts();
+  
+#define DEBUG_SLEEP_CYCLE
 
 #ifdef DEBUG_SLEEP_CYCLE
 	Dp("INIT: curMinLogCycle - lastMinLogCycle >= MaxMinLogCycle ");
@@ -647,7 +668,7 @@ void doMaintenance()
 
 					case 'i':
 						if(buf[1] == '?') {
-							Serial.print(F("Node ID: ")); Serial.println( getNodeId() );
+							Serial.print(RCF( pNodeId )); Serial.println( getNodeId() );
 							break;
 						} else {
 							int n;
@@ -920,7 +941,7 @@ void doMaintenance()
 									case '0': moduleAflags &= ~A_ENABLE; break;
 									case '1': moduleAflags |= A_ENABLE; break;
 									default:
-										Serial.println(F("wrong parameter!"));
+										Serial.println(RCF( pWrongParameter ));
 										break;
 								}
 								break;
@@ -929,12 +950,12 @@ void doMaintenance()
 									case '0': moduleAflags &= ~A_DNSLOOKUP; break;
 									case '1': moduleAflags |= A_DNSLOOKUP; break;
 									default:
-										Serial.println(F("wrong parameter!"));
+										Serial.println(RCF( pWrongParameter ));
 										break;
 								}
 								break;
 							default:
-								Serial.println(F("wrong parameter"));
+								Serial.println(RCF( pWrongParameter ));
 								break;
 						}
 						break;
@@ -1100,12 +1121,7 @@ void loop()
 			    //powerRTC(1, 10);
 			    powerPeripherals(1,50);
 			    //powerPER_RTC(1, 250);
-			    Serial.println(F("before read temp"));
-			    
 			    db.bhvTemp = therm_getTemperature() * 100;
-			    
-			    Serial.println(F("after read temp"));
-			    
 			    db.bhvHumid = therm_getHumidity() * 100;
 					db.bhvWeight = 75432;
 								    
@@ -1278,7 +1294,9 @@ void loop()
 							powerPeripherals(1, 25);
 							while(mem_popDatablock(&dd)) {
 								if(!http_send_datablock( dd )) {
-				  				Serial.println( F("error: could not send data block"));
+									Serial.print( RCF( pErrorCouldNot ) );
+									Serial.println( RCF( pErrorSendDATblock ) );
+//				  				Serial.println( F("error: could not send data block"));
 				  				break;
 								}
 							}
@@ -1303,7 +1321,12 @@ void loop()
 								dd.gsmPowerDur = millis() - mil1;
 							
 								if( http_send_datablock( dd ) ) {
-								} else Serial.println( F("error: could not send gsm block"));
+								} else  {
+									Serial.print( RCF( pErrorCouldNot ) );
+									Serial.println( RCF( pErrorSendGSMblock ) );
+									
+									//Serial.println( F("error: could not send gsm block"));
+								}
 							} while(0);
 
 							
@@ -1311,8 +1334,14 @@ void loop()
 							
 
 							
-					} else Serial.println( F("error: could not initiate get request"));
-				} else Serial.println( F("error: could not activate bearer profile"));
+					} else {
+						Serial.print( RCF( pErrorCouldNot ) );
+						Serial.println( RCF( pErrorInitiateGet ) );
+					}
+				} else {
+					Serial.print( RCF( pErrorCouldNot ) );
+					Serial.println( RCF( pErrorActivateBearer ) );
+				}
 				
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();

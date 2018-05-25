@@ -14,6 +14,7 @@
 #include <Arduino.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "pstr.h"
 #include "utils.h"
 #include "rtc.h"
 #include "gsm.h"
@@ -231,35 +232,38 @@ bool gsm_activateBearerProfile()
 //AT+SAPBR=3,1,"PWD",""
 
 		/* reset interface */
-		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK"), 2) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF(pATCIPSHUTrn), RCF(pSHUTOK), 2) )
 			return false;
+
+//		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK"), 2) )
+//			return false;
 	
-		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPMUX=0\r\n"), F("OK"), 2 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF(pATCIPMUX0rn), RCF(pOK), 2 ) )
 			return false;
 
 		/* set parameters */
-    if(!gsm_sendrecvcmdtimeoutp( F( "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n") , F( "OK") , 2 ) )
+    if(!gsm_sendrecvcmdtimeoutp( RCF(pATSAPBR31CONTYPE) , RCF(pOK) , 2 ) )
     	return false;
 
-		gsm_sendcmdp( F("AT+SAPBR=3,1,\"APN\",\"") );
+		gsm_sendcmdp( RCF(pATSAPBR31APN) );
 		transmitEEPROMstr(E_APN, gsmserial);
-		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n") , F( "OK" ), 2 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF(pQrn) , RCF(pOK), 2 ) )
 			return false;
 		
 
-		gsm_sendcmdp( F("AT+SAPBR=3,1,\"USER\",\"") );
+		gsm_sendcmdp( RCF(pATSAPBR31USER) );
 		transmitEEPROMstr(E_USER, gsmserial);
-		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ) )
 			return false;
 		
 
-		gsm_sendcmdp( F("AT+SAPBR=3,1,\"PWD\",\"") );
+		gsm_sendcmdp( RCF( pATSAPBR31PWD ) );
 		transmitEEPROMstr(E_PASS, gsmserial);
-		if(!gsm_sendrecvcmdtimeoutp( F("\"\r\n"), F( "OK" ), 2 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ) )
 			return false;
 			
     /* actual connection */
-    if(!gsm_sendrecvcmdtimeoutp( F("AT+SAPBR=1,1\r\n"), F("OK"), 85) )
+    if(!gsm_sendrecvcmdtimeoutp( RCF( pATSAPBR11rn ), RCF( pOK ), 85) )
     return false;
 
     /* so we are connected! */
@@ -272,7 +276,7 @@ uint8_t	gsm_getBearerStatus()
   DEF_CLEAR_TEMPBUF;
   
 
-    gsm_sendcmdp( F("AT+SAPBR=2,1\r\n") );
+    gsm_sendcmdp( RCF( pATSAPBR21rn ) );
     READGSM( 2 );
 
     c = strstr_P(_tempbuf, PF("+SAPBR: "));
@@ -304,7 +308,7 @@ bool gsm_deactivateBearerProfile()
 {
 	DEF_CLEAR_TEMPBUF;
 
-		if(!gsm_sendrecvcmdtimeoutp( F("AT+SAPBR=0,1\r\n"), F( "OK" ), 65 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATSAPBR01rn ), RCF( pOK ), 65 ) )
 			return false;
 
   return true;
@@ -312,35 +316,35 @@ bool gsm_deactivateBearerProfile()
 
 bool gsm_initCIP()
 {
-	if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK"), 2) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2) )
 		return false;
 			
-	if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPMUX=0\r\n"), F("OK"), 2 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPMUX0rn ), RCF( pOK ), 2 ) )
 		return false;
 	
-	gsm_sendcmdp( F( "AT+CSTT=\"") );
+	gsm_sendcmdp( RCF( pATCSTTQ ) );
 		
 	transmitEEPROMstr(E_APN, gsmserial);
-	gsm_sendcmdp( F("\",\"") );
+	gsm_sendcmdp( RCF( pQcommaQ ) );
 		
 	transmitEEPROMstr(E_USER, gsmserial);
-	gsm_sendcmdp( F("\",\"") );
+	gsm_sendcmdp( RCF( pQcommaQ ) );
 
 	transmitEEPROMstr(E_PASS, gsmserial);
 		
-	if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ) )
 		return false;
 
-	if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP START" ), 5 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSTATUSrn ), RCF( pIPSTART ), 5 ) )
 		return false;
 		
-	if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIICR\r\n" ), F( "OK" ), 5 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIICRrn ), RCF( pOK ), 5 ) )
 		return false;
 		
-	if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP GPRSACT" ), 5 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSTATUSrn ), RCF( pIPGPRSACT ), 5 ) )
 		return false;
 		
-	if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIFSR\r\n" ), F( "." ), 5 ) )
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIFSRrn ), RCF( pDOT ), 5 ) )
 		return false;
 
   return true;
@@ -348,7 +352,7 @@ bool gsm_initCIP()
 
 bool gsm_doneCIP()
 {
-	if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSHUT\r\n" ), F("SHUT OK"), 2 ))return false;
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2 ))return false;
 	else return true;
 }
 
@@ -409,7 +413,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 
 		gsm_initCIP();
 				
-		gsm_sendcmdp( F( "AT+CDNSGIP=\"" ) );
+		gsm_sendcmdp( RCF( pATCDNSGIPQ ) );
 		
 		c = _tempbuf;
 		CLEAR_TEMPBUF;
@@ -417,7 +421,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 //		gsm_sendcmd( dns );
 		gsm_sendcmd( c );
 
-		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F("+CDNSGIP:"), 20 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pCDNSGIP ), 20 ) )
 			return false;
 		
 		CLEAR_TEMPBUF;
@@ -456,7 +460,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 		}
 
 #if 0		
-		gsm_sendrecvcmdtimeoutp( F( "AT+CIPSHUT\r\n" ), F("SHUT OK"), 2 );
+		gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2 );
 #endif
 	gsm_doneCIP();
 
@@ -469,19 +473,19 @@ bool http_initiateGetRequest()
 {
 //	DEF_CLEAR_TEMPBUF;
 
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPINIT\r\n" ), F( "OK" ),  2 ) ) {
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATHTTPINITrn ), RCF( pOK ),  2 ) ) {
 			return false;
 		}
 		
 		/* set HTTP CID */
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPPARA=\"CID\",1\r\n" ), F( "OK" ), 2 ) ) {
-			gsm_sendcmdp( F( "AT+HTTPTERM\r\n" ) );
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATHTTPPARACIDrn ), RCF( pOK ), 2 ) ) {
+			gsm_sendcmdp( RCF( pATHTTPTERMrn ) );
 			return false;
 		}
 
 		/* set HTTP USER AGENT */
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPPARA=\"UA\",\"BEEHIVE SIM MODULE\"\r\n" ), F ("OK"), 2 ) ) {
-			gsm_sendcmdp( F ("AT+HTTPTERM\r\n" ) );
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATHTTPPARAUArn ), RCF ( pOK ), 2 ) ) {
+			gsm_sendcmdp( RCF ( pATHTTPTERMrn ) );
 			return false;
 		}
 
@@ -490,19 +494,19 @@ bool http_initiateGetRequest()
 		
 void http_terminateRequest()
 {
-	gsm_sendrecvcmdtimeoutp( F( "AT+HTTPTERM\r\n" ) , F( "OK" ), 2);
+	gsm_sendrecvcmdtimeoutp( RCF( pATHTTPTERMrn ) , RCF( pOK ), 2);
 }
 
 
-#ifndef SERVER_URL
+//#ifndef SERVER_URL
 //#define SERVER_URL	CF( "5.55.150.188" )
-#define SERVER_URL	CF( "erns.sytes.net" )
+//#define SERVER_URL	CF( "erns.sytes.net" )
 
-#endif
+//#endif
 
-#ifndef SERVER_PORT
-#define SERVER_PORT	CF( "8088" )
-#endif
+//#ifndef SERVER_PORT
+//#define SERVER_PORT	CF( "8088" )
+//#endif
 
 uint8_t serverip[4];
 
@@ -511,7 +515,7 @@ void transmitServerIP()
 {
 	char cbuf[20];
 
-		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
+		sprintf_P(cbuf, (PGM_P)F("%d.%d.%d.%d") , serverip[0],serverip[1],serverip[2],serverip[3]);
 		gsm_sendcmd( cbuf );
 }
 
@@ -529,7 +533,7 @@ bool http_send_datablock(datablock_t &db)
 
 //		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
 
-		gsm_sendcmdp( F( "AT+HTTPPARA=\"URL\",\"http://") );
+		gsm_sendcmdp( RCF( pATHTTPPARAURLQ ) );
 //		gsm_sendcmd( cbuf );
 		transmitServerIP();
 
@@ -542,35 +546,35 @@ bool http_send_datablock(datablock_t &db)
 		
 
 		memset(cbuf, 0, sizeof( cbuf ));
-		SENDs(F("apikey"), getEEPROMstr( E_APIKEY, cbuf ) );
-		SENDi(F("nodeId"), getNodeId());
+		SENDs(RCF( pAPIKEY ), getEEPROMstr( E_APIKEY, cbuf ) );
+		SENDi(RCF( pnodeId ), getNodeId());
 //		SENDi(F("mcuTemp"), 100);
 
 		switch(db.entryType) {
 			case ENTRY_DATA:
-				SENDsp(F("entryType"), F("dat"));
-				SENDf(F("batVolt"), db.batVolt/ 1000.0, 3);
-				SENDf(F("bhvTemp"), db.bhvTemp / 100.0, 2);
-				SENDf(F("bhvHumid"), db.bhvHumid / 100.0, 2);
-				SENDf(F("bhvWeight"), db.bhvWeight / 1000.0, 3);
+				SENDsp(RCF( pentryType ), RCF( pDAT ));
+				SENDf(RCF( pbatVolt ), db.batVolt/ 1000.0, 3);
+				SENDf(RCF( pbhvTemp ), db.bhvTemp / 100.0, 2);
+				SENDf(RCF( pbhvHumid ), db.bhvHumid / 100.0, 2);
+				SENDf(RCF( pbhvWeight ), db.bhvWeight / 1000.0, 3);
 				break;
 			case ENTRY_GSM:
-				SENDsp(F("entryType"), F("gsm"));
-				SENDi(F("gsmSig"), db.gsmSig);
-				SENDf(F("gsmVolt"), db.gsmVolt / 1000.0, 3);
-				SENDul(F("gsmPDur"), db.gsmPowerDur);
+				SENDsp(RCF( pentryType ), RCF( pGSM ));
+				SENDi(RCF( pgsmSig ), db.gsmSig);
+				SENDf(RCF( pgsmVolt ), db.gsmVolt / 1000.0, 3);
+				SENDul(RCF( pgsmPDur ), db.gsmPowerDur);
 				break;
 			case ENTRY_GPS:
-				SENDsp(F("entrytype"), F("gps"));
-				SENDf(F("gsmLon"), db.gpsLon, 6);
-				SENDf(F("gsmLat"), db.gpsLat, 6);
+				SENDsp(RCF( pentryType ), RCF( PGPS ));
+				SENDf(RCF( pgpsLon ), db.gpsLon, 6);
+				SENDf(RCF( pgpsLat ), db.gpsLat, 6);
 				break;
 		
 			default: break;
 		}
 		
 
-		sprintf(cbuf, "%02d-%02d-%02d_%02d:%02d",
+		sprintf_P(cbuf, (PGM_P)F("%02d-%02d-%02d_%02d:%02d"),
 			db.dayOfMonth, 
 			db.month, 
 			db.year, 
@@ -579,9 +583,9 @@ bool http_send_datablock(datablock_t &db)
 
 		SENDs(F("rtcDateTime"), cbuf );
 
-		gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 );
+		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
 		
-		gsm_sendrecvcmdtimeoutp( F ( "AT+HTTPACTION=0\r\n" ), F( "+HTTPACTION:" ), 15 );
+		gsm_sendrecvcmdtimeoutp( RCF ( pATHTTPACTION0rn ), RCF( pHTTPACTION ), 15 );
 
 		CLEAR_TEMPBUF;
 		READGSM( 5 );
@@ -589,7 +593,7 @@ bool http_send_datablock(datablock_t &db)
 		
 		c = _tempbuf;
 
-		c = strstr(c, "200" );
+		c = strstr_P(c, (PGM_P)F("200") );
 		if(!c) {
 			Serial.println( F("response was not 200") );
 			Serial.println( _tempbuf );
@@ -599,14 +603,14 @@ bool http_send_datablock(datablock_t &db)
 		
 		c = strchr(c, ',');
 		if(!c) {
-			Serial.println( F("could not find received bytes length") );
+			Serial.println( RCF( pNoReceivedLength ) );
 			http_terminateRequest();
 			return false;
 		}
 		
 		dlen = atoi(++c);
 		Serial.print( F("Received bytes: ") ); Serial.println( dlen );
-		gsm_sendcmdp( F( "AT+HTTPREAD\r\n" ) );
+		gsm_sendcmdp( RCF( pATHTTPREADrn ) );
 
 //		delay(500);
 //		READGSM( 2 );
@@ -654,7 +658,7 @@ bool http_send_getconf_request()
 
 //		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
 
-		gsm_sendcmdp( F( "AT+HTTPPARA=\"URL\",\"http://") );
+		gsm_sendcmdp( RCF( pATHTTPPARAURLQ ) );
 
 		transmitServerIP();
 		
@@ -667,11 +671,11 @@ bool http_send_getconf_request()
 
 		gsm_sendcmdp( F( "/data.php?action=getconf" ) );
 
-		SENDi(F("nodeId"), getNodeId());
+		SENDi(RCF( pnodeId ), getNodeId());
 		
-		gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 );
+		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
 		
-		gsm_sendrecvcmdtimeoutp( F ( "AT+HTTPACTION=0\r\n" ), F( "+HTTPACTION:" ), 15 );
+		gsm_sendrecvcmdtimeoutp( RCF( pATHTTPACTION0rn ), RCF( pHTTPACTION ), 15 );
 
 		CLEAR_TEMPBUF;
 		READGSM( 5 );
@@ -688,7 +692,7 @@ bool http_send_getconf_request()
 		
 		c = strchr(c, ',');
 		if(!c) {
-			Serial.println( F("could not find received bytes length") );
+			Serial.println( RCF( pNoReceivedLength ) );
 			http_terminateRequest();
 			return false;
 		}
@@ -703,7 +707,7 @@ bool http_send_getconf_request()
 
 		//gsm_interactiveMode();
 
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+HTTPREAD\r\n"), F("+HTTPREAD: "), 2 ) )
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATHTTPREADrn ), RCF( pHTTPREAD ), 2 ) )
 		{
 			return true;
 		}
@@ -745,13 +749,13 @@ bool gsm_moduleInfo()
 {
 	DEF_CLEAR_TEMPBUF;
 	
-		if(gsm_sendrecvcmdtimeoutp( F( "ATI\r\n" ), F( "OK" ), 2 ) )
+		if(gsm_sendrecvcmdtimeoutp( RCF( pATIrn ), RCF( pOK ), 2 ) )
 			return true;
 		else
 			return false;
 	
 
-  	gsm_sendcmdp( F("ATI\r\n") );
+  	gsm_sendcmdp( RCF( pATIrn ) );
   	READGSM( 2 );
 //  	Serial.print("GSM response: <");
   	Serial.print( _tempbuf ); Serial.println( F(">") );
@@ -797,21 +801,21 @@ bool gsm_sendPin()
 {
 //	DEF_CLEAR_TEMPBUF;
 
-		gsm_sendcmdp( F("AT+CPIN=") );
+		gsm_sendcmdp( RCF( pATCPINeq ) );
 		transmitEEPROMstr( E_SIMPIN, gsmserial );
 //		gsm_sendcmd( aspin );
 
-		if(!gsm_sendrecvcmdtimeoutp( F( "\r\n" ), F( "OK" ), 2 ) ) {
-			Serial.println( F("Error setting SIM PIN") );
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF(  pOK ), 2 ) ) {
+			Serial.println( RCF( pErrorCPIN ) );
 			return false;
 		}
-		gsm_sendcmdp( F("AT\r\n") );
+		gsm_sendcmdp( RCF( pATrn ) );
 		
 #if 0
-		gsm_sendcmdp( F("\r\n") );
+		gsm_sendcmdp( RCF( pRN ) );
 		if(!READGSM(2))return false;
 		if(!strstr_P(_tempbuf, F( ("OK\r\n") ) )) {
-			Serial.println(F( "Error setting cpin\n" ) );
+			Serial.println(RCF( pErrorCPIN ) );
 			return false;
 		}
 #endif
@@ -823,7 +827,7 @@ bool gsm_getICCID(char *aiccid)
 {
 	DEF_CLEAR_TEMPBUF;
 
-		gsm_sendcmdp( F("AT+CCID\r\n") );
+		gsm_sendcmdp( RCF( pATCCIDrn ) );
 		
 		if(!READGSM(2))return false;
 		
@@ -842,30 +846,11 @@ bool gsm_moduleReady()
 	uint8_t reg;
 	DEF_CLEAR_TEMPBUF;
 
-	if( !gsm_sendrecvcmdtimeoutp( F("AT\n\r") , F("OK"), 2) )return false;
+	if( !gsm_sendrecvcmdtimeoutp( RCF( pATrn ) , RCF( pOK ), 2) )return false;
 	
 	gsm_getRegistration( reg );
 	if( (reg == 1) || (reg == 5))return true;
 	else return false;
-	 
-#if 0
-	gsm_sendcmdp( F("AT+CREG?\n\r") );
-	if( !READGSM( 5 ) )return false;
-	c = strstr( _tempbuf, CF( ("+CREG: ") ) );
-	if(!c)return false;
-	
-	c = strchr( c, ',' );
-	if(!c)return false;
-
-	switch( *( ++c ) ) {
-		case '1':
-		case '5':
-			return true;
-		default:
-			return false;
-	}
-#endif
-
 }
 
 
@@ -874,7 +859,7 @@ bool gsm_getRegistration(uint8_t &areg)
 	char *c;
   DEF_CLEAR_TEMPBUF;
 
-  	gsm_sendcmdp( F("AT+CREG?\n\r" ) );
+  	gsm_sendcmdp( RCF( pATCREGqrn ) );
   	READGSM( 2 );
   	
   	c = strstr(_tempbuf, CF( ("+CREG: ") ) );
@@ -901,10 +886,10 @@ bool gsm_getRegistration(uint8_t &areg)
 bool gsm_moduleLowPower( bool alowpower )
 {
 	if( alowpower ) {
-		if( gsm_sendrecvcmdtimeoutp( F("AT+CFUNC=0\n\r") , F("OK"), 2) )return true;
+		if( gsm_sendrecvcmdtimeoutp( RCF( pATCFUNC0rn ) , RCF( pOK ), 2) )return true;
 		else return false;
 	} else {
-		if( gsm_sendrecvcmdtimeoutp(F("AT+CFUNC=1\n\r"), F("OK"), 2) )return true;
+		if( gsm_sendrecvcmdtimeoutp( RCF( pATCFUNC0rn ), RCF( pOK ), 2) )return true;
 		else return false;
 	}
 }
@@ -915,7 +900,7 @@ bool gsm_getBattery(uint16_t &bat)
 	DEF_CLEAR_TEMPBUF;
 
 		
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CBC\r\n" ), F( "+CBC:" ), 2))
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCBCrn ), RCF( pCBC ), 2))
 			return false;
 		
 		READGSM(2);
@@ -933,7 +918,7 @@ bool gsm_getSignalQuality(uint8_t &asqual)
 	char *c;
   DEF_CLEAR_TEMPBUF;
 
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CSQ\r\n" ), F( "+CSQ: " ), 2))
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCSQrn ), RCF( pCSQ ), 2))
 			return false;
 
   	READGSM( 2 );
@@ -953,7 +938,7 @@ uint8_t &year, float &lon, float &lat)
 	int16_t res;
 	DEF_CLEAR_TEMPBUF;
 
-		gsm_sendcmdp( F("AT+CIPGSMLOC=1,1\n") );
+		gsm_sendcmdp( RCF( pATCIPGSMLOC11rn ) );
 		
 		c=strstr( _tempbuf, "GSMLOC: " );
 		if(!c)return false;
@@ -1022,7 +1007,7 @@ uint8_t &year)
 	int16_t res;
 	DEF_CLEAR_TEMPBUF;
 
-		gsm_sendcmdp( F("AT+CIPGSMLOC=2,1\n") );
+		gsm_sendcmdp( RCF( pATCIPGSMLOC21rn ) );
 		
 		c=strstr( _tempbuf, "GSMLOC: " );
 		if(!c)return false;

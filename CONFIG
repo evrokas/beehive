@@ -21,7 +21,7 @@ Maintanance mode
 In maintanance mode: (each command is followed by \r)
 
 In use:
-[uraswiklnpdvXEPDUVTHCGBQRFAO]
+[uraswiklnpdvteXEPDUVTHCGBQRFAO]
 
 
 u?								get data server URL
@@ -59,6 +59,13 @@ l<log freq>				set logging frequency	(default: 5 per hour)
 n?								get networking frequency
 n<net freq>				set networking frequency (default: 1 per hour)
 *
+
+t?								get logging primming interval
+t<log prim>				set logging primming interval
+
+e?								get networking primming interval
+e<net prim>				set networking primming interval
+
 
 p?								get SIM pin
 p<pin>						set SIM pin to <pin>
