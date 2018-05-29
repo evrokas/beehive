@@ -158,12 +158,18 @@ bool mem_readcounters()
 	__tail_db |= (int)Wire.read() << 8;
 	
 	
-	__cnt_db = (__max_db + (__head_db - __tail_db)) % __max_db;
+//	__cnt_db = (__max_db + (__head_db - __tail_db)) % __max_db;
+	__cnt_db = mem_entriesCount();
 	
 
   return (true);
 }
- 
+
+counter_type inline mem_entriesCount()
+{
+	return ( (__max_db + (__head_db - __tail_db)) % __max_db );
+}
+
 
 uint32_t	inline __block2linearaddress(uint16_t blockno)
 {
@@ -295,6 +301,12 @@ bool mem_popDatablock(datablock_t *db)
 
 	return true;
 }
+
+bool mem_readFirstDatablock(datablock_t *db)
+{
+	return( mem_readDatablocki( __tail_db, db ) );
+}
+
 
 /* read data block at index */
 bool mem_readDatablocki(uint16_t index, datablock_t *db)

@@ -77,10 +77,16 @@ extern "C" {
     bool http_initiateGetRequest();
     void http_terminateRequest();
     
-    uint16_t http_getRequest(char *url, char *args);
-    bool http_send_datablock(datablock_t &db);
+//    uint16_t http_getRequest(char *url, char *args);
+#if defined( HTTP_API_GET )
+    bool http_send_datablock_get(datablock_t &db);
     bool http_send_getconf_request();
-    
+#endif
+
+#if defined( HTTP_API_POST )
+		bool http_send_post_preample();
+#endif
+
     bool gsm_moduleInfo();
 
 		bool gsm_getBattery(uint16_t &bat);
@@ -105,6 +111,11 @@ extern "C" {
 		bool gsm_dnsLookup(uint8_t *ipaddr);
 
 		extern uint8_t serverip[4];
+
+		unsigned long getGSMCharCount();
+		void resetGSMCharCount();
+		void incGSMCharCount(unsigned int aincr = 1);
+	
 		
 };
 

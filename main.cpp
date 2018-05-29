@@ -195,11 +195,40 @@ bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
 		if(c == 0)break;	/* end of string */
 
 		strm.write(c);
+		incGSMCharCount();
 	}
 
 	return (true);
 }
+
+#if 0
+bool transmitEEPROMstrd(uint8_t ecode, Stream &strm)
+{
+	uint8_t i,m, sta;
+	char c;
 	
+	switch( ecode ) {
+		case E_URL: m = URL_SIZE; sta = addrURL; break;
+		case E_APN: m = APN_SIZE; sta = addrAPN; break;
+		case E_USER: m = USER_SIZE; sta = addrUSER; break;
+		case E_PASS: m = PASS_SIZE; sta = addrPASS; break;
+		case E_APIKEY: m = APIKEY_SIZE; sta = addrAPIKEY; break;
+		case E_SIMPIN: m = SIMPIN_SIZE; sta = addrSIMPIN; break;
+		case E_SIMICCID: m = SIMICCID_SIZE; sta = addrSIMICCID; break;
+		default: return (false);	//m = 0; break;
+	}
+	
+	for(i=0;i<m;i++) {
+		c = eepromGetByte( sta + i );
+		if(c == 0)break;	/* end of string */
+
+		strm.write(c);
+		Serial.print(c);
+	}
+
+	return (true);
+}
+#endif	
 
 void setLogCycle(uint8_t dat)
 {
@@ -460,7 +489,6 @@ void mySleep()
 	/* setup to wake on pin change on D0 (RX) */
 	cli();
 
-	
 	PCMSK2	|= bit( PCINT16 );
 	PCIFR		|= bit( PCIF2 );
 	PCICR		|= bit( PCIE2 );
@@ -482,7 +510,6 @@ void mySleep()
 	
 	
 //	wdt_enable( WDTO_2S );
-	
 }
 
 #if 0
@@ -1069,7 +1096,7 @@ void loop()
 			 * sense for the minute passed must wait for another 56 seconds.
 			 * If we leave curSleepCycle as is, in the next 8 seconds, the algorithm
 			 * will sense the passed minute and reset the timer. This results in
-			 * timing */
+			 * better timing */
 			curSleepCycle = 0;
 #endif
 	
@@ -1285,7 +1312,10 @@ void loop()
 							Dlnp("could not successfully resolve domain name, using old IP address");
 						}
 				} while(0);
-				
+
+/* send data via a series of GET requests (time consuming, about 7 secs for each entry) */
+#ifdef HTTP_API_GET
+
 				if( gsm_activateBearerProfile() ) {
 					if( http_initiateGetRequest() ) {
 						datablock_t dd;
@@ -1293,7 +1323,7 @@ void loop()
 							//powerPER_RTC(1, 25);		//powerRTC(1, 100);
 							powerPeripherals(1, 25);
 							while(mem_popDatablock(&dd)) {
-								if(!http_send_datablock( dd )) {
+								if(!http_send_datablock_get( dd )) {
 									Serial.print( RCF( pErrorCouldNot ) );
 									Serial.println( RCF( pErrorSendDATblock ) );
 //				  				Serial.println( F("error: could not send data block"));
@@ -1320,7 +1350,7 @@ void loop()
 						
 								dd.gsmPowerDur = millis() - mil1;
 							
-								if( http_send_datablock( dd ) ) {
+								if( http_send_datablock_get( dd ) ) {
 								} else  {
 									Serial.print( RCF( pErrorCouldNot ) );
 									Serial.println( RCF( pErrorSendGSMblock ) );
@@ -1342,7 +1372,19 @@ void loop()
 					Serial.print( RCF( pErrorCouldNot ) );
 					Serial.println( RCF( pErrorActivateBearer ) );
 				}
+	/* HTTP_API_GET */
+
+#elif defined( HTTP_API_POST )
+/* use POST request to send a series of data (faster...) */
 				
+				/* tcp stack is already brought up by DNS request, save some
+				 * time using this opportunity */
+				 
+				//if( 
+
+/* HTTP_API_POST */
+#endif
+	
 				http_terminateRequest();						
 				gsm_deactivateBearerProfile();
 

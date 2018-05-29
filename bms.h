@@ -85,11 +85,34 @@
 
 
 
-/* this factor is determined by trial and error, may be different
- * for various chips, may have to remove hard coding and replace it
- * in the EEPROM */
+/* define API_STRING_KEYS, in order to use string literals
+ * in API GET command, 
+ * if API_NUMERIC_KEYS is defined then use numeric literals 1 - 13 */
  
-//#define VCC_CORRECTION_FACTOR	0.9854
+#define API_STRING_KEYS		1
+//#define API_NUMERIC_KEYS	1
+
+#if ( (defined( API_STRING_KEYS ) && defined( API_NUMERIC_KEYS )) || \
+			(!defined( API_STRING_KEYS ) && !defined( API_NUMERIC_KEYS )) )
+
+#error	Please define only one of API_STRING_KEYS or API_NUMERIC_KEYS
+
+#endif
+
+
+/*
+ * define HTTP_API_POST in order to send multiple data blocks using POST http request
+ * define HTTP_API_GET in order to send one data block using GET http request
+ */
+//#define HTTP_API_POST
+#define HTTP_API_GET
+
+#if ( (defined( HTTP_API_POST ) && defined( HTTP_API_GET ) ) || \
+			(!defined( HTTP_API_POST ) && !defined( HTTP_API_GET ) ) )
+
+#error	Please define only one of HTTP_API_POST or HTTP_API_GET
+
+#endif
 
 /* pins for software serial for GPS communication */
 #define GPS_RX_PIN	6

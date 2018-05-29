@@ -48,7 +48,23 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 #define PF(str)	(PGM_P)F(str)
 
 
-//const __FlashStringHelper *FOK = F("OK\r\n");
+unsigned long _gsmCharCount = 0;
+
+unsigned long getGSMCharCount()
+{
+	return (_gsmCharCount);
+}
+
+void resetGSMCharCount()
+{
+	_gsmCharCount = 0;
+}
+
+void incGSMCharCount(unsigned int aincr)
+{
+	_gsmCharCount += aincr;
+}
+
 
 /* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
@@ -89,6 +105,8 @@ uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 void gsm_init()
 {
 	gsmserial.begin( GSM_SERIAL_BAUDRATE );
+
+	resetGSMCharCount();
 }
 
 bool gsm_sendrecvcmd(char *cmd, char *expstr)
@@ -201,6 +219,8 @@ void gsm_sendcmd(char *cmd)
 	
 	gsmserial.print( cmd );
 
+	_gsmCharCount += strlen( cmd );
+
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
 #endif
@@ -211,6 +231,8 @@ void gsm_sendcmdp(const __FlashStringHelper *cmd)
 	while(gsm_available())gsm_read();
 	
 	gsmserial.print( cmd );
+
+	_gsmCharCount += strlen_P( (PGM_P)cmd );
 
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
@@ -519,8 +541,59 @@ void transmitServerIP()
 		gsm_sendcmd( cbuf );
 }
 
+#if defined( HTTP_API_POST )
 
-bool http_send_datablock(datablock_t &db)
+bool http_send_post_preample()
+{
+	unsigned long gcount;
+	counter_type i,n;
+	datablock_t db;
+		
+	Serial.println( F("sending POST preample") );
+	
+	gcount = getGSMCharCount();
+
+#define PREAMPLE_SIZE	71		/* until ...Length:_ */
+
+/* lengths with string literals, using numeric literals will even reduce size */
+#if defined( API_STRING_KEYS )
+
+#define SIZE_DAT			119
+#define SIZE_GSM			96
+#define SIZE_GPS			91
+
+#elif defined( API_NUMERIC_KEYS )
+
+#define SIZE_DAT			75
+#define SIZE_GSM			62
+#define SIZE_GPS			65
+
+#endif
+
+	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
+	gsm_sendcmdp( F("Content-Type: application/json\n") );
+	gsm_sendcmdp( F("Content-Length: ") );
+
+	/* now estimate content length(!) */
+
+
+	gsm_sendcmdp( F("\"action\":\"add\",\"data\":[") );		/* 21 characters */
+	i = mem_entriesCount();
+	for(n = i;n;n--) {
+		mem_readDatablocki( n )		
+	
+	
+
+
+  return (true);
+}
+
+#endif	/* HTTP_API_POST */
+
+
+#if defined( HTTP_API_GET )
+
+bool http_send_datablock_get(datablock_t &db)
 {
 	DEF_CLEAR_TEMPBUF;
 	char	cbuf[20], *c;
@@ -537,7 +610,7 @@ bool http_send_datablock(datablock_t &db)
 //		gsm_sendcmd( cbuf );
 		transmitServerIP();
 
-		gsm_sendcmdp( F( ":" ) );
+		gsm_sendcmdp( RCF( pDDOT ) );
 
 		CLEAR_TEMPBUF;
 		gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );
@@ -546,9 +619,8 @@ bool http_send_datablock(datablock_t &db)
 		
 
 		memset(cbuf, 0, sizeof( cbuf ));
-		SENDs(RCF( pAPIKEY ), getEEPROMstr( E_APIKEY, cbuf ) );
+//		SENDs(RCF( pAPIKEY ), getEEPROMstr( E_APIKEY, cbuf ) );
 		SENDi(RCF( pnodeId ), getNodeId());
-//		SENDi(F("mcuTemp"), 100);
 
 		switch(db.entryType) {
 			case ENTRY_DATA:
@@ -581,7 +653,7 @@ bool http_send_datablock(datablock_t &db)
 			db.hour, 
 			db.minute);
 
-		SENDs(F("rtcDateTime"), cbuf );
+		SENDs(RCF( prtcDateTime ), cbuf );
 
 		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
 		
@@ -631,6 +703,8 @@ bool http_send_datablock(datablock_t &db)
 	return (true);
 }
 
+#endif	/* HTTP_API_GET */
+
 void gsm_interactiveMode()
 {
   char c;
@@ -647,6 +721,8 @@ void gsm_interactiveMode()
 		}
 }
 
+
+#if defined( HTTP_API_GET )
 	
 bool http_send_getconf_request()
 {
@@ -664,7 +740,7 @@ bool http_send_getconf_request()
 		
 //		gsm_sendcmd( cbuf );
 
-		gsm_sendcmdp( F( ":" ) );
+		gsm_sendcmdp( RCF( pDDOT ) );
 
 		CLEAR_TEMPBUF;
 		gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );
@@ -732,6 +808,13 @@ bool http_send_getconf_request()
 			Serial.print(F("NodeId: ")); Serial.println( nid );
 			Serial.print(F("Log cycle: ")); Serial.println( lc );
 			Serial.print(F("Net cycle: ")); Serial.println( nc );
+		
+			if( lc != getLogCycle())
+				maxMinLogCycle = lc;	//setLogCycle( lc );
+			
+			if( nc != getNetCycle() )
+				maxMinNetCycle = nc;	//setNetCycle( nc );
+				
 		} while( 0 );
 		
 		
@@ -744,6 +827,8 @@ bool http_send_getconf_request()
 
 	return (true);
 }
+
+#endif	/* HTTP_API_GET */
 
 bool gsm_moduleInfo()
 {
@@ -805,7 +890,7 @@ bool gsm_sendPin()
 		transmitEEPROMstr( E_SIMPIN, gsmserial );
 //		gsm_sendcmd( aspin );
 
-		if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF(  pOK ), 2 ) ) {
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pRN ), RCF(  pOK ), 2 ) ) {
 			Serial.println( RCF( pErrorCPIN ) );
 			return false;
 		}

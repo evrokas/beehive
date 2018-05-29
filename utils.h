@@ -157,6 +157,7 @@ void eepromSetChar( uint16_t aaddr, char dat );
 void eepromGetStr(uint16_t aaddr, int acnt, char *dat);
 void eepromSetStr(uint16_t aaddr, int acnt, char *dat);
 bool transmitEEPROMstr(uint8_t ecode, Stream &strm);
+bool transmitEEPROMstrd(uint8_t ecode, Stream &strm);
 
 
 void initializeEEPROM();
@@ -176,6 +177,13 @@ void loadVariablesFromEEPROM();
 
 uint8_t i2c_clearBus();
 
+uint8_t getNetCycle();
+void setNetCycle(uint8_t dat);
+void setLogCycle(uint8_t dat);
+uint8_t getLogCycle();
+
+extern uint16_t maxMinLogCycle;
+extern uint16_t maxMinNetCycle;
 
 
 #ifdef __cplusplus

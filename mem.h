@@ -130,6 +130,7 @@ bool mem_pushDatablock(datablock_t *db);
 
 bool mem_popDatablock(datablock_t *db);
 bool mem_readDatablocki(uint16_t index, datablock_t *db);
+bool mem_readFirstDatablock(datablock_t *db);
 	
 void datetime2db(datetime_t *dt, datablock_t *db);
 
@@ -137,6 +138,8 @@ bool mem_readcounters();
 void mem_storecounters();
 
 void dumpDBrecord(datablock_t *db, int recno = -1);
+
+counter_type mem_entriesCount();
 
 
 #ifdef __cplusplus

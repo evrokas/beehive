@@ -185,7 +185,7 @@ uint32_t InternalReferenceVoltage = (uint32_t)(1100);
 unsigned long readVcc()
 {
   //float f;
-  unsigned long f;
+//  unsigned long f;
   
     ADCSRA |= (1 << ADEN);
 
