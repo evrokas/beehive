@@ -41,6 +41,13 @@ const prog_char pATCIFSRrn [] PROGMEM							= "AT+CIFSR\r\n";
 const prog_char pDOT [] PROGMEM									= ".";
 const prog_char pCOMMA [] PROGMEM								= ",";
 const prog_char pDDOT [] PROGMEM								= ":";
+const prog_char pQ [] PROGMEM										= "\"";
+const prog_char pAmp [] PROGMEM										= "&";
+const prog_char pEq [] PROGMEM									= "=";
+const prog_char pQddQ [] PROGMEM								= "\":\"";
+const prog_char pCURLOPEN [] PROGMEM						= "{";
+const prog_char pCURLCLOSE [] PROGMEM						= "}";
+const prog_char pCRLF [] PROGMEM								= "\r\n";
 
 const prog_char pATCDNSGIPQ [] PROGMEM					= "AT+CDNSGIP=\"";
 const prog_char pCDNSGIP [] PROGMEM							= "+CDNSGIP:";

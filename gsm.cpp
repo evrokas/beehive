@@ -211,6 +211,8 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 }
 
 
+
+
 //#define SERIAL_DUMPCMD
 
 void gsm_sendcmd(char *cmd)
@@ -220,6 +222,17 @@ void gsm_sendcmd(char *cmd)
 	gsmserial.print( cmd );
 
 	_gsmCharCount += strlen( cmd );
+
+#ifdef SERIAL_DUMPCMD
+	Serial.print( cmd );
+#endif
+}
+
+void gsm_sendchar(char ch)
+{
+	gsmserial.print( ch );
+	
+	_gsmCharCount++;
 
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
@@ -238,6 +251,82 @@ void gsm_sendcmdp(const __FlashStringHelper *cmd)
 	Serial.print( cmd );
 #endif
 }
+
+
+#if defined(HTTP_API_POST)
+/*
+ * the gsm_postcmd* version of functions is used in conjuction
+ * with POST HTTP method end Transfer-Encoding: chunked
+ * Actually, they buffer output and print output in chunks of
+ * predetermined size */
+
+#define CHUNK_BUFFER_SIZE		16
+uint8_t _chunk_pos; 
+char chunk_buffer[ CHUNK_BUFFER_SIZE+1 ];
+
+
+
+void gsm_poststart()
+{
+	_chunk_current = 0;
+	memset( chunk_buffer, 0, CHUNK_BUFFER_SIZE+1 );
+}
+
+
+void gsm_postcmd(char *cmd)
+{
+  DEF_CLEAR_TEMPBUF;
+  uint8_t i=0;
+  
+	while( i < strlen( cmd ) ) {
+		
+		if( _chunk_pos < CHUNK_BUFFER_SIZE ) {
+			/* there is still room in buffer */
+			chunk_buffer[ _chunk_pos ] = cmd[i];
+			_chunk_pos++;
+			i++;
+			continue;
+		} else {
+			uint8_t n;
+			
+			/* buffer is full, so print result */
+			gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );			/* print number of bytes */
+			gsm_sendcmdp( RCF( pCRLF ) );
+			gsm_sendcmd( chunk_buffer );	/* always chunk_buffer[ CHUNK_BUFFER ] is \0 */
+			gsm_sendcmdp( RCF( pCRLF ) );
+			gsm_poststart();
+		}
+	}
+}
+
+void gsm_postcmdp(const __FlashStringHelper *cmd)
+{
+  DEF_CLEAR_TEMPBUF;
+  uint8_t i=0;
+  
+	while( i < strlen( cmd ) ) {
+		
+		if( _chunk_pos < CHUNK_BUFFER_SIZE ) {
+			/* there is still room in buffer */
+			chunk_buffer[ _chunk_pos ] = cmd[i];
+			_chunk_pos++;
+			i++;
+			continue;
+		} else {
+			uint8_t n;
+			
+			/* buffer is full, so print result */
+			gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );			/* print number of bytes */
+			gsm_sendcmdp( RCF( pCRLF ) );
+			gsm_sendcmd( chunk_buffer );	/* always chunk_buffer[ CHUNK_BUFFER ] is \0 */
+			gsm_sendcmdp( RCF( pCRLF ) );
+			gsm_poststart();
+		}
+	}
+}
+
+#endif	/* HTTP_API_POST */
+
 
 		
 void gsm_relayOutput( Stream &ast )
@@ -395,44 +484,6 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
  * AT+CIFSR													0.0.0.0
  * AT+CDNSGIP="url.ext"							+CDNSGIP: 1,"url.ext","0.0.0.0"
  */
-
-#if 0
-		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK"), 2) )
-			return false;
-			
-		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPMUX=0\r\n"), F("OK"), 2 ) )
-			return false;
-	
-		c = _tempbuf;
-		
-		gsm_sendcmdp( F( "AT+CSTT=\"") );
-		
-		transmitEEPROMstr(E_APN, gsmserial);
-		gsm_sendcmdp( F("\",\"") );
-		
-		transmitEEPROMstr(E_USER, gsmserial);
-		gsm_sendcmdp( F("\",\"") );
-
-		transmitEEPROMstr(E_PASS, gsmserial);
-		
-		if(!gsm_sendrecvcmdtimeoutp( F( "\"\r\n" ), F( "OK" ), 2 ) )
-			return false;
-
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP START" ), 5 ) )
-			return false;
-		
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIICR\r\n" ), F( "OK"; ), 5 ) )
-			return false;
-		
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIPSTATUS\r\n" ), F( "IP GPRSACT" ), 5 ) )
-			return false;
-		
-		if(!gsm_sendrecvcmdtimeoutp( F( "AT+CIFSR\r\n" ), F( "." ), 5 ) )
-			return false;
-#endif
-
-
-
 		gsm_initCIP();
 				
 		gsm_sendcmdp( RCF( pATCDNSGIPQ ) );
@@ -474,18 +525,19 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 			STRTOD(ipaddr[1], c);c++;
 			STRTOD(ipaddr[2], c);c++;
 			STRTOD(ipaddr[3], c);
-		
-//			Serial.println(ipaddr[0], DEC);
-//			Serial.println(ipaddr[1], DEC);
-//			Serial.println(ipaddr[2], DEC);
-//			Serial.println(ipaddr[3], DEC);
+
+/*
+			Serial.println(ipaddr[0], DEC);
+			Serial.println(ipaddr[1], DEC);
+			Serial.println(ipaddr[2], DEC);
+			Serial.println(ipaddr[3], DEC);
+*/
 		}
 
 #if 0		
 		gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2 );
 #endif
-	gsm_doneCIP();
-
+		gsm_doneCIP();
 
 	return true;
 }
@@ -543,6 +595,73 @@ void transmitServerIP()
 
 #if defined( HTTP_API_POST )
 
+bool http_post_db_preample(uint16_t nid)
+{
+	DEF_CLEAR_TEMPBUF;
+	
+	//{"action":"add","nodeId":100,"data":);
+	POSTSENDsp("action", "add");
+	POSTSENDcomma;
+	POSTSENDi("nodeId", nid);
+	gsm_sendcmdp(",\"data\":[");
+}
+
+bool http_post_db_data(datablock_t &db)
+{
+	DEF_CLEAR_TEMPBUF;
+	
+		gsm_sendcmdp( RCF( pCURLOPEN );
+	
+	
+		switch(db.entryType) {
+			case ENTRY_DATA:
+				POSTSENDsp(RCF( pentryType ), RCF( pDAT ));
+				POSTSENDcomma;
+				POSTSENDf(RCF( pbatVolt ), db.batVolt/ 1000.0, 3);
+				POSTSENDcomma;
+				POSTSENDf(RCF( pbhvTemp ), db.bhvTemp / 100.0, 2);
+				POSTSENDcomma;
+				POSTSENDf(RCF( pbhvHumid ), db.bhvHumid / 100.0, 2);
+				POSTSENDcomma;
+				POSTSENDf(RCF( pbhvWeight ), db.bhvWeight / 1000.0, 3);
+				break;
+			case ENTRY_GSM:
+				POSTSENDsp(RCF( pentryType ), RCF( pGSM ));
+				POSTSENDcomma;
+				POSTSENDi(RCF( pgsmSig ), db.gsmSig);
+				POSTSENDcomma;
+				POSTSENDf(RCF( pgsmVolt ), db.gsmVolt / 1000.0, 3);
+				POSTSENDcomma;
+				POSTSENDul(RCF( pgsmPDur ), db.gsmPowerDur);
+				break;
+			case ENTRY_GPS:
+				POSTSENDsp(RCF( pentryType ), RCF( PGPS ));
+				POSTSENDcomma;
+				POSTSENDf(RCF( pgpsLon ), db.gpsLon, 6);
+				POSTSENDcomma;
+				POSTSENDf(RCF( pgpsLat ), db.gpsLat, 6);
+				break;
+		
+			default: break;
+		}
+		
+		POSTSENDcomma;
+		sprintf_P(cbuf, (PGM_P)F("%02d-%02d-%02d_%02d:%02d"),
+			db.dayOfMonth, 
+			db.month, 
+			db.year, 
+			db.hour, 
+			db.minute);
+
+		POSTSENDs(RCF( prtcDateTime ), cbuf );
+		
+		gsm_sendcmdp( RCF( pCURLCLOSE );
+
+  return (true);
+}
+
+
+
 bool http_send_post_preample()
 {
 	unsigned long gcount;
@@ -571,13 +690,17 @@ bool http_send_post_preample()
 #endif
 
 	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
+	gsm_sendcmdp( F("Host: 10.0.0.1\n" ) );
+	gsm_sendcmdp( F("User-Agent: beewatch-firmware\n");
 	gsm_sendcmdp( F("Content-Type: application/json\n") );
+
+	gsm_sendcmdp( F("Transfer-Encoding: chunked\n") );
+		
 	gsm_sendcmdp( F("Content-Length: ") );
 
 	/* now estimate content length(!) */
 
-
-	gsm_sendcmdp( F("\"action\":\"add\",\"data\":[") );		/* 21 characters */
+	gsm_sendcmdp( F("{\"action\":\"add\",\"data\":[") );		/* 21 characters */
 	i = mem_entriesCount();
 	for(n = i;n;n--) {
 		mem_readDatablocki( n )		
@@ -620,26 +743,26 @@ bool http_send_datablock_get(datablock_t &db)
 
 		memset(cbuf, 0, sizeof( cbuf ));
 //		SENDs(RCF( pAPIKEY ), getEEPROMstr( E_APIKEY, cbuf ) );
-		SENDi(RCF( pnodeId ), getNodeId());
+		GETSENDi(RCF( pnodeId ), getNodeId());
 
 		switch(db.entryType) {
 			case ENTRY_DATA:
-				SENDsp(RCF( pentryType ), RCF( pDAT ));
-				SENDf(RCF( pbatVolt ), db.batVolt/ 1000.0, 3);
-				SENDf(RCF( pbhvTemp ), db.bhvTemp / 100.0, 2);
-				SENDf(RCF( pbhvHumid ), db.bhvHumid / 100.0, 2);
-				SENDf(RCF( pbhvWeight ), db.bhvWeight / 1000.0, 3);
+				GETSENDsp(RCF( pentryType ), RCF( pDAT ));
+				GETSENDf(RCF( pbatVolt ), db.batVolt/ 1000.0, 3);
+				GETSENDf(RCF( pbhvTemp ), db.bhvTemp / 100.0, 2);
+				GETSENDf(RCF( pbhvHumid ), db.bhvHumid / 100.0, 2);
+				GETSENDf(RCF( pbhvWeight ), db.bhvWeight / 1000.0, 3);
 				break;
 			case ENTRY_GSM:
-				SENDsp(RCF( pentryType ), RCF( pGSM ));
-				SENDi(RCF( pgsmSig ), db.gsmSig);
-				SENDf(RCF( pgsmVolt ), db.gsmVolt / 1000.0, 3);
-				SENDul(RCF( pgsmPDur ), db.gsmPowerDur);
+				GETSENDsp(RCF( pentryType ), RCF( pGSM ));
+				GETSENDi(RCF( pgsmSig ), db.gsmSig);
+				GETSENDf(RCF( pgsmVolt ), db.gsmVolt / 1000.0, 3);
+				GETSENDul(RCF( pgsmPDur ), db.gsmPowerDur);
 				break;
 			case ENTRY_GPS:
-				SENDsp(RCF( pentryType ), RCF( PGPS ));
-				SENDf(RCF( pgpsLon ), db.gpsLon, 6);
-				SENDf(RCF( pgpsLat ), db.gpsLat, 6);
+				GETSENDsp(RCF( pentryType ), RCF( PGPS ));
+				GETSENDf(RCF( pgpsLon ), db.gpsLon, 6);
+				GETSENDf(RCF( pgpsLat ), db.gpsLat, 6);
 				break;
 		
 			default: break;
@@ -653,7 +776,7 @@ bool http_send_datablock_get(datablock_t &db)
 			db.hour, 
 			db.minute);
 
-		SENDs(RCF( prtcDateTime ), cbuf );
+		GETSENDs(RCF( prtcDateTime ), cbuf );
 
 		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
 		
@@ -747,7 +870,7 @@ bool http_send_getconf_request()
 
 		gsm_sendcmdp( F( "/data.php?action=getconf" ) );
 
-		SENDi(RCF( pnodeId ), getNodeId());
+		GETSENDi(RCF( pnodeId ), getNodeId());
 		
 		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
 		

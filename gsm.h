@@ -23,36 +23,76 @@
 //#include "data.h"
 #include "mem.h"
 
-#define SENDs(key, svalue) \
-						gsm_sendcmdp(F("&")); \
+
+/* macros for GET method  */
+#define GETSENDs(key, svalue) \
+						gsm_sendcmdp(RCF( pAmp )); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp(RCF( pEq )); \
 						gsm_sendcmd( svalue );
 
-#define SENDsp(key, svalue) \
-						gsm_sendcmdp(F("&")); \
+#define GETSENDsp(key, svalue) \
+						gsm_sendcmdp(RCF( pAmp )); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp(RCF( pEq )); \
 						gsm_sendcmdp( svalue );
 
-#define SENDi(key, ivalue) \
-						gsm_sendcmdp(F("&")); \
+#define GETSENDi(key, ivalue) \
+						gsm_sendcmdp(RCF( pAmp )); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp(RCF( pEq )); \
 						gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );
 
-#define SENDul(key, ivalue) \
-						gsm_sendcmdp(F("&")); \
+#define GETSENDul(key, ivalue) \
+						gsm_sendcmdp(RCF( pAmp )); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp(RCF( pEq )); \
 						gsm_sendcmd( ultoa( ivalue, _tempbuf, 10) );
 
-#define SENDf(key, fvalue, fsig) \
-						gsm_sendcmdp(F("&")); \
+#define GETSENDf(key, fvalue, fsig) \
+						gsm_sendcmdp(RCF( pAmp )); \
 						gsm_sendcmdp(key); \
-						gsm_sendcmdp(F("=")); \
+						gsm_sendcmdp(RCF( pEq )); \
 						gsm_sendcmd( dtostrf( fvalue, 1, fsig, _tempbuf ) );
 
+
+/* macros for POST method  */
+#define POSTSENDs(key, svalue) \
+						gsm_postcmdp(RCF( pQ )); \
+						gsm_postcmdp(key); \
+						gsm_postcmdp(RCF( pQddQ )); \
+						gsm_postcmd( svalue );	\
+						gsm_postcmd(RCF( pQ ));
+
+#define POSTSENDsp(key, svalue) \
+						gsm_postcmdp(RCF( pQ )); \
+						gsm_postcmdp( key ); \
+						gsm_postcmdp(RCF( pQddQ )); \
+						gsm_postcmdp( svalue ); \
+						gsm_postcmdp(RCF( pQ ) );
+
+#define POSTSENDi(key, ivalue) \
+						gsm_postcmdp(RCF( pQ )); \
+						gsm_postcmdp(key); \
+						gsm_postcmdp(RCF( pQddQ )); \
+						gsm_postcmd( itoa( ivalue, _tempbuf, 10) ); \
+						gsm_postcmdp(RCF( pQ ));
+
+#define POSTSENDul(key, ivalue) \
+						gsm_postcmdp(RCF( pQ )); \
+						gsm_postcmdp(key); \
+						gsm_postcmdp(RCF( pQddQ )); \
+						gsm_postcmd( ultoa( ivalue, _tempbuf, 10) ); \
+						gsm_postcmdp(RCF( pQ ));
+
+#define POSTSENDf(key, fvalue, fsig) \
+						gsm_postcmdp(RCF( pQ )); \
+						gsm_postcmdp(key); \
+						gsm_postcmdp(RCF( pQddQ )); \
+						gsm_postcmd( dtostrf( fvalue, 1, fsig, _tempbuf ) ); \
+						gsm_postcmdp(RCF( pQ ));
+
+#define POSTSENDcomma	gsm_postcmdp( RCF( pCOMMA ) );
 
 
 extern "C" {
