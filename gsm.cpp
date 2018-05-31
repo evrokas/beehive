@@ -48,24 +48,6 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 #define PF(str)	(PGM_P)F(str)
 
 
-unsigned long _gsmCharCount = 0;
-
-unsigned long getGSMCharCount()
-{
-	return (_gsmCharCount);
-}
-
-void resetGSMCharCount()
-{
-	_gsmCharCount = 0;
-}
-
-void incGSMCharCount(unsigned int aincr)
-{
-	_gsmCharCount += aincr;
-}
-
-
 /* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 {
@@ -105,8 +87,6 @@ uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 void gsm_init()
 {
 	gsmserial.begin( GSM_SERIAL_BAUDRATE );
-
-	resetGSMCharCount();
 }
 
 bool gsm_sendrecvcmd(char *cmd, char *expstr)
@@ -221,8 +201,6 @@ void gsm_sendcmd(char *cmd)
 	
 	gsmserial.print( cmd );
 
-	_gsmCharCount += strlen( cmd );
-
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
 #endif
@@ -232,8 +210,6 @@ void gsm_sendchar(char ch)
 {
 	gsmserial.print( ch );
 	
-	_gsmCharCount++;
-
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
 #endif
@@ -244,8 +220,6 @@ void gsm_sendcmdp(const __FlashStringHelper *cmd)
 	while(gsm_available())gsm_read();
 	
 	gsmserial.print( cmd );
-
-	_gsmCharCount += strlen_P( (PGM_P)cmd );
 
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
@@ -316,7 +290,7 @@ void gsm_postcmdp(const __FlashStringHelper *cmd)
 			uint8_t n;
 			
 			/* buffer is full, so print result */
-			gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );			/* print number of bytes */
+			gsm_sendcmd( itoa( strlen( chunk_buffer ), _tempbuf, 10) );			/* print number of bytes */
 			gsm_sendcmdp( RCF( pCRLF ) );
 			gsm_sendcmd( chunk_buffer );	/* always chunk_buffer[ CHUNK_BUFFER ] is \0 */
 			gsm_sendcmdp( RCF( pCRLF ) );
@@ -325,6 +299,25 @@ void gsm_postcmdp(const __FlashStringHelper *cmd)
 	}
 }
 
+void gsm_postdone()
+{
+	DEF_CLEAR_TEMPBUF;
+	uint8_t i=0;
+
+		if(_chunk_pos) {
+			/* there are still data in buffer, spit them... */
+			chunk_buffer[ _chunk_pos ] = 0;
+
+			gsm_sendcmd( itoa( strlen( chunk_buffer ), _tempbuf, 10) );			/* print number of bytes */
+			gsm_sendcmdp( RCF( pCRLF ) );
+			gsm_sendcmd( chunk_buffer );
+			gsm_sendcmdp( RCF( pCRLF );
+		}
+		
+		gsm_sendcmdp( F("0\r\n\r\n");		/* this marks the end of the chunks */
+		gsm_poststart();
+}
+		
 #endif	/* HTTP_API_POST */
 
 
@@ -484,7 +477,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
  * AT+CIFSR													0.0.0.0
  * AT+CDNSGIP="url.ext"							+CDNSGIP: 1,"url.ext","0.0.0.0"
  */
-		gsm_initCIP();
+//		gsm_initCIP();
 				
 		gsm_sendcmdp( RCF( pATCDNSGIPQ ) );
 		
@@ -537,7 +530,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 #if 0		
 		gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2 );
 #endif
-		gsm_doneCIP();
+//		gsm_doneCIP();
 
 	return true;
 }
@@ -600,11 +593,19 @@ bool http_post_db_preample(uint16_t nid)
 	DEF_CLEAR_TEMPBUF;
 	
 	//{"action":"add","nodeId":100,"data":);
-	POSTSENDsp("action", "add");
-	POSTSENDcomma;
-	POSTSENDi("nodeId", nid);
-	gsm_sendcmdp(",\"data\":[");
+	gsm_postcmdp( RCF( pCURLOPEN ) );
+	
+		POSTSENDsp("action", "add");
+		POSTSENDcomma;
+		POSTSENDi("nodeId", nid);
+		gsm_sendcmdp(",\"data\":[");
 }
+
+bool http_post_db_postample()
+{
+	gsm_postcmdp( F("]}"));
+}
+
 
 bool http_post_db_data(datablock_t &db)
 {
@@ -662,51 +663,56 @@ bool http_post_db_data(datablock_t &db)
 
 
 
-bool http_send_post_preample()
+bool http_send_post()
 {
-	unsigned long gcount;
-	counter_type i,n;
 	datablock_t db;
-		
-	Serial.println( F("sending POST preample") );
-	
-	gcount = getGSMCharCount();
-
-#define PREAMPLE_SIZE	71		/* until ...Length:_ */
-
-/* lengths with string literals, using numeric literals will even reduce size */
-#if defined( API_STRING_KEYS )
-
-#define SIZE_DAT			119
-#define SIZE_GSM			96
-#define SIZE_GPS			91
-
-#elif defined( API_NUMERIC_KEYS )
-
-#define SIZE_DAT			75
-#define SIZE_GSM			62
-#define SIZE_GPS			65
-
-#endif
-
+	uint16_t ii;
+	uint8_t iii;
+			
 	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
 	gsm_sendcmdp( F("Host: 10.0.0.1\n" ) );
-	gsm_sendcmdp( F("User-Agent: beewatch-firmware\n");
+	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\n");
 	gsm_sendcmdp( F("Content-Type: application/json\n") );
-
 	gsm_sendcmdp( F("Transfer-Encoding: chunked\n") );
+	
+	gsm_sendcmdp( RCF( pCRLF ) );
 		
-	gsm_sendcmdp( F("Content-Length: ") );
+//	gsm_sendcmdp( F("Content-Length: ") );
 
-	/* now estimate content length(!) */
-
-	gsm_sendcmdp( F("{\"action\":\"add\",\"data\":[") );		/* 21 characters */
-	i = mem_entriesCount();
-	for(n = i;n;n--) {
-		mem_readDatablocki( n )		
+	/* start emitting chunked data */
+	gsm_poststart();
 	
-	
+	http_post_db_preample( getNodeId() );
 
+	while( mem_popDatablock( &db ) ) {
+		http_post_db_data( db );
+		
+		SENDPOSTcomma;
+	}
+	/* so all data blocks have been send */
+	
+	/* send the final GSM block */
+	db.entryType = ENTRY_GSM;
+
+	db.entryType = ENTRY_GSM;
+	if( gsm_getBattery( ii ) ) {
+//		Serial.print("Battery level: " ); Serial.println( ii );
+		db.gsmVolt = ii;
+	}
+
+	if( gsm_getSignalQuality( iii ) ) {
+//		Serial.print("Signal quality: " ); Serial.println( iii );
+		db.gsmSig = iii;
+	}
+						
+	db.gsmPowerDur = millis() - mil1;
+
+	http_post_db_data( db );
+	
+	http_post_db_postample();
+	
+	/* send any remaining data from the buffer */
+	gsm_postdone();
 
   return (true);
 }

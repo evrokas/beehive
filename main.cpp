@@ -10,9 +10,11 @@
  * $version$
  */
 
+#include <avr/wdt.h>
+
 #include <Arduino.h>
 #include <Wire.h>
-//#include <EEPROM.h>
+#include <NeoSWSerial.h>
 
 #include "conf.h"
 #include "ver.h"
@@ -25,12 +27,8 @@
 #include "thermal.h"
 #include "LowPower.h"
 #include "gsm.h"
-//#include "data.h"
 #include "mem.h"
 
-#include <avr/wdt.h>
-
-#include <NeoSWSerial.h>
 
 /* counter of sleep cycles */
 uint32_t cntSleepCycle;
@@ -58,6 +56,7 @@ uint16_t	timeoutNetCycle;
 #define A_ENABLE			0x01				/* enable module, enable means that it actually performs logging and net traffic,
 																	 * otherwise, it is in a low power state, during which it sleeps for 8 sec and
 																	 * wakes up to see what happens */
+
 #define A_DNSLOOKUP		0x02				/* enable DNS look up, this is enabled only when APN is given in a form that needs
 																	 * resolving, if it is given in numeric format, do not perform DNS lookup */
 
@@ -195,7 +194,6 @@ bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
 		if(c == 0)break;	/* end of string */
 
 		strm.write(c);
-		incGSMCharCount();
 	}
 
 	return (true);
@@ -379,7 +377,7 @@ void setupLoop();
 void setup()
 {
 	/* initialize peripheral control as early as possible, in order
-	 * to turn off GSM module, which is by default turned on */
+	 * to turn off GSM module, which is by default turned on(!!!) */
 	setupPeripheralsControl();
 
 	delay(500);
@@ -391,10 +389,10 @@ void setup()
 	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
 	Serial.print(		F("System Board version ")); Serial.print( F(BOARD_REVISION) );
 	Serial.print(		F("  Firmware version ")); Serial.println( F(FIRMWARE_REVISION) );
+	
 	Serial.print(   F("Date: ")); Serial.print( F(FIRMWARE_DATE) );
 	Serial.print( 	F("  upload no # ")); Serial.println( F(FIRMWARE_UNUM) );
 	
-//	delay(2000);
 
 /*
  * Noticed that some times reading the ADXL345 without first enabling
@@ -413,13 +411,9 @@ void setup()
 
 	initializeCounters(); 
       
-	/* power peripherals on, GSM off */
-//	powerPER_RTC(1, 10 );
-	
-//	powerRTC( 1, 10 );
 	powerPeripherals(1,1);
 
-		/* GSM is turned off by initialize function */
+	/* GSM is turned off by initialize function */
 	powerGPRSGPS( 0 );
 
 	/* always have RTC(!) */
@@ -437,16 +431,9 @@ void setup()
 	gsm_init();
 #endif
 
-#if ENABLE_DATAPUSHING == 1
 	mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
-#endif
 
-//	powerPER_RTC(0, 0);
-	
 	powerPeripherals(0,0);	/* disable all peripherals */
-//	powerRTC( 0, 1 );
-
-//	setNodeId( NODE_ID );
 
 	setupLoop();
 }
@@ -564,6 +551,11 @@ void setupLoop()
 #else
 #define DBGSLEEP
 #endif	/* DEBUG_SLEEP_CYCLE */
+
+	serverip[0] = 192;
+	serverip[1] = 168;
+	serverip[2] = 1;
+	serverip[3] = 1;
 
 }
 
@@ -1305,12 +1297,14 @@ void loop()
 				do {
 					uint8_t srvip[4];
 						
+						gsm_initCIP();
 						if( gsm_dnsLookup( srvip )) {
 							Dlnp("successfully resolved domain name");
 							memcpy(serverip, srvip, 4);
 						} else {
 							Dlnp("could not successfully resolve domain name, using old IP address");
 						}
+						gsm_doneCIP();
 				} while(0);
 
 /* send data via a series of GET requests (time consuming, about 7 secs for each entry) */

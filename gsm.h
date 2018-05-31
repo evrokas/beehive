@@ -23,6 +23,24 @@
 //#include "data.h"
 #include "mem.h"
 
+#define PREAMPLE_SIZE	71		/* until ...Length:_ */
+
+/* lengths with string literals, using numeric literals will even reduce size */
+#if defined( API_STRING_KEYS )
+
+#define SIZE_DAT			119
+#define SIZE_GSM			96
+#define SIZE_GPS			91
+
+#elif defined( API_NUMERIC_KEYS )
+
+#define SIZE_DAT			75
+#define SIZE_GSM			62
+#define SIZE_GPS			65
+
+#endif
+
+
 
 /* macros for GET method  */
 #define GETSENDs(key, svalue) \
@@ -149,6 +167,8 @@ extern "C" {
 	
 		bool gsm_getDateTime(uint8_t &hour, uint8_t &min, uint8_t &sec, uint8_t &day, uint8_t &month, uint16_t &year);
 		bool gsm_dnsLookup(uint8_t *ipaddr);
+		bool gsm_initCIP();
+		bool gsm_doneCIP();
 
 		extern uint8_t serverip[4];
 
