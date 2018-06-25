@@ -10,6 +10,7 @@
  * $version$
  */
 
+#include <avr/pgmspace.h>
 
 #include <Arduino.h>
 #include <stdio.h>
@@ -48,10 +49,19 @@ SoftwareSerial gsmserial(GSM_RX, GSM_TX);
 #define PF(str)	(PGM_P)F(str)
 
 
-/* buf is buffer to store contents, buflen is length of buffer, timeout in seconds */
+/* this holds the IP address of the server, which is updated in each NET cycle,
+ * if DNS resolving has failed, then it uses previous succesful resolve */
+uint8_t serverip[4];
+
+
+
+/* buf is buffer to store contents, buflen is length of buffer, timeout in seconds
+ * sender must take to zero fill the buffer (if needed) */
 uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 {
-	timeout *= 2;
+	timeout *= 2; /* double the timeout value, since we are going to wait in steps
+								 * of 1/2 of a second or 500msec */
+								 
 	while((timeout) && (!gsmserial.available()) ) {
 		delay(500);
 		timeout--;;
@@ -193,7 +203,7 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 
 
 
-//#define SERIAL_DUMPCMD
+#define SERIAL_DUMPCMD
 
 void gsm_sendcmd(char *cmd)
 {
@@ -211,7 +221,7 @@ void gsm_sendchar(char ch)
 	gsmserial.print( ch );
 	
 #ifdef SERIAL_DUMPCMD
-	Serial.print( cmd );
+	Serial.print( ch );
 #endif
 }
 
@@ -230,70 +240,107 @@ void gsm_sendcmdp(const __FlashStringHelper *cmd)
 #if defined(HTTP_API_POST)
 /*
  * the gsm_postcmd* version of functions is used in conjuction
- * with POST HTTP method end Transfer-Encoding: chunked
+ * with POST HTTP method and Transfer-Encoding: chunked
  * Actually, they buffer output and print output in chunks of
- * predetermined size */
+ * predetermined size of CHUNK_BUFFER_SIZE */
 
-#define CHUNK_BUFFER_SIZE		16
+#define CHUNK_BUFFER_SIZE		32
 uint8_t _chunk_pos; 
 char chunk_buffer[ CHUNK_BUFFER_SIZE+1 ];
 
-
-
 void gsm_poststart()
 {
-	_chunk_current = 0;
+	_chunk_pos = 0;
 	memset( chunk_buffer, 0, CHUNK_BUFFER_SIZE+1 );
 }
 
+void gsm_sendchunk()
+{
+	char tmp[5];
+	
+		D("<>");D(chunk_buffer);D("\t");Dln(strlen( chunk_buffer ) );
+	
+		sprintf(tmp, "%02x", strlen( chunk_buffer ) );
+		gsm_sendcmd( tmp );
+		
+		/* CRLF */
+		gsm_sendcmdp( RCF( pCRLF ) );
+			
+		/* chunk data follow */
+		gsm_sendcmd( chunk_buffer );	/* chunk_buffer[ CHUNK_BUFFER ] is always \0 */
+		gsm_sendcmdp( RCF( pCRLF ) );
+}
 
+//#define DEBUG_POSTCMD
+	
 void gsm_postcmd(char *cmd)
 {
   DEF_CLEAR_TEMPBUF;
   uint8_t i=0;
   
+#ifdef DEBUG_POTSCMD
+  D("*s "); D(cmd); D(" ("); D( strlen(cmd) ); Dln(")");
+#endif
+	
 	while( i < strlen( cmd ) ) {
 		
 		if( _chunk_pos < CHUNK_BUFFER_SIZE ) {
 			/* there is still room in buffer */
+#ifdef DEBUG_POSTCMD
+			D(">> _chunk_pos: "); D(_chunk_pos); D("\ti: ");D(i); D("\tchar: "); Dln(cmd[i]);
+#endif
+
+
 			chunk_buffer[ _chunk_pos ] = cmd[i];
 			_chunk_pos++;
 			i++;
-			continue;
-		} else {
-			uint8_t n;
+
 			
+//			continue;
+		} else {
 			/* buffer is full, so print result */
-			gsm_sendcmd( itoa( ivalue, _tempbuf, 10) );			/* print number of bytes */
-			gsm_sendcmdp( RCF( pCRLF ) );
-			gsm_sendcmd( chunk_buffer );	/* always chunk_buffer[ CHUNK_BUFFER ] is \0 */
-			gsm_sendcmdp( RCF( pCRLF ) );
+			Dln(">> sending chunk");
+			gsm_sendchunk();
+
+			/* reset chunk buffer */
 			gsm_poststart();
 		}
 	}
 }
 
+/* same as above, but works with strings in flash memory */
 void gsm_postcmdp(const __FlashStringHelper *cmd)
 {
   DEF_CLEAR_TEMPBUF;
   uint8_t i=0;
+  PGM_P cp = reinterpret_cast<PGM_P>(cmd);
   
-	while( i < strlen( cmd ) ) {
+#ifdef DEBUG_POSTCMD
+  D("*p ");D( cmd );D(" (");D(strlen_P( (PGM_P)cmd ) ); Dln(")");
+#endif
+
+	while( i < strlen_P( (PGM_P)cmd ) ) {
 		
 		if( _chunk_pos < CHUNK_BUFFER_SIZE ) {
 			/* there is still room in buffer */
-			chunk_buffer[ _chunk_pos ] = cmd[i];
+#ifdef DEBUG_POSTCMD
+			D(">> _chunk_pos: "); D(_chunk_pos); D("\ti: ");D(i); D("\tchar: ");
+			//Dln(((PGM_P)cmd)[i]);
+			//Dln( (char)pgm_read_byte( cp ) );
+#endif
+
+
+			chunk_buffer[ _chunk_pos ] = pgm_read_byte( cp );	//((PGM_P)cmd)[i];
 			_chunk_pos++;
 			i++;
+			cp++;
 			continue;
 		} else {
-			uint8_t n;
-			
 			/* buffer is full, so print result */
-			gsm_sendcmd( itoa( strlen( chunk_buffer ), _tempbuf, 10) );			/* print number of bytes */
-			gsm_sendcmdp( RCF( pCRLF ) );
-			gsm_sendcmd( chunk_buffer );	/* always chunk_buffer[ CHUNK_BUFFER ] is \0 */
-			gsm_sendcmdp( RCF( pCRLF ) );
+
+			gsm_sendchunk();
+			
+			/* reset chunk buffer */
 			gsm_poststart();
 		}
 	}
@@ -302,19 +349,24 @@ void gsm_postcmdp(const __FlashStringHelper *cmd)
 void gsm_postdone()
 {
 	DEF_CLEAR_TEMPBUF;
-	uint8_t i=0;
 
 		if(_chunk_pos) {
-			/* there are still data in buffer, spit them... */
+			/* there are still data in buffer, spit them out ... */
 			chunk_buffer[ _chunk_pos ] = 0;
 
-			gsm_sendcmd( itoa( strlen( chunk_buffer ), _tempbuf, 10) );			/* print number of bytes */
+			gsm_sendchunk();
+			
+#if 0
+			sprintf( _tempbuf, "%02x", strlen( chunk_buffer ) );
+			gsm_sendcmd( _tempbuf );		/* number of bytes in hexadecimal format (no 0x in front) */
+
 			gsm_sendcmdp( RCF( pCRLF ) );
 			gsm_sendcmd( chunk_buffer );
-			gsm_sendcmdp( RCF( pCRLF );
+			gsm_sendcmdp( RCF( pCRLF ) );
+#endif
 		}
 		
-		gsm_sendcmdp( F("0\r\n\r\n");		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
 		
@@ -339,9 +391,6 @@ bool gsm_activateBearerProfile()
 		if(!gsm_sendrecvcmdtimeoutp( RCF(pATCIPSHUTrn), RCF(pSHUTOK), 2) )
 			return false;
 
-//		if(!gsm_sendrecvcmdtimeoutp( F("AT+CIPSHUT\r\n"), F("SHUT OK"), 2) )
-//			return false;
-	
 		if(!gsm_sendrecvcmdtimeoutp( RCF(pATCIPMUX0rn), RCF(pOK), 2 ) )
 			return false;
 
@@ -467,7 +516,7 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 	DEF_CLEAR_TEMPBUF;
 	char *c, *cc;
 
-/*
+/* bring up wireless
  * AT+CIPSHUT					SHUT OK
  * AT+CIPMUX=0				OK
  * AT+CSTT="apn", "user", "pass"		OK
@@ -475,10 +524,10 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
  * AT+CIICR													OK
  * AT+CIPSTATUS											IP GPRSACT
  * AT+CIFSR													0.0.0.0
+ 
+ * perform DNS resolv
  * AT+CDNSGIP="url.ext"							+CDNSGIP: 1,"url.ext","0.0.0.0"
  */
-//		gsm_initCIP();
-				
 		gsm_sendcmdp( RCF( pATCDNSGIPQ ) );
 		
 		c = _tempbuf;
@@ -527,11 +576,6 @@ bool gsm_dnsLookup(uint8_t *ipaddr)
 */
 		}
 
-#if 0		
-		gsm_sendrecvcmdtimeoutp( RCF( pATCIPSHUTrn ), RCF( pSHUTOK ), 2 );
-#endif
-//		gsm_doneCIP();
-
 	return true;
 }
 		
@@ -565,18 +609,6 @@ void http_terminateRequest()
 }
 
 
-//#ifndef SERVER_URL
-//#define SERVER_URL	CF( "5.55.150.188" )
-//#define SERVER_URL	CF( "erns.sytes.net" )
-
-//#endif
-
-//#ifndef SERVER_PORT
-//#define SERVER_PORT	CF( "8088" )
-//#endif
-
-uint8_t serverip[4];
-
 
 void transmitServerIP()
 {
@@ -588,22 +620,53 @@ void transmitServerIP()
 
 #if defined( HTTP_API_POST )
 
+bool gsm_initiateCIPRequest()
+{
+	DEF_CLEAR_TEMPBUF;
+	
+	/*
+	 * AT+CIPSTART="TCP", "IP", "PORT"
+	 * AT+CIPSEND
+	 */
+	 
+	gsm_sendcmdp( RCF( pATCIPSTART ) );				/* AT+CIPSTART="TCP", " */
+	transmitServerIP();								/* *.*.*.* */
+	gsm_sendcmdp( RCF( pQcommaQ ) );	/* "," */
+	
+	gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );	/* port */
+	
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ))
+		return false;
+	
+	gsm_sendcmdp( RCF( pATCIPSEND ) );	
+	
+	delay(2);	/* allow '>' character to come in */
+	
+	/* so connection if ready to transmit useable data */
+  return (true);
+}
+	
+
 bool http_post_db_preample(uint16_t nid)
 {
 	DEF_CLEAR_TEMPBUF;
 	
+//	gsm_poststart();
 	//{"action":"add","nodeId":100,"data":);
 	gsm_postcmdp( RCF( pCURLOPEN ) );
 	
-		POSTSENDsp("action", "add");
+		POSTSENDsp( F("action") , F("add") );
 		POSTSENDcomma;
-		POSTSENDi("nodeId", nid);
-		gsm_sendcmdp(",\"data\":[");
+		POSTSENDi( RCF( pnodeId ), getNodeId() );
+		gsm_postcmdp( F(",\"data\":[") );
+
+  return (true);
 }
 
 bool http_post_db_postample()
 {
 	gsm_postcmdp( F("]}"));
+  return (true);
 }
 
 
@@ -611,7 +674,7 @@ bool http_post_db_data(datablock_t &db)
 {
 	DEF_CLEAR_TEMPBUF;
 	
-		gsm_sendcmdp( RCF( pCURLOPEN );
+		gsm_postcmdp( RCF( pCURLOPEN ) );
 	
 	
 		switch(db.entryType) {
@@ -647,23 +710,21 @@ bool http_post_db_data(datablock_t &db)
 		}
 		
 		POSTSENDcomma;
-		sprintf_P(cbuf, (PGM_P)F("%02d-%02d-%02d_%02d:%02d"),
-			db.dayOfMonth, 
-			db.month, 
-			db.year, 
-			db.hour, 
-			db.minute);
-
-		POSTSENDs(RCF( prtcDateTime ), cbuf );
 		
-		gsm_sendcmdp( RCF( pCURLCLOSE );
+		sprintf_P(_tempbuf, (PGM_P)F("%02d-%02d-%02d_%02d:%02d"),
+			db.dayOfMonth, db.month, db.year, 
+			db.hour, db.minute);
+
+		POSTSENDs( RCF( prtcDateTime ), _tempbuf );
+		
+		gsm_postcmdp( RCF( pCURLCLOSE ) );
 
   return (true);
 }
 
 
 
-bool http_send_post()
+bool http_send_post(unsigned long amsecs)
 {
 	datablock_t db;
 	uint16_t ii;
@@ -671,14 +732,12 @@ bool http_send_post()
 			
 	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
 	gsm_sendcmdp( F("Host: 10.0.0.1\n" ) );
-	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\n");
+	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\n") );
 	gsm_sendcmdp( F("Content-Type: application/json\n") );
 	gsm_sendcmdp( F("Transfer-Encoding: chunked\n") );
 	
 	gsm_sendcmdp( RCF( pCRLF ) );
 		
-//	gsm_sendcmdp( F("Content-Length: ") );
-
 	/* start emitting chunked data */
 	gsm_poststart();
 	
@@ -687,13 +746,11 @@ bool http_send_post()
 	while( mem_popDatablock( &db ) ) {
 		http_post_db_data( db );
 		
-		SENDPOSTcomma;
+		POSTSENDcomma;
 	}
 	/* so all data blocks have been send */
 	
 	/* send the final GSM block */
-	db.entryType = ENTRY_GSM;
-
 	db.entryType = ENTRY_GSM;
 	if( gsm_getBattery( ii ) ) {
 //		Serial.print("Battery level: " ); Serial.println( ii );
@@ -705,7 +762,7 @@ bool http_send_post()
 		db.gsmSig = iii;
 	}
 						
-	db.gsmPowerDur = millis() - mil1;
+	db.gsmPowerDur = millis() - amsecs;
 
 	http_post_db_data( db );
 	
@@ -714,8 +771,130 @@ bool http_send_post()
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
+	gsm_sendcmdp( RCF( pCtrlZ ) );
+
   return (true);
 }
+
+#if 0
+bool http_send_getconf_request_cip()
+{
+	DEF_CLEAR_TEMPBUF;
+	char	*c;
+	uint16_t dlen;
+
+//		sprintf(cbuf, "%d.%d.%d.%d" , serverip[0],serverip[1],serverip[2],serverip[3]);
+
+//		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
+
+		gsm_initiateCIPRequest();
+		
+		/*
+		 * request:
+		 * GET /data.php?action=getconf&nodeId=10200 HTTP/1.1
+		 * host: server:port
+		 * User-Agent: beewatch-firmware/0.1 arduino/$(ARDUINO_VERSION)
+		 */
+		 
+		gsm_sendcmdp( RCF( pGET ) );
+		gsm_sendcmdp( F("/data.php?action=getconf") );
+		GETSENDi( RCF( pnodeId ), getNodeId() );
+		
+		gsm_sendcmdp( RCF( pHTTP11 ) );
+		gsm_sendcmdp( RCF( pHOST ) );
+		transmitServerIP();
+		gsm_sendcmdp( RCF( pDDOT ) );
+		CLEAR_TEMPBUF;
+		gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );
+		gsm_sendcmdp( RCF( pLF ) );
+
+		gsm_sendcmdp( RCF( pUserAgent ) );
+
+		/* send blank line  */
+		gsm_sendcmdp( RCF( pCRLF ) );
+		
+		
+		gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 );
+		
+		gsm_sendrecvcmdtimeoutp( RCF( pATHTTPACTION0rn ), RCF( pHTTPACTION ), 15 );
+
+		CLEAR_TEMPBUF;
+		READGSM( 5 );
+		Serial.print( F("action: ") );Serial.println( _tempbuf );
+		
+		c = _tempbuf;
+
+		c = strstr(c, "200" );
+		if(!c) {
+			Serial.println( F("response was not 200") );
+			http_terminateRequest();
+			return false;
+		}
+		
+		c = strchr(c, ',');
+		if(!c) {
+			Serial.println( RCF( pNoReceivedLength ) );
+			http_terminateRequest();
+			return false;
+		}
+		
+		Serial.print(F("response text: "));Serial.println( _tempbuf );
+		
+		dlen = atoi(++c);
+		Serial.print( F("Received bytes: ") ); Serial.println( dlen );
+//		delay(200);
+
+		
+
+		//gsm_interactiveMode();
+
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATHTTPREADrn ), RCF( pHTTPREAD ), 2 ) )
+		{
+			return true;
+		}
+		
+		CLEAR_TEMPBUF;
+		READGSM( 5 );
+		Serial.print(F(">>")); Serial.println( _tempbuf );
+
+		do {
+			uint16_t nid;
+			uint16_t lc, nc;
+			char *uc = _tempbuf;
+
+			
+			while( *uc++ != '\n');					/* eat characters read after +HTTPREAD */
+			while( !isdigit( *uc ) )uc++;		/* eat all characters until 1 digit */
+			
+			STRTOD( nid, uc ); uc++;
+			STRTOD( lc, uc ); uc++;
+			STRTOD( nc, uc );
+			
+			Serial.print(F("NodeId: ")); Serial.println( nid );
+			Serial.print(F("Log cycle: ")); Serial.println( lc );
+			Serial.print(F("Net cycle: ")); Serial.println( nc );
+		
+			if( lc != getLogCycle())
+				maxMinLogCycle = lc;	//setLogCycle( lc );
+			
+			if( nc != getNetCycle() )
+				maxMinNetCycle = nc;	//setNetCycle( nc );
+				
+		} while( 0 );
+		
+		
+#if 0
+		while( gsm_available() ) {
+			Serial.write( gsm_read() );
+		}
+#endif
+
+
+	return (true);
+}
+#endif	 /* getconf_request */
+
+
 
 #endif	/* HTTP_API_POST */
 
@@ -864,11 +1043,7 @@ bool http_send_getconf_request()
 //		Serial.print(F("Sending data to IP: ")); Serial.println( cbuf );
 
 		gsm_sendcmdp( RCF( pATHTTPPARAURLQ ) );
-
 		transmitServerIP();
-		
-//		gsm_sendcmd( cbuf );
-
 		gsm_sendcmdp( RCF( pDDOT ) );
 
 		CLEAR_TEMPBUF;
@@ -937,38 +1112,34 @@ bool http_send_getconf_request()
 			Serial.print(F("NodeId: ")); Serial.println( nid );
 			Serial.print(F("Log cycle: ")); Serial.println( lc );
 			Serial.print(F("Net cycle: ")); Serial.println( nc );
-		
-			if( lc != getLogCycle())
-				maxMinLogCycle = lc;	//setLogCycle( lc );
+
+			if( nid == getNodeId() ) {
+				if( lc != getLogCycle())
+					maxMinLogCycle = lc;	//setLogCycle( lc );
 			
-			if( nc != getNetCycle() )
-				maxMinNetCycle = nc;	//setNetCycle( nc );
-				
+				if( nc != getNetCycle() )
+					maxMinNetCycle = nc;	//setNetCycle( nc );
+			}
+							
 		} while( 0 );
 		
-		
-#if 0
-		while( gsm_available() ) {
-			Serial.write( gsm_read() );
-		}
-#endif
-
-
 	return (true);
 }
 
 #endif	/* HTTP_API_GET */
 
+
+
 bool gsm_moduleInfo()
 {
-	DEF_CLEAR_TEMPBUF;
+//	DEF_CLEAR_TEMPBUF;
 	
 		if(gsm_sendrecvcmdtimeoutp( RCF( pATIrn ), RCF( pOK ), 2 ) )
 			return true;
 		else
 			return false;
 	
-
+#if 0
   	gsm_sendcmdp( RCF( pATIrn ) );
   	READGSM( 2 );
 //  	Serial.print("GSM response: <");
@@ -982,6 +1153,8 @@ bool gsm_moduleInfo()
  		
   	if(!strncmp( _tempbuf+6, "SIM800", 6 ))return true;
   	else return false;
+#endif
+
 }
 
 
@@ -1010,14 +1183,11 @@ void gsm_flushInput()
 }
 
 
-//bool gsm_sendPin(char *aspin)
 bool gsm_sendPin()
 {
-//	DEF_CLEAR_TEMPBUF;
 
 		gsm_sendcmdp( RCF( pATCPINeq ) );
 		transmitEEPROMstr( E_SIMPIN, gsmserial );
-//		gsm_sendcmd( aspin );
 
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pRN ), RCF(  pOK ), 2 ) ) {
 			Serial.println( RCF( pErrorCPIN ) );
@@ -1025,15 +1195,6 @@ bool gsm_sendPin()
 		}
 		gsm_sendcmdp( RCF( pATrn ) );
 		
-#if 0
-		gsm_sendcmdp( RCF( pRN ) );
-		if(!READGSM(2))return false;
-		if(!strstr_P(_tempbuf, F( ("OK\r\n") ) )) {
-			Serial.println(RCF( pErrorCPIN ) );
-			return false;
-		}
-#endif
-
 	return true;
 }
 
@@ -1042,6 +1203,7 @@ bool gsm_getICCID(char *aiccid)
 	DEF_CLEAR_TEMPBUF;
 
 		gsm_sendcmdp( RCF( pATCCIDrn ) );
+		delay(200);
 		
 		if(!READGSM(2))return false;
 		

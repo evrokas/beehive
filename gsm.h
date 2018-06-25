@@ -80,7 +80,7 @@
 						gsm_postcmdp(key); \
 						gsm_postcmdp(RCF( pQddQ )); \
 						gsm_postcmd( svalue );	\
-						gsm_postcmd(RCF( pQ ));
+						gsm_postcmdp(RCF( pQ ));
 
 #define POSTSENDsp(key, svalue) \
 						gsm_postcmdp(RCF( pQ )); \
@@ -142,7 +142,8 @@ extern "C" {
 #endif
 
 #if defined( HTTP_API_POST )
-		bool http_send_post_preample();
+		bool http_send_post(unsigned long amsecs);
+		bool gsm_initiateCIPRequest();
 #endif
 
     bool gsm_moduleInfo();

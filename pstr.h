@@ -32,11 +32,11 @@ const prog_char pATCSTTQ [] PROGMEM							= "AT+CSTT=\"";
 const prog_char pQcommaQ [] PROGMEM							= "\",\"";
 
 
-const prog_char pATCIPSTATUSrn [] PROGMEM					= "AT+CIPSTATUS\r\n";
+const prog_char pATCIPSTATUSrn [] PROGMEM				= "AT+CIPSTATUS\r\n";
 const prog_char pIPSTART [] PROGMEM							= "IP START";
 const prog_char pATCIICRrn [] PROGMEM						= "AT+CIICR\r\n";
 const prog_char pIPGPRSACT [] PROGMEM						= "IP GPRSACT";
-const prog_char pATCIFSRrn [] PROGMEM							= "AT+CIFSR\r\n";
+const prog_char pATCIFSRrn [] PROGMEM						= "AT+CIFSR\r\n";
 
 const prog_char pDOT [] PROGMEM									= ".";
 const prog_char pCOMMA [] PROGMEM								= ",";
@@ -48,15 +48,28 @@ const prog_char pQddQ [] PROGMEM								= "\":\"";
 const prog_char pCURLOPEN [] PROGMEM						= "{";
 const prog_char pCURLCLOSE [] PROGMEM						= "}";
 const prog_char pCRLF [] PROGMEM								= "\r\n";
+const prog_char pCtrlZ [] PROGMEM								= "";
 
 const prog_char pATCDNSGIPQ [] PROGMEM					= "AT+CDNSGIP=\"";
 const prog_char pCDNSGIP [] PROGMEM							= "+CDNSGIP:";
+
+const prog_char pATCIPSTART [] PROGMEM					= "AT+CIPSTART=\"TCP\",\"";
+const prog_char pATCIPSEND [] PROGMEM						= "AT+CIPSEND";
 
 const prog_char pATHTTPINITrn [] PROGMEM				= "AT+HTTPINIT\r\n";
 const prog_char pATHTTPPARACIDrn [] PROGMEM			= "AT+HTTPPARA=\"CID\", 1\r\n";
 const prog_char pATHTTPTERMrn [] PROGMEM				= "AT+HTTPTERM\r\n";
 const prog_char pATHTTPPARAUArn [] PROGMEM			= "AT+HTTPPARA=\"UA\",\"BEEHIVE SIM MODULE\"\r\n";
 const prog_char pATHTTPPARAURLQ [] PROGMEM			= "AT+HTTPPARA=\"URL\",\"http://";
+
+const prog_char pGET [] PROGMEM				= "GET ";
+const prog_char pPOST [] PROGMEM			= "POST ";
+const prog_char pHTTP11 [] PROGMEM		= " HTTP/1.1\n";
+const prog_char pHOST [] PROGMEM			= "Host: ";
+const prog_char pUserAgent [] PROGMEM	= "User-Agent: beewatch/0.1 arduino/181\n";
+
+const prog_char pACTION [] PROGMEM		= "action";
+const prog_char pGETCONF [] PROGMEM		= "getconf";
 
 const prog_char pDAT [] PROGMEM						= "dat";
 const prog_char pGSM [] PROGMEM						= "gsm";
@@ -112,6 +125,7 @@ const prog_char pATIrn [] PROGMEM				= "ATI\r\n";
 const prog_char pATCPINeq [] PROGMEM		= "AT+CPIN=";
 const prog_char pATrn [] PROGMEM				= "AT\r\n";
 const prog_char pRN [] PROGMEM					= "\r\n";
+const prog_char pLF [] PROGMEM						= "\n";
 
 const prog_char pATCCIDrn [] PROGMEM		= "AT+CCID\r\n";
 const prog_char pATCREGqrn [] PROGMEM		= "AT+CREG?\r\n";
@@ -139,11 +153,7 @@ const prog_char pErrorSendDATblock [] PROGMEM = "send data block";
 const prog_char pErrorSendGSMblock [] PROGMEM = "send gsm block";
 const prog_char pErrorInitiateGet [] PROGMEM = "initiate get request";
 const prog_char pErrorActivateBearer [] PROGMEM ="activate bearer profile";
-
-
-
-#undef prog_var
-
+const prog_char pErrorInitiatePost [] PROGMEM = "initiate post request";
 
 
 #endif	/* __PSTR_H__ */

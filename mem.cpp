@@ -10,8 +10,6 @@
  * $version$
  */
 
-//#include <extEEPROM.h>
-
 #if LINUX_NATIVE_APP == 1
 
 #include <stdio.h>
@@ -43,7 +41,7 @@ uint32_t	__ee_dev_size;
 
 
 // set DEBUG_MEM to 1 in order to emit the debugging messages
-//#define DEBUG_MEM	1
+#define DEBUG_MEM	1
 
 
 void mem_stats()
@@ -134,19 +132,24 @@ void mem_storecounters()
 /* read counters __head_db and __tail_db from special purpose memory */
 bool mem_readcounters()
 {
-	//Serial.print(F("PORTB bits: ")); Serial.println( PORTB, BIN );
-	
-	//Wire.begin();
-	
 	Wire.beginTransmission( RTC_I2C_ADDRESS );
 
-//		Serial.println(F("wire.begintransmission()"));
+#if DEBUG_MEM > 1
+		Serial.println(F("wire.begintransmission()"));
+#endif
+
 	Wire.write( RTC_COUNTER_ADDRESS );
 
-//		Serial.println(F("wire.write( RTC_COUNTER_ADRESS )" ));
+#if DEBUG_MEM > 1
+		Serial.println(F("wire.write( RTC_COUNTER_ADRESS )" ));
+#endif
+
 	Wire.endTransmission();
 
-//		Serial.println(F("wire.endtransmission()"));
+#if DEBUG_MEM > 1
+		Serial.println(F("wire.endtransmission()"));
+#endif
+
 	Wire.requestFrom( RTC_I2C_ADDRESS, 4);
 
 //		Serial.println(F("wire.requestfrom()"));
@@ -270,11 +273,17 @@ bool mem_pushDatablock(datablock_t *db)
 
 bool mem_popDatablock(datablock_t *db)
 {
+
+#ifdef DEBUG_MEM
+
 #if defined(LINUX_NATIVE_APP)
 	fprintf(stderr, "mem_popDatablock\n");
 #else
 	Serial.println( F("mem_popDatablock") );
 #endif
+
+#endif	/* DEBUG_MEM */
+
 
 	mem_readcounters();
 

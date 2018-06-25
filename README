@@ -119,6 +119,9 @@ Content-Length:23
 Hope this helps the next person stuck on it.
 
 
+GET /data.php?action=getconf&nodeId=10200 HTTP/1.1
+Host: erns.sytes.net:8088
+User-Agent: beewatch-firmware/0.1 arduino/1.8.1
 
 
 30-4-2018
@@ -126,8 +129,33 @@ TODO:
 * Enable interrupt on change of Serial RX, so to wake up from sleep
 when external module is attached to the serial port.
 
-* when waiting for module to register, perform a 3 step procedure,
-initiate a variable for 10 secs (this is the most likely the module
-will registerd), if in this interval module is not registered, set a flag,
-and increase the interval by 10 secs, and go to sleep, for a specified
-time frame, after this, try again for network communication
+* when waiting for module to register, perform a 3 step procedure, initiate
+a variable for 10 secs (this is the most likely the module will registerd),
+if in this interval module is not registered, set a flag, and increase the
+interval by 10 secs, and go to sleep, for a specified time frame, after
+this, try again for network communication
+
+
+
+09-06-2018
+TODO:
+Having a variable for repeating log (or net cycles), seems not to be enough. 
+Whenever the module resets, this variable starts over again.  This creates
+the problem, that the module might fire in regular but not specific times
+(or intervals).
+
+There are 2 solutions:
+A.  Add a delay variable so when one reprograms the log/net cycles, the
+module must wait for the new 'delay' variable so when it starts cycling in a
+known pattern.
+
+B.  Implement an algorithm similar to linux program 'crontab', which
+specifies certain intervals (or specific minute/hour criteria) when to fire
+log/net cycle.
+
+In this implementation in order to reduce memory usage one can apply a 60
+bits variable for minutes and a 24 bit variable for hours (one could add one
+more 7 bit variable for days).  When a specific bit is set to '1' then the
+event is allowed to fire, in the specific minute:hour(:day) time.  RAM usage
+is: 60+24+7 = 91 bits (or 84 if days are not used) which means an extra 12
+bytes of memory for each event (12 for Log, 12 for Net).

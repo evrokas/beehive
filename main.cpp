@@ -392,6 +392,15 @@ void setup()
 	
 	Serial.print(   F("Date: ")); Serial.print( F(FIRMWARE_DATE) );
 	Serial.print( 	F("  upload no # ")); Serial.println( F(FIRMWARE_UNUM) );
+
+	Serial.print( F("Utilizing "));
+#ifdef HTTP_API_POST
+	Serial.print( F("POST") );
+#endif
+#ifdef HTTP_API_GET
+	Serial.print( F("GET") );
+#endif
+	Serial.println( F(" method") );
 	
 
 /*
@@ -1173,7 +1182,6 @@ void loop()
 					/* put here code to store in EEPROM memory data blocks until
 					 * net cycle is reached, and data are forwarded to internet server */
 
-#if ENABLE_DATAPUSHING == 1
 					db.entryType = ENTRY_DATA;
 
 
@@ -1184,7 +1192,7 @@ void loop()
 					} else {
 						Serial.println( F("could not push dat datablock to EEPROM.") );
 					}
-#endif
+
 					//powerPER_RTC(0, 0);		//powerRTC(0, 1);
 					powerPeripherals(0, 0);
 					
@@ -1294,18 +1302,23 @@ void loop()
 				};
 				
 				
+				gsm_initCIP();
 				do {
 					uint8_t srvip[4];
 						
-						gsm_initCIP();
 						if( gsm_dnsLookup( srvip )) {
 							Dlnp("successfully resolved domain name");
 							memcpy(serverip, srvip, 4);
 						} else {
 							Dlnp("could not successfully resolve domain name, using old IP address");
 						}
-						gsm_doneCIP();
 				} while(0);
+
+/* disable wireless only if about to use GET methos,
+ * for POST method leave wireless leave it as is */
+#ifdef HTTP_API_GET
+				gsm_doneCIP();
+#endif
 
 /* send data via a series of GET requests (time consuming, about 7 secs for each entry) */
 #ifdef HTTP_API_GET
@@ -1366,22 +1379,51 @@ void loop()
 					Serial.print( RCF( pErrorCouldNot ) );
 					Serial.println( RCF( pErrorActivateBearer ) );
 				}
-	/* HTTP_API_GET */
+
+				http_terminateRequest();						
+				gsm_deactivateBearerProfile();
+
+	/* end of 	#if defined (HTTP_API_GET) */
 
 #elif defined( HTTP_API_POST )
 /* use POST request to send a series of data (faster...) */
 				
-				/* tcp stack is already brought up by DNS request, save some
+				
+				powerPeripherals(1, 25);
+				
+				/* wireless is already up by DNS request, save some
 				 * time using this opportunity */
-				 
-				//if( 
+				
+				if(gsm_initiateCIPRequest()) {
+					/* ready to transmit POST data */
+					if( http_send_post( mil1 ) ) {
+						Serial.println( F("Succesfully send all data blocks with POST method!") );
+					}
 
-/* HTTP_API_POST */
+				} else {
+					Serial.print( RCF( pErrorCouldNot ) );
+					Serial.println( RCF( pErrorInitiatePost ) );
+				}
+				
+//				gsm_doneCIP();
+
+				powerPeripherals(0, 0);
+				
+#if 0
+				/* do not need this, since 'getconf' directive can be includes
+				 * in the POST request above */
+				if(gsm_activateBearerProfile() ) {
+					if(http_initiateGetRequest() ) {
+//							http_send_getconf_request_cip();
+//						http_send_getconf_request();
+					}
+				}
 #endif
-	
 				http_terminateRequest();						
-				gsm_deactivateBearerProfile();
-
+//				gsm_deactivateBearerProfile();
+				
+#endif	/* HTTP_API_POST */
+	
 				powerGPRSGPS( 0 );
 				poweredGSM = 0;
 				mil2 = millis();

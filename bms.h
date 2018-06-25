@@ -34,7 +34,7 @@
 #define FIRMWARE_REVISION	"alpha"
 #endif
 #define FIRMWARE_REV_MAX	0
-#define FIRMWARE_REV_MIN	0
+#define FIRMWARE_REV_MIN	1
 
 
 /* setup defines */
@@ -100,8 +100,8 @@
  * define HTTP_API_POST in order to send multiple data blocks using POST http request
  * define HTTP_API_GET in order to send one data block using GET http request
  */
-//#define HTTP_API_POST
-#define HTTP_API_GET
+#define HTTP_API_POST
+//#define HTTP_API_GET
 
 #if ( (defined( HTTP_API_POST ) && defined( HTTP_API_GET ) ) || \
 			(!defined( HTTP_API_POST ) && !defined( HTTP_API_GET ) ) )
