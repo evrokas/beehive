@@ -1,13 +1,14 @@
 /*
  * main.cpp - main file
  *
+ * BeeWatch Project
+ *
  * Beehive Monitoring System - BMS
- * (c) Evangelos Rokas, 2015-16-17-18
+ * (c) Evangelos Rokas, 2015-18
  *
  * This software is Free Software and distributed under
  * the terms of GNU General Public License.
  *
- * $version$
  */
 
 #include <avr/wdt.h>
@@ -28,6 +29,7 @@
 #include "LowPower.h"
 #include "gsm.h"
 #include "mem.h"
+#include "error.h"
 
 
 /* counter of sleep cycles */
@@ -98,19 +100,19 @@ uint8_t addrAflags;
 void initializeEEPROM()
 {
 	Serial.print(F("Initializing EEPROM memory allocation ... "));
-	addrNodeId	= eepromGetAddr( 2 );
+	addrNodeId	= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
 	addrAPIKEY	= eepromGetAddr( APIKEY_SIZE );
 	addrAPN			= eepromGetAddr( APN_SIZE );
 	addrUSER		= eepromGetAddr( USER_SIZE );
 	addrPASS		= eepromGetAddr( PASS_SIZE );
 	addrURL			= eepromGetAddr( URL_SIZE );			
 	addrPORT		= eepromGetAddr( 2 );			/* 0-65535, 2 bytes long */
-	addrLogCycle = eepromGetAddr( 2 );
-	addrNetCycle = eepromGetAddr( 2 );
+	addrLogCycle = eepromGetAddr( 2 );		/* log cycle, every # minutes, 2 bytes long */
+	addrNetCycle = eepromGetAddr( 2 );		/* net cycle, every # minutes, 2 bytes long */
 	addrSIMPIN	 = eepromGetAddr( SIMPIN_SIZE );
 	addrSIMICCID	= eepromGetAddr( SIMICCID_SIZE );
-	addrVCCfactor	= eepromGetAddr( 4 );
-	addrAflags = eepromGetAddr( 2 );
+	addrVCCfactor	= eepromGetAddr( 4 );		/* floating point value */
+	addrAflags = eepromGetAddr( 2 );			/* module flags, 2  bytes long  */
 	
 	Serial.print( eepromGetLastAddr() );
 	Serial.println( F(" bytes") );
@@ -441,6 +443,8 @@ void setup()
 #endif
 
 	mem_init( EXT_EEPROM_SIZE, EXT_EEPROM_ADDR );
+
+	initErrorHandling();
 
 	powerPeripherals(0,0);	/* disable all peripherals */
 
@@ -1190,6 +1194,7 @@ void loop()
 						mem_stats();
 //						Serial.println( F("pushed datablock to EEPROM successfully.") );
 					} else {
+						logError( erCANNOTPUSHDBINEEPROM );
 						Serial.println( F("could not push dat datablock to EEPROM.") );
 					}
 
@@ -1331,6 +1336,7 @@ void loop()
 							powerPeripherals(1, 25);
 							while(mem_popDatablock(&dd)) {
 								if(!http_send_datablock_get( dd )) {
+									logError( erCANNOTSENDDAT );
 									Serial.print( RCF( pErrorCouldNot ) );
 									Serial.println( RCF( pErrorSendDATblock ) );
 //				  				Serial.println( F("error: could not send data block"));
@@ -1359,6 +1365,7 @@ void loop()
 							
 								if( http_send_datablock_get( dd ) ) {
 								} else  {
+									logError( erCANNOTSENDGSM );
 									Serial.print( RCF( pErrorCouldNot ) );
 									Serial.println( RCF( pErrorSendGSMblock ) );
 									
@@ -1372,10 +1379,12 @@ void loop()
 
 							
 					} else {
+						logError( erCANNOTINITGETREQ );
 						Serial.print( RCF( pErrorCouldNot ) );
 						Serial.println( RCF( pErrorInitiateGet ) );
 					}
 				} else {
+					logError( erCANNOTACTIVATEBEARER );
 					Serial.print( RCF( pErrorCouldNot ) );
 					Serial.println( RCF( pErrorActivateBearer ) );
 				}
@@ -1401,6 +1410,7 @@ void loop()
 					}
 
 				} else {
+					logError( erCANNOTINITPOST );
 					Serial.print( RCF( pErrorCouldNot ) );
 					Serial.println( RCF( pErrorInitiatePost ) );
 				}
@@ -1409,17 +1419,10 @@ void loop()
 
 				powerPeripherals(0, 0);
 				
-#if 0
-				/* do not need this, since 'getconf' directive can be includes
-				 * in the POST request above */
-				if(gsm_activateBearerProfile() ) {
-					if(http_initiateGetRequest() ) {
-//							http_send_getconf_request_cip();
-//						http_send_getconf_request();
-					}
-				}
-#endif
-				http_terminateRequest();						
+				/* do not need to actively terminate http_ since we are going to
+				 * shutdown the module anyway! */
+
+//				http_terminateRequest();						
 //				gsm_deactivateBearerProfile();
 				
 #endif	/* HTTP_API_POST */
@@ -1439,4 +1442,3 @@ void loop()
 	
 	}	/* main while logop  */
 }
-

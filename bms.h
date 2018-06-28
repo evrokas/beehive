@@ -167,4 +167,12 @@
 //#define InternalReferenceVoltage	(1100.0)
 extern uint32_t InternalReferenceVoltage;	// = (uint32_t)(1100);
 
+
+/* define USE_NEWSW to use the NeoSoftwareSerial library for
+ * GSM and GPS serial communication, otherwise use good old SoftwareSerial class */
+#define USE_NEOSW	1
+
+
+
+
 #endif	/* __BMS_H__ */

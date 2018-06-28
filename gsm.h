@@ -23,7 +23,17 @@
 //#include "data.h"
 #include "mem.h"
 
-#define PREAMPLE_SIZE	71		/* until ...Length:_ */
+#define TEMP_BUF_LEN	64
+#define	DEF_CLEAR_TEMPBUF	char _tempbuf[ TEMP_BUF_LEN ]; memset( _tempbuf, 0, TEMP_BUF_LEN )
+#define CLEAR_TEMPBUF	memset( _tempbuf, 0, TEMP_BUF_LEN )
+
+/* shortcut to read data in _tempbuf */
+#define READGSM( lat )	gsm_readSerial( _tempbuf, TEMP_BUF_LEN, (lat) )
+
+#define CF(str)	(char *)( str )
+#define PF(str)	(PGM_P)F(str)
+
+
 
 /* lengths with string literals, using numeric literals will even reduce size */
 #if defined( API_STRING_KEYS )
@@ -114,8 +124,7 @@
 
 
 extern "C" {
-
-    void gsm_init(void);
+		void gsm_init(void);
 
     bool gsm_sendrecvcmd(char *cmd, char *expstr);
     bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout);
@@ -127,6 +136,7 @@ extern "C" {
 
     void gsm_relayOutput( Stream &ast );
     
+#if defined( HTTP_API_GET )
     bool gsm_activateBearerProfile();
     uint8_t	gsm_getBearerStatus();
     bool gsm_deactivateBearerProfile();
@@ -134,8 +144,8 @@ extern "C" {
 
     bool http_initiateGetRequest();
     void http_terminateRequest();
+#endif
     
-//    uint16_t http_getRequest(char *url, char *args);
 #if defined( HTTP_API_GET )
     bool http_send_datablock_get(datablock_t &db);
     bool http_send_getconf_request();
@@ -149,12 +159,24 @@ extern "C" {
     bool gsm_moduleInfo();
 
 		bool gsm_getBattery(uint16_t &bat);
-	    
+
+
+#define GSM_FUNCS_AS_MACRO
+
+#ifdef GSM_FUNCS_AS_MACRO
+#define gsm_available()		(gsmserial.available())
+#define gsm_read()				(gsmserial.read())
+#define gsm_write(c)			(gsmserial.write(c))
+//#define gsm_flushInput()	do{while(gsm_available())gsm_ead()}while(0)
+
+#else		
     bool gsm_available();
     char gsm_read();
     void gsm_write(char c);
-    
+//    void gsm_flushInput();
+#endif
     void gsm_flushInput();
+    
 
 //    bool gsm_sendPin(char *apin);    
     bool gsm_sendPin();    
@@ -177,6 +199,7 @@ extern "C" {
 		void resetGSMCharCount();
 		void incGSMCharCount(unsigned int aincr = 1);
 	
+		void transmitServerIP();
 		
 };
 

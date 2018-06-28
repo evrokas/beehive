@@ -1,5 +1,7 @@
 # Makefile for Beehive Monitoring System
 #
+# BeeWatch Project
+#
 # (c) Evangelos Rokas, 2016, 2017
 #
 
