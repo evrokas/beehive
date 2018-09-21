@@ -143,7 +143,7 @@ void gsm_postdone()
 		}
 		
 //		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
-		gsm_sendcmdp( F("0\n\n\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
 		
