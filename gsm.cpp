@@ -258,13 +258,13 @@ bool gsm_initCIP()
 	/* AT+CSTT="apn","user", "pass" 		OK */
 	gsm_sendcmdp( RCF( pATCSTTQ ) );
 		
-	transmitEEPROMstr(E_APN, gsmserial);
+	transmitEEPROMstr(E_APN, gsmserial, true);
 	gsm_sendcmdp( RCF( pQcommaQ ) );
 		
-	transmitEEPROMstr(E_USER, gsmserial);
+	transmitEEPROMstr(E_USER, gsmserial, true);
 	gsm_sendcmdp( RCF( pQcommaQ ) );
 
-	transmitEEPROMstr(E_PASS, gsmserial);
+	transmitEEPROMstr(E_PASS, gsmserial, true);
 		
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ) )
 		return false;
@@ -418,7 +418,7 @@ void gsm_flushInput()
 bool gsm_sendPin()
 {
 		gsm_sendcmdp( RCF( pATCPINeq ) );
-		transmitEEPROMstr( E_SIMPIN, gsmserial );
+		transmitEEPROMstr( E_SIMPIN, gsmserial, true );
 
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pRN ), RCF(  pOK ), 2 ) ) {
 			Serial.println( RCF( pErrorCPIN ) );
