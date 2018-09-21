@@ -299,7 +299,7 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
-	gsm_interactiveMode();
+//	gsm_interactiveMode();
 
 //	gsm_sendcmdp( RCF( pCtrlZ ) );
 
