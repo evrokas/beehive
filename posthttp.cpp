@@ -153,7 +153,7 @@ bool gsm_initiateCIPRequest()
 	DEF_CLEAR_TEMPBUF;
 	
 	/*
-	 * AT+CIPSTART="TCP", "IP", "PORT"
+	 * AT+CIPSTART="TCP", "IP", "PORT"		OK	CONNECT OK
 	 * AT+CIPSEND
 	 */
 	 
@@ -164,7 +164,7 @@ bool gsm_initiateCIPRequest()
 	
 	gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );	/* port */
 	
-	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pCONOK ), 2 ))
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pCONNECT ), 2 ))
 		return false;
 	
 #if 0
@@ -260,7 +260,9 @@ bool http_send_post(unsigned long amsecs)
 	gsm_getSignalQuality( iii );
 
 
-	gsm_sendcmdp( RCF( pATCIPSEND ) );	
+	gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
+	
+	//gsm_sendcmdp( RCF( pATCIPSEND ) );	
 	
 	delay(2);	/* allow '>' character to come in */
 
