@@ -166,11 +166,11 @@ bool gsm_initiateCIPRequest()
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ))
 		return false;
 	
-/*
+#if 0
 	gsm_sendcmdp( RCF( pATCIPSEND ) );	
 	
 	delay(2);	/* allow '>' character to come in */
-*/
+#endif
 	
 	/* so connection if ready to transmit useable data */
   return (true);
