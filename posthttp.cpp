@@ -143,7 +143,7 @@ void gsm_postdone()
 		}
 		
 //		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
-		gsm_sendcmdp( F("0\n\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\n\n\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
 		
@@ -158,7 +158,7 @@ bool gsm_initiateCIPRequest()
 	 
 	gsm_sendcmdp( RCF( pATCIPSTART ) );				/* AT+CIPSTART="TCP", " */
 //	transmitServerIP();								/* *.*.*.* */
-	transmitEEPROMstr( E_URL, gsmserial );
+	transmitEEPROMstr( E_URL, gsmserial, true );
 	gsm_sendcmdp( RCF( pQcommaQ ) );	/* "," */
 	
 	gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );	/* port */
