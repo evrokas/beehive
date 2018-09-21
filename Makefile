@@ -45,5 +45,6 @@ pmon:
 
 
 upl:
+	git commit -a -m "upload commit (automatic)"
 	./mkver.sh
 	$(MAKE) upload
