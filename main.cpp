@@ -1311,6 +1311,8 @@ void loop()
 				
 				
 				gsm_initCIP();
+
+#ifdef HTTP_API_GET
 				do {
 					uint8_t srvip[4];
 						
@@ -1322,9 +1324,9 @@ void loop()
 						}
 				} while(0);
 
+
 /* disable wireless only if about to use GET methos,
- * for POST method leave wireless leave it as is */
-#ifdef HTTP_API_GET
+ * for POST method leave wireless as is */
 				gsm_doneCIP();
 #endif
 

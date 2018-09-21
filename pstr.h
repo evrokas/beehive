@@ -49,7 +49,7 @@ const prog_char pQddQ [] PROGMEM								= "\":\"";
 const prog_char pCURLOPEN [] PROGMEM						= "{";
 const prog_char pCURLCLOSE [] PROGMEM						= "}";
 const prog_char pCRLF [] PROGMEM								= "\r\n";
-const prog_char pCtrlZ [] PROGMEM								= "";
+const prog_char pCtrlZ [] PROGMEM								= "\x1A";
 
 const prog_char pATCDNSGIPQ [] PROGMEM					= "AT+CDNSGIP=\"";
 const prog_char pCDNSGIP [] PROGMEM							= "+CDNSGIP:";
