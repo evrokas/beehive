@@ -23,6 +23,28 @@
 //#include "data.h"
 #include "mem.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef USE_NEOSW
+
+#include <NeoSWSerial.h>
+extern NeoSWSerial gsmserial;	//(GSM_RX, GSM_TX);
+
+#else
+
+#include <SoftwareSerial.h>
+extern SoftwareSerial gsmserial;	//(GSM_RX, GSM_TX);
+
+#endif	/* USE_NEOSW */
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
 #define TEMP_BUF_LEN	64
 #define	DEF_CLEAR_TEMPBUF	char _tempbuf[ TEMP_BUF_LEN ]; memset( _tempbuf, 0, TEMP_BUF_LEN )
 #define CLEAR_TEMPBUF	memset( _tempbuf, 0, TEMP_BUF_LEN )
