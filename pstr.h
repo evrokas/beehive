@@ -133,7 +133,7 @@ const prog_char pATCREGqrn [] PROGMEM		= "AT+CREG?\r\n";
 const prog_char pATCFUNC0rn [] PROGMEM	= "AT+CFUNC=0\r\n";
 const prog_char pATCFUNC1rn [] PROGMEM	= "AT+CFUNC=1\r\n";
 const prog_char pATCBCrn [] PROGMEM			= "AT+CBC\r\n";
-const prog_char pCBC [] PROGMEM					= "+CBC:";
+const prog_char pCBC [] PROGMEM					= "+CBC: ";
 const prog_char pATCSQrn [] PROGMEM			= "AT+CSQ\r\n";
 const prog_char pCSQ [] PROGMEM					= "+CSQ: ";
 const prog_char pATCIPGSMLOC11rn [] PROGMEM	= "AT+CIPGSMLOC11\r\n";

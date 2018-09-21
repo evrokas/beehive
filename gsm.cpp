@@ -137,6 +137,11 @@ bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper 
 {
 	DEF_CLEAR_TEMPBUF;
 
+#if 0
+		D("send: "); Dln( cmd );
+		D("recv: "); Dln( expstr );
+#endif
+
 		gsm_sendcmdp( cmd );
     
 		if( READGSM( 2 ) ) {
@@ -156,6 +161,11 @@ bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout)
 	uint32_t mils;
 	char *tb;
   
+#if 0
+		D("send: "); Dln( cmd );
+		D("recv: "); Dln( expstr );
+#endif
+
 		gsm_sendcmd( cmd );
 
 		mils = millis() + 1000UL * timeout;
@@ -190,6 +200,11 @@ bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashString
 	char *tb;
   
 //		while(gsm_available())Serial.print( gsm_read() );
+
+#if 0
+		D("send: "); Dln( cmd );
+		D("recv: "); Dln( expstr );
+#endif
 
 		gsm_sendcmdp( cmd );
 
@@ -503,7 +518,8 @@ bool gsm_getBattery(uint16_t &bat)
 		if(!c)return false;
 		
 		bat = atoi( ++c );
-
+		
+		D("Battery voltage: "); Dln( bat );
 	return true;
 }
 
@@ -521,6 +537,9 @@ bool gsm_getSignalQuality(uint8_t &asqual)
   	if(!c)return false;
 
   	asqual = atoi( c );
+
+  	D("Signal: "); Dln( asqual );
+  	
 		return true;
 		
 	return true;

@@ -45,11 +45,13 @@ void gsm_sendchunk()
 		gsm_sendcmd( tmp );
 		
 		/* CRLF */
-		gsm_sendcmdp( RCF( pCRLF ) );
+//		gsm_sendcmdp( RCF( pCRLF ) );
+		gsm_sendcmdp( RCF( pLF ) );
 			
 		/* chunk data follow */
 		gsm_sendcmd( chunk_buffer );	/* chunk_buffer[ CHUNK_BUFFER ] is always \0 */
-		gsm_sendcmdp( RCF( pCRLF ) );
+//		gsm_sendcmdp( RCF( pCRLF ) );
+		gsm_sendcmdp( RCF( pLF ) );
 }
 
 //#define DEBUG_POSTCMD
@@ -72,10 +74,12 @@ void gsm_postcmd(char *cmd)
 #endif
 
 
+/*
 			chunk_buffer[ _chunk_pos ] = cmd[i];
 			_chunk_pos++;
 			i++;
-
+*/
+			chunk_buffer[ _chunk_pos++ ] = cmd[ i++ ];
 			
 //			continue;
 		} else {
@@ -136,18 +140,10 @@ void gsm_postdone()
 			chunk_buffer[ _chunk_pos ] = 0;
 
 			gsm_sendchunk();
-			
-#if 0
-			sprintf( _tempbuf, "%02x", strlen( chunk_buffer ) );
-			gsm_sendcmd( _tempbuf );		/* number of bytes in hexadecimal format (no 0x in front) */
-
-			gsm_sendcmdp( RCF( pCRLF ) );
-			gsm_sendcmd( chunk_buffer );
-			gsm_sendcmdp( RCF( pCRLF ) );
-#endif
 		}
 		
-		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
+//		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\n\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
 		
@@ -256,14 +252,19 @@ bool http_send_post(unsigned long amsecs)
 	datablock_t db;
 	uint16_t ii;
 	uint8_t iii;
+	
+	gsm_getBattery( ii );
+	gsm_getSignalQuality( iii );
 			
-	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
+//	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
+	gsm_sendcmdp( F("POST /post.php HTTP/1.1\n") );
 	gsm_sendcmdp( F("Host: 10.0.0.1\n" ) );
 	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\n") );
 	gsm_sendcmdp( F("Content-Type: application/json\n") );
 	gsm_sendcmdp( F("Transfer-Encoding: chunked\n") );
 	
-	gsm_sendcmdp( RCF( pCRLF ) );
+//	gsm_sendcmdp( RCF( pCRLF ) );
+	gsm_sendcmdp( RCF( pLF ) );
 		
 	/* start emitting chunked data */
 	gsm_poststart();
@@ -279,15 +280,15 @@ bool http_send_post(unsigned long amsecs)
 	
 	/* send the final GSM block */
 	db.entryType = ENTRY_GSM;
-	if( gsm_getBattery( ii ) ) {
+	//if( gsm_getBattery( ii ) ) {
 //		Serial.print("Battery level: " ); Serial.println( ii );
 		db.gsmVolt = ii;
-	}
+	//}
 
-	if( gsm_getSignalQuality( iii ) ) {
+	//if( gsm_getSignalQuality( iii ) ) {
 //		Serial.print("Signal quality: " ); Serial.println( iii );
 		db.gsmSig = iii;
-	}
+	//}
 						
 	db.gsmPowerDur = millis() - amsecs;
 
@@ -298,7 +299,9 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
-	gsm_sendcmdp( RCF( pCtrlZ ) );
+	gsm_interactiveMode();
+
+//	gsm_sendcmdp( RCF( pCtrlZ ) );
 
   return (true);
 }

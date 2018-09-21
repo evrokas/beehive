@@ -200,6 +200,7 @@ extern "C" {
 		void incGSMCharCount(unsigned int aincr = 1);
 	
 		void transmitServerIP();
+		void gsm_interactiveMode();
 		
 };
 
