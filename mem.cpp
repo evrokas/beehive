@@ -41,7 +41,7 @@ uint32_t	__ee_dev_size;
 
 
 // set DEBUG_MEM to 1 in order to emit the debugging messages
-#define DEBUG_MEM	1
+//#define DEBUG_MEM	1
 
 
 void mem_stats()
