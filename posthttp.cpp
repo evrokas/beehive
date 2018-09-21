@@ -311,8 +311,9 @@ bool http_send_post(unsigned long amsecs)
 	gsm_postdone();
 
 	gsm_sendcmdp( RCF( pCtrlZ ) );
+	gsm_sendcmdp( RCF(pCRLF) );
 
-	gsm_interactiveMode();
+//	gsm_interactiveMode();
 
   return (true);
 }
