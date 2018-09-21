@@ -45,13 +45,13 @@ void gsm_sendchunk()
 		gsm_sendcmd( tmp );
 		
 		/* CRLF */
-//		gsm_sendcmdp( RCF( pCRLF ) );
-		gsm_sendcmdp( RCF( pLF ) );
+		gsm_sendcmdp( RCF( pCRLF ) );
+		//gsm_sendcmdp( RCF( pLF ) );
 			
 		/* chunk data follow */
 		gsm_sendcmd( chunk_buffer );	/* chunk_buffer[ CHUNK_BUFFER ] is always \0 */
-//		gsm_sendcmdp( RCF( pCRLF ) );
-		gsm_sendcmdp( RCF( pLF ) );
+		gsm_sendcmdp( RCF( pCRLF ) );
+//		gsm_sendcmdp( RCF( pLF ) );
 }
 
 //#define DEBUG_POSTCMD
@@ -142,8 +142,8 @@ void gsm_postdone()
 			gsm_sendchunk();
 		}
 		
-//		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
-		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
+//		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
 		
@@ -180,9 +180,8 @@ bool http_post_db_preample(uint16_t nid)
 {
 	DEF_CLEAR_TEMPBUF;
 	
-//	gsm_poststart();
 	//{"action":"add","nodeId":100,"data":);
-	gsm_postcmdp( RCF( pCURLOPEN ) );
+		gsm_postcmdp( RCF( pCURLOPEN ) );
 	
 		POSTSENDsp( F("action") , F("add") );
 		POSTSENDcomma;
@@ -266,14 +265,14 @@ bool http_send_post(unsigned long amsecs)
 
 			
 //	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
-	gsm_sendcmdp( F("POST /post.php HTTP/1.1\n") );
-	gsm_sendcmdp( F("Host: 10.0.0.1\n" ) );
-	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\n") );
-	gsm_sendcmdp( F("Content-Type: application/json\n") );
-	gsm_sendcmdp( F("Transfer-Encoding: chunked\n") );
+	gsm_sendcmdp( F("POST /post.php HTTP/1.1\r\n") );
+	gsm_sendcmdp( F("Host: 10.0.0.1\r\n" ) );
+	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\r\n") );
+	gsm_sendcmdp( F("Content-Type: application/json\r\n") );
+	gsm_sendcmdp( F("Transfer-Encoding: chunked\r\n") );
 	
-//	gsm_sendcmdp( RCF( pCRLF ) );
-	gsm_sendcmdp( RCF( pLF ) );
+	gsm_sendcmdp( RCF( pCRLF ) );
+//	gsm_sendcmdp( RCF( pLF ) );
 		
 	/* start emitting chunked data */
 	gsm_poststart();
@@ -310,7 +309,7 @@ bool http_send_post(unsigned long amsecs)
 
 //	gsm_interactiveMode();
 
-//	gsm_sendcmdp( RCF( pCtrlZ ) );
+	gsm_sendcmdp( RCF( pCtrlZ ) );
 
   return (true);
 }
