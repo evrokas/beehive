@@ -163,7 +163,7 @@ bool gsm_initiateCIPRequest()
 	
 	gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );	/* port */
 	
-	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ))
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pCONOK ), 2 ))
 		return false;
 	
 #if 0
