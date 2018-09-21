@@ -137,6 +137,7 @@ void gsm_postdone()
 
 		if(_chunk_pos) {
 			/* there are still data in buffer, spit them out ... */
+			
 			chunk_buffer[ _chunk_pos ] = 0;
 
 			gsm_sendchunk();
@@ -307,9 +308,9 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
-//	gsm_interactiveMode();
-
 	gsm_sendcmdp( RCF( pCtrlZ ) );
+
+	gsm_interactiveMode();
 
   return (true);
 }
