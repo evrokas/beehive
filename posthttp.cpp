@@ -166,9 +166,11 @@ bool gsm_initiateCIPRequest()
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ))
 		return false;
 	
+/*
 	gsm_sendcmdp( RCF( pATCIPSEND ) );	
 	
 	delay(2);	/* allow '>' character to come in */
+*/
 	
 	/* so connection if ready to transmit useable data */
   return (true);
@@ -256,6 +258,12 @@ bool http_send_post(unsigned long amsecs)
 	
 	gsm_getBattery( ii );
 	gsm_getSignalQuality( iii );
+
+
+	gsm_sendcmdp( RCF( pATCIPSEND ) );	
+	
+	delay(2);	/* allow '>' character to come in */
+
 			
 //	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
 	gsm_sendcmdp( F("POST /post.php HTTP/1.1\n") );
