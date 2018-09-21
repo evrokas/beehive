@@ -18,7 +18,7 @@
 
 const prog_char pATCIPSHUTrn [] PROGMEM	= "AT+CIPSHUT\r\n";
 const prog_char pSHUTOK [] PROGMEM			= "SHUT OK";
-const prog_char pCONOK [] PROGMEM				= "CONNECT OK";
+const prog_char pCONNECT [] PROGMEM				= "CONNECT";
 const prog_char pATCIPMUX0rn [] PROGMEM	= "AT+CIPMUX=0\r\n";
 const prog_char pOK [] PROGMEM					= "OK";
 const prog_char pATSAPBR31CONTYPE [] PROGMEM		= "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n";
@@ -49,7 +49,7 @@ const prog_char pQddQ [] PROGMEM								= "\":\"";
 const prog_char pCURLOPEN [] PROGMEM						= "{";
 const prog_char pCURLCLOSE [] PROGMEM						= "}";
 const prog_char pCRLF [] PROGMEM								= "\r\n";
-const prog_char pCtrlZ [] PROGMEM								= "\x1A";
+const prog_char pCtrlZ [] PROGMEM								= "\032";
 
 const prog_char pATCDNSGIPQ [] PROGMEM					= "AT+CDNSGIP=\"";
 const prog_char pCDNSGIP [] PROGMEM							= "+CDNSGIP:";
