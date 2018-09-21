@@ -39,7 +39,7 @@ void gsm_sendchunk()
 {
 	char tmp[5];
 	
-		D("<>");D(chunk_buffer);D("\t");Dln(strlen( chunk_buffer ) );
+//		D("<>");D(chunk_buffer);D("\t");Dln(strlen( chunk_buffer ) );
 	
 		sprintf(tmp, "%02x", strlen( chunk_buffer ) );
 		gsm_sendcmd( tmp );

@@ -44,7 +44,14 @@ pmon:
 	putty -load serial
 
 
-upl:
+git-upl:
 	git commit -a -m "upload commit (automatic)"
+	$(MAKE) upl
+		
+
+upl:
 	./mkver.sh
 	$(MAKE) upload
+
+
+.PHONY: git-upl upl pmon
