@@ -84,7 +84,7 @@ void gsm_postcmd(char *cmd)
 //			continue;
 		} else {
 			/* buffer is full, so print result */
-			Dln(">> sending chunk");
+//			Dln(">> sending chunk");
 			gsm_sendchunk();
 
 			/* reset chunk buffer */
@@ -157,7 +157,8 @@ bool gsm_initiateCIPRequest()
 	 */
 	 
 	gsm_sendcmdp( RCF( pATCIPSTART ) );				/* AT+CIPSTART="TCP", " */
-	transmitServerIP();								/* *.*.*.* */
+//	transmitServerIP();								/* *.*.*.* */
+	transmitEEPROMstr( E_URL, gsmserial );
 	gsm_sendcmdp( RCF( pQcommaQ ) );	/* "," */
 	
 	gsm_sendcmd( utoa( getServerPort(), _tempbuf, 10 ) );	/* port */
