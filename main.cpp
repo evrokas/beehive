@@ -175,7 +175,7 @@ char *setEEPROMstr(uint8_t ecode, char *dat)
 	return dat;
 }
 
-bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
+bool transmitEEPROMstr(uint8_t ecode, Stream &strm, bool debugSerial)
 {
 	uint8_t i,m, sta;
 	char c;
@@ -196,6 +196,9 @@ bool transmitEEPROMstr(uint8_t ecode, Stream &strm)
 		if(c == 0)break;	/* end of string */
 
 		strm.write(c);
+
+		if( debugSerial )
+			Serial.write(c);
 	}
 
 	return (true);

@@ -156,7 +156,7 @@ void eepromSetChar( uint16_t aaddr, char dat );
 
 void eepromGetStr(uint16_t aaddr, int acnt, char *dat);
 void eepromSetStr(uint16_t aaddr, int acnt, char *dat);
-bool transmitEEPROMstr(uint8_t ecode, Stream &strm);
+bool transmitEEPROMstr(uint8_t ecode, Stream &strm, bool debugSerial = false);
 bool transmitEEPROMstrd(uint8_t ecode, Stream &strm);
 
 
