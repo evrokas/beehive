@@ -310,8 +310,10 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
-	gsm_sendcmdp( RCF( pCtrlZ ) );
-	gsm_sendcmdp( RCF(pCRLF) );
+	gsmserial.write( 0x1a );
+	//gsm_sendcmd( 0x1a );
+	//gsm_sendcmdp( RCF( pCtrlZ ) );
+//	gsm_sendcmdp( RCF(pCRLF) );
 
 //	gsm_interactiveMode();
 
