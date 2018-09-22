@@ -260,8 +260,8 @@ bool http_send_post(unsigned long amsecs)
 	gsm_getSignalQuality( iii );
 
 
-	//gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
-	gsm_interactiveMode();
+	gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
+//	gsm_interactiveMode();
 	//gsm_sendcmdp( RCF( pATCIPSEND ) );	
 	
 //	delay(2);	/* allow '>' character to come in */
@@ -314,10 +314,11 @@ bool http_send_post(unsigned long amsecs)
 
 	gsm_interactiveMode();
 
-	gsmserial.write( 0x1a );
-	//gsm_sendcmd( 0x1a );
+	//gsmserial.write( 0x1a );
+	//gsmserial.write( 0x1a );
+	gsm_sendcmd( "\x1a" );
 	//gsm_sendcmdp( RCF( pCtrlZ ) );
-	gsm_sendcmdp( RCF(pCRLF) );
+	//gsm_sendcmdp( RCF(pCRLF) );
 
   return (true);
 }
