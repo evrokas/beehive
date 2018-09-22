@@ -1420,7 +1420,8 @@ void loop()
 					Serial.println( RCF( pErrorInitiatePost ) );
 				}
 				
-//				gsm_doneCIP();
+				gsm_doneCIP();
+				delay(500);
 
 				powerPeripherals(0, 0);
 				

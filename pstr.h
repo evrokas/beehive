@@ -18,7 +18,9 @@
 
 const prog_char pATCIPSHUTrn [] PROGMEM	= "AT+CIPSHUT\r\n";
 const prog_char pSHUTOK [] PROGMEM			= "SHUT OK";
-const prog_char pCONNECT [] PROGMEM				= "CONNECT";
+const prog_char pCONNECT [] PROGMEM			= "CONNECT";
+const prog_char pSEND [] PROGMEM				= "SEND";
+
 const prog_char pATCIPMUX0rn [] PROGMEM	= "AT+CIPMUX=0\r\n";
 const prog_char pOK [] PROGMEM					= "OK";
 const prog_char pATSAPBR31CONTYPE [] PROGMEM		= "AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"\r\n";

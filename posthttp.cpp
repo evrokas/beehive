@@ -310,15 +310,13 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
-	delay(5);
-
-	gsm_interactiveMode();
-
-	//gsmserial.write( 0x1a );
-	//gsmserial.write( 0x1a );
-	gsm_sendcmd( "\x1a" );
-	//gsm_sendcmdp( RCF( pCtrlZ ) );
-	//gsm_sendcmdp( RCF(pCRLF) );
+//	gsm_interactiveMode();
+	if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 10 ) ) {
+		Dln(F("http_send_post failed"));
+		return (false);
+	} else {
+		Dln(F("http_send_post success"));
+	}
 
   return (true);
 }
