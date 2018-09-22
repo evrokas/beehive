@@ -285,6 +285,10 @@ bool gsm_initCIP()
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIFSRrn ), RCF( pDOT ), 5 ) )
 		return false;
 
+	/* send a final status request */
+	gsm_sendcmdp( RCF( pATCIPSTATUSrn ) );
+	
+
   return true;
 }
 

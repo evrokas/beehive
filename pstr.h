@@ -55,7 +55,7 @@ const prog_char pATCDNSGIPQ [] PROGMEM					= "AT+CDNSGIP=\"";
 const prog_char pCDNSGIP [] PROGMEM							= "+CDNSGIP:";
 
 const prog_char pATCIPSTART [] PROGMEM					= "AT+CIPSTART=\"TCP\",\"";
-const prog_char pATCIPSEND [] PROGMEM						= "AT+CIPSEND\n";
+const prog_char pATCIPSEND [] PROGMEM						= "AT+CIPSEND\r\n";
 
 const prog_char pATHTTPINITrn [] PROGMEM				= "AT+HTTPINIT\r\n";
 const prog_char pATHTTPPARACIDrn [] PROGMEM			= "AT+HTTPPARA=\"CID\", 1\r\n";

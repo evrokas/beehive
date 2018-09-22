@@ -143,7 +143,7 @@ void gsm_postdone()
 			gsm_sendchunk();
 		}
 		
-		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
 //		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
 		gsm_poststart();
 }
@@ -260,11 +260,11 @@ bool http_send_post(unsigned long amsecs)
 	gsm_getSignalQuality( iii );
 
 
-	gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
-	
+	//gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
+	gsm_interactiveMode();
 	//gsm_sendcmdp( RCF( pATCIPSEND ) );	
 	
-	delay(2);	/* allow '>' character to come in */
+//	delay(2);	/* allow '>' character to come in */
 
 			
 //	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
@@ -310,12 +310,14 @@ bool http_send_post(unsigned long amsecs)
 	/* send any remaining data from the buffer */
 	gsm_postdone();
 
+	delay(5);
+
+	gsm_interactiveMode();
+
 	gsmserial.write( 0x1a );
 	//gsm_sendcmd( 0x1a );
 	//gsm_sendcmdp( RCF( pCtrlZ ) );
-//	gsm_sendcmdp( RCF(pCRLF) );
-
-//	gsm_interactiveMode();
+	gsm_sendcmdp( RCF(pCRLF) );
 
   return (true);
 }
