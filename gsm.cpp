@@ -542,7 +542,7 @@ bool gsm_getSignalQuality(uint8_t &asqual)
 
   	asqual = atoi( c );
 
-  	D("Signal: "); Dln( asqual );
+//  	D("Signal: "); Dln( asqual );
   	
 		return true;
 		

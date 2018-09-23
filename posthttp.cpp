@@ -311,7 +311,7 @@ bool http_send_post(unsigned long amsecs)
 	gsm_postdone();
 
 //	gsm_interactiveMode();
-	if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 10 ) ) {
+	if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
 		Dln(F("http_send_post failed"));
 		return (false);
 	} else {
