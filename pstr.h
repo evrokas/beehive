@@ -139,9 +139,9 @@ const prog_char pATCBCrn [] PROGMEM			= "AT+CBC\r\n";
 const prog_char pCBC [] PROGMEM					= "+CBC: ";
 const prog_char pATCSQrn [] PROGMEM			= "AT+CSQ\r\n";
 const prog_char pCSQ [] PROGMEM					= "+CSQ: ";
-const prog_char pATCIPGSMLOC11rn [] PROGMEM	= "AT+CIPGSMLOC11\r\n";
+const prog_char pATCIPGSMLOC11rn [] PROGMEM	= "AT+CIPGSMLOC=1,1\r\n";
 const prog_char pCIPGSMLOC [] PROGMEM					= "+CIPGSMLOC:";		/* take care not to include the last space */
-const prog_char pATCIPGSMLOC21rn [] PROGMEM	= "AT+CIPGSMLOC21\r\n";
+const prog_char pATCIPGSMLOC21rn [] PROGMEM	= "AT+CIPGSMLOC=2,1\r\n";
 
 const prog_char pNoReceivedLength [] PROGMEM	= "no received bytes length";
 const prog_char pErrorCPIN [] PROGMEM					= "error setting SIM pin";

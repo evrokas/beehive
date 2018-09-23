@@ -25,13 +25,25 @@
  * Actually, they buffer output and print output in chunks of
  * predetermined size of CHUNK_BUFFER_SIZE */
 
+#define HAVE_TOTAL_CHUNK_SIZE	1
+
 #define CHUNK_BUFFER_SIZE		32
+
+#ifdef HAVE_TOTAL_CHUNK_SIZE
+uint16_t _total_chunk_size;
+#endif
+
 uint8_t _chunk_pos; 
 char chunk_buffer[ CHUNK_BUFFER_SIZE+1 ];
 
 void gsm_poststart()
 {
 	_chunk_pos = 0;
+
+#ifdef HAVE_TOTAL_CHUNK_SIZE
+	_total_chunk_size = 0;
+#endif
+
 	memset( chunk_buffer, 0, CHUNK_BUFFER_SIZE+1 );
 }
 
@@ -41,6 +53,10 @@ void gsm_sendchunk()
 	
 //		D("<>");D(chunk_buffer);D("\t");Dln(strlen( chunk_buffer ) );
 	
+#ifdef HAVE_TOTAL_CHUNK_SIZE
+		_total_chunk_size += strlen( chunk_buffer );
+#endif
+
 		sprintf(tmp, "%02x", strlen( chunk_buffer ) );
 		gsm_sendcmd( tmp );
 		
@@ -309,6 +325,10 @@ bool http_send_post(unsigned long amsecs)
 	
 	/* send any remaining data from the buffer */
 	gsm_postdone();
+
+#ifdef HAVE_TOTAL_CHUNK_SIZE
+	D(F("POST request send ")); D( _total_chunk_size ); Dln(F(" bytes of payload"));
+#endif
 
 //	gsm_interactiveMode();
 	if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
