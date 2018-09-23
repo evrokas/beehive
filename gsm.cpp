@@ -75,15 +75,17 @@ uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 }
 
 
-#define SERIAL_DUMPCMD
+//#define SERIAL_DUMPCMD
 
 /* send 'cmd' to gsmserial, cmd is stored in RAM */
-void gsm_sendcmd(char *cmd)
+void gsm_sendcmd(char *cmd, bool debug)
 {
 	while(gsm_available())gsm_read();
 	
 	gsmserial.print( cmd );
 
+	if(debug)
+		Serial.print( cmd );
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
 #endif
@@ -95,19 +97,21 @@ void gsm_sendchar(char ch)
 	while(gsm_available())gsm_read();
 
 	gsmserial.print( ch );
-	
+
 #ifdef SERIAL_DUMPCMD
 	Serial.print( ch );
 #endif
 }
 
 /* send 'cmd' to gsmserial, cmd is stored in FLASH memory */
-void gsm_sendcmdp(const __FlashStringHelper *cmd)
+void gsm_sendcmdp(const __FlashStringHelper *cmd, bool debug)
 {
 	while(gsm_available())gsm_read();
 	
 	gsmserial.print( cmd );
 
+	if(debug)
+		Serial.print( cmd );
 #ifdef SERIAL_DUMPCMD
 	Serial.print( cmd );
 #endif
@@ -258,13 +262,13 @@ bool gsm_initCIP()
 	/* AT+CSTT="apn","user", "pass" 		OK */
 	gsm_sendcmdp( RCF( pATCSTTQ ) );
 		
-	transmitEEPROMstr(E_APN, gsmserial, true);
+	transmitEEPROMstr(E_APN, gsmserial, false);
 	gsm_sendcmdp( RCF( pQcommaQ ) );
 		
-	transmitEEPROMstr(E_USER, gsmserial, true);
+	transmitEEPROMstr(E_USER, gsmserial, false);
 	gsm_sendcmdp( RCF( pQcommaQ ) );
 
-	transmitEEPROMstr(E_PASS, gsmserial, true);
+	transmitEEPROMstr(E_PASS, gsmserial, false);
 		
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pOK ), 2 ) )
 		return false;
@@ -422,7 +426,7 @@ void gsm_flushInput()
 bool gsm_sendPin()
 {
 		gsm_sendcmdp( RCF( pATCPINeq ) );
-		transmitEEPROMstr( E_SIMPIN, gsmserial, true );
+		transmitEEPROMstr( E_SIMPIN, gsmserial, false );
 
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pRN ), RCF(  pOK ), 2 ) ) {
 			Serial.println( RCF( pErrorCPIN ) );
@@ -439,8 +443,8 @@ bool gsm_getICCID(char *aiccid)
 {
 	DEF_CLEAR_TEMPBUF;
 
+		gsm_sendcmdp( F("ATE0\r\n") );
 		gsm_sendcmdp( RCF( pATCCIDrn ) );
-		delay(200);
 		
 		READGSM(2);
 		if(!strlen(_tempbuf))return false;

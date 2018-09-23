@@ -167,7 +167,7 @@ char *setEEPROMstr(uint8_t ecode, char *dat)
 		case E_PASS: eepromSetStr(addrPASS, PASS_SIZE, dat); break;
 		case E_APIKEY: eepromSetStr(addrAPIKEY, APIKEY_SIZE, dat); break;
 		case E_SIMPIN: eepromSetStr(addrSIMPIN, SIMPIN_SIZE, dat); break;
-		case E_SIMICCID: eepromSetStr(addrSIMPIN, SIMICCID_SIZE, dat); break;
+		case E_SIMICCID: eepromSetStr(addrSIMICCID, SIMICCID_SIZE, dat); break;
 	default:
 		/* if wrong ecode, then return fail */
 		return NULL;
@@ -769,25 +769,26 @@ void doMaintenance()
 						break;
 
 					case 'd':
-						switch (buf[1]) {
-							case '?':
-								Serial.print(F("SIM ICIID: "));
-								memset(buf, 0, BUF_SIZE+1);
-								if(getEEPROMstr( E_SIMICCID, buf ))
-									Serial.println( buf );
-								break;
-							case '*':
-								if(gsm_getICCID( buf )) {
-									Serial.print(F("SIM ICCID: "));
-									Serial.println( buf );
-								}
-								break;
-							case '+':
-								break;
-							default:
-								if(setEEPROMstr( E_SIMICCID, buf+1 ))
-									Serial.println(F("sim iccid set ok!"));
+						if(buf[1] == '?') {
+							Serial.print(F("SIM ICIID: "));
+							memset(buf, 0, BUF_SIZE+1);
+							if(getEEPROMstr( E_SIMICCID, buf ))
+								Serial.println( buf );
+							break;
 						}
+						if(buf[1] == '*') {
+							memset(buf, 0, BUF_SIZE+1);
+							if(gsm_getICCID( buf )) {
+								Serial.print(F("SIM ICCID: "));
+								Serial.println( buf );
+							}
+							break;
+						}
+						if(buf[1] == '+') {
+							break;
+						}
+						if(setEEPROMstr( E_SIMICCID, buf+1 ))
+							Serial.println(F("sim iccid set ok!"));
 						break;
 
 					case 'v':

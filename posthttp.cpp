@@ -40,10 +40,6 @@ void gsm_poststart()
 {
 	_chunk_pos = 0;
 
-#ifdef HAVE_TOTAL_CHUNK_SIZE
-	_total_chunk_size = 0;
-#endif
-
 	memset( chunk_buffer, 0, CHUNK_BUFFER_SIZE+1 );
 }
 
@@ -161,13 +157,19 @@ void gsm_postdone()
 		
 		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
 //		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
-		gsm_poststart();
+//		gsm_poststart();
 }
 		
 bool gsm_initiateCIPRequest()
 {
 	DEF_CLEAR_TEMPBUF;
 	
+#ifdef HAVE_TOTAL_CHUNK_SIZE
+		/* zero the total bytes send counter */
+		_total_chunk_size = 0;
+#endif
+
+
 	/*
 	 * AT+CIPSTART="TCP", "IP", "PORT"		OK	CONNECT OK
 	 * AT+CIPSEND

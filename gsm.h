@@ -150,9 +150,11 @@ extern "C" {
 
     bool gsm_sendrecvcmd(char *cmd, char *expstr);
     bool gsm_sendrecvcmdtimeout(char *cmd, char *expstr, uint8_t timeout);
-    void gsm_sendcmd(char *cmd);
+//    void gsm_sendcmd(char *cmd);
+    void gsm_sendcmd(char *cmd, bool debug = false);
 
-    void gsm_sendcmdp(const __FlashStringHelper *cmd);
+//    void gsm_sendcmdp(const __FlashStringHelper *cmd);
+  	void gsm_sendcmdp(const __FlashStringHelper *cmd, bool debug = false);
     bool gsm_sendrecvcmdp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr);
     bool gsm_sendrecvcmdtimeoutp(const __FlashStringHelper *cmd, const __FlashStringHelper *expstr, uint8_t timeout);
 
