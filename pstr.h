@@ -151,12 +151,12 @@ const prog_char pQrn [] PROGMEM			= "\"\r\n";
 const prog_char pNodeId [] PROGMEM	= "Node ID: ";
 const prog_char pWrongParameter [] PROGMEM = "wrong parameter";
 const prog_char pErrorCouldNot [] PROGMEM = "error: could not ";
+const prog_char pError [] PROGMEM = "error: ";
 const prog_char pErrorSendDATblock [] PROGMEM = "send data block";
 const prog_char pErrorSendGSMblock [] PROGMEM = "send gsm block";
 const prog_char pErrorInitiateGet [] PROGMEM = "initiate get request";
 const prog_char pErrorActivateBearer [] PROGMEM ="activate bearer profile";
 const prog_char pErrorInitiatePost [] PROGMEM = "initiate post request";
-
+const prog_char pFailedPostSend [] PROGMEM = "failed POST send";
 
 #endif	/* __PSTR_H__ */
- 

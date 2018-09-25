@@ -172,7 +172,7 @@ extern uint32_t InternalReferenceVoltage;	// = (uint32_t)(1100);
  * GSM and GPS serial communication, otherwise use good old SoftwareSerial class */
 #define USE_NEOSW	1
 
-
+//#define sleepCycle_type	uint16;
 
 
 #endif	/* __BMS_H__ */

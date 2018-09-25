@@ -1382,8 +1382,6 @@ void loop()
 							
 							http_send_getconf_request();
 							
-
-							
 					} else {
 						logError( erCANNOTINITGETREQ );
 						Serial.print( RCF( pErrorCouldNot ) );
@@ -1403,7 +1401,14 @@ void loop()
 #elif defined( HTTP_API_POST )
 /* use POST request to send a series of data (faster...) */
 				
+				/* use this pointer to store current __tail_db in case
+				 * something fails during sending of the records,
+				 * if a failure happens, then restore the __tail_db to this
+				 * pointer, so no records are lost */
+				counter_type __saved_tail_pointer;
 				
+				__saved_tail_pointer = __tail_db;
+								
 				powerPeripherals(1, 25);
 				
 				/* wireless is already up by DNS request, save some
@@ -1413,8 +1418,13 @@ void loop()
 					/* ready to transmit POST data */
 					if( http_send_post( mil1 ) ) {
 						Serial.println( F("Succesfully send all data blocks with POST method!") );
+					} else {
+						/* post request failed, restore __tail_db pointer */
+						__tail_db = __saved_tail_pointer;
+						logError( erPOSTSENDFAILED );
+						Serial.print( RCF( pError ) );
+						Serial.println( RCF( pFailedPostSend ) );
 					}
-
 				} else {
 					logError( erCANNOTINITPOST );
 					Serial.print( RCF( pErrorCouldNot ) );
@@ -1422,16 +1432,16 @@ void loop()
 				}
 				
 				gsm_doneCIP();
-				delay(500);
+
+//				delay(500);
+				/* actually the module needs some msecs to shutdown the connection, but
+				 * we not going to needed it anyway, so shutdown immediately */
 
 				powerPeripherals(0, 0);
 				
 				/* do not need to actively terminate http_ since we are going to
 				 * shutdown the module anyway! */
 
-//				http_terminateRequest();						
-//				gsm_deactivateBearerProfile();
-				
 #endif	/* HTTP_API_POST */
 	
 				powerGPRSGPS( 0 );

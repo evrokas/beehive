@@ -14,6 +14,9 @@
 #ifndef __ERROR_H__
 #define __ERROR_H__
 
+#include <stdint.h>
+#include "bms.h"
+
 #define ERROR_BUFFER_LENGTH	512
 
 extern char __error_buffer[ ERROR_BUFFER_LENGTH ];
@@ -28,7 +31,19 @@ extern uint16_t __error_tail;
 #define erCANNOTINITGETREQ					4		/* S: "cannot initiate GET request" */
 #define erCANNOTACTIVATEBEARER			5		/* S: "cannot activate bearer profile" */
 #define erCANNOTINITPOST						6		/* S: "could not initiate POST request" */
+#define erPOSTSENDFAILED						7		/* S: "sending records via POST failed" */
 
+
+typedef struct {
+	uint16_t 		sc_time;			/* sleep cycle, error occured */
+	uint8_t			er_code;			/* error code */
+	union {
+		uint8_t		dat_ui8[5];				/* uint8_t arguments */
+		uint16_t	dat_ui16[2];			/* uint16_t arguments */
+		uint32_t	dat_ui32[1];			/* uint32_t arguments */
+		float			dat_float;				/* float argument */
+	};
+} errorRecord;
 
 
 

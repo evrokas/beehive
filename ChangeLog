@@ -1,3 +1,18 @@
+2018-09-25	Evangelos Rokas <evrokas@gmail.com>
+* Makefile: added git-upl
+* error.[ch]: some progress on error logging and handling
+* gsm.cpp: gsm_sendcmd*(): added parameter 'debug' default false
+* main.cpp: transmitEEPROMstr(): added parameter 'debug' default false,
+					setEEPROMstr(): in case E_SIMICCID it was setting addrSIMPIN, changed
+					to addrSIMICCID instead,
+					use __save_tail_pointer to save __tail_db pointer during POST method,
+					if POST fails, then restore __tail_db in order to preserve records,
+* posthttp.cpp: use _total_chunk_size to store total number of payload send to
+					the server,
+					http_send_post(): moved gsm_getBattery and gsm_getSignalQuality to
+					the beginning of the function, so not to delay while sending data
+					added \r\n in all data for the header,
+
 2018-09-21	Evangelos Rokas <evrokas@gmail.com>
 * posthttp.cpp: changed CRLF to LF, changed POST request to post.php
 * 

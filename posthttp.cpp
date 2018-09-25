@@ -278,12 +278,8 @@ bool http_send_post(unsigned long amsecs)
 	gsm_getSignalQuality( iii );
 
 
-	gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10);
-//	gsm_interactiveMode();
-	//gsm_sendcmdp( RCF( pATCIPSEND ) );	
-	
-//	delay(2);	/* allow '>' character to come in */
-
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
+		return (false);
 			
 //	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
 	gsm_sendcmdp( F("POST /post.php HTTP/1.1\r\n") );
