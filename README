@@ -159,3 +159,26 @@ more 7 bit variable for days).  When a specific bit is set to '1' then the
 event is allowed to fire, in the specific minute:hour(:day) time.  RAM usage
 is: 60+24+7 = 91 bits (or 84 if days are not used) which means an extra 12
 bytes of memory for each event (12 for Log, 12 for Net).
+
+
+
+25-09-2018
+Progress
+The software is progressing from alpha to beta stage. Soon it will be ready
+to do a field test on real enviroment.
+
+
+* Sending data to the server via POST is ok, this reduced the time needed for
+GPRS/GSM connection A LOT (!), it now needs almost 20-30 seconds to send a chunk
+of data when it needed almost 200 seconds to send 17 records (!!!). This reduces
+a lot battery consumption and increases life capacity.
+
+* An error logging mechanism is began to be created, so errors during operations
+are stored in RAM and sent to the server at each connection (or earlier perhaps).
+
+* Maintenance mode is working good (but not perfect yet), you can actually execute
+various commands.
+
+* What is very important to implement is a fail safe mechanism that will restart the
+module when something goes wrong. In such a case logged records can be lost, but it
+is absolutely important for the module to resume normal operation.
