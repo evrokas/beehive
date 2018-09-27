@@ -75,7 +75,7 @@ uint8_t gsm_readSerial(char *buf, uint8_t buflen, uint8_t timeout)
 }
 
 
-//#define SERIAL_DUMPCMD
+#define SERIAL_DUMPCMD
 
 /* send 'cmd' to gsmserial, cmd is stored in RAM */
 void gsm_sendcmd(char *cmd, bool debug)
