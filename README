@@ -182,3 +182,11 @@ various commands.
 * What is very important to implement is a fail safe mechanism that will restart the
 module when something goes wrong. In such a case logged records can be lost, but it
 is absolutely important for the module to resume normal operation.
+
+
+** Note from the SIM900_AN_TCPIP_V100:
+Error handling:
+If en error occurs during TCP/UDP connection, it is suggested to close the connection
+with AT+CIPCLOSE and restart the connection with AT+CIPSTART. If the error still occurs,
+it is recommended to shut off the PDP with AT+CIPSHUT and restart the connection,
+if the error still persists, it is recommended to restart the module.

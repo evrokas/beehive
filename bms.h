@@ -85,8 +85,8 @@
  * in API GET and POST command, 
  * if API_NUMERIC_KEYS is defined then use numeric literals 0 - 12 */
  
-//#define API_STRING_KEYS		1
-#define API_NUMERIC_KEYS	1
+#define API_STRING_KEYS		1
+//#define API_NUMERIC_KEYS	1
 
 #if ( (defined( API_STRING_KEYS ) && defined( API_NUMERIC_KEYS )) || \
 			(!defined( API_STRING_KEYS ) && !defined( API_NUMERIC_KEYS )) )

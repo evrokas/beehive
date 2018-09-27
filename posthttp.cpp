@@ -18,6 +18,8 @@
 #include "mem.h"
 
 
+#define MAX_TCP_FRAME_SIZE	1400		// allow some overhead for management purposes
+
 #if defined(HTTP_API_POST)
 /*
  * the gsm_postcmd* version of functions is used in conjuction
@@ -25,13 +27,12 @@
  * Actually, they buffer output and print output in chunks of
  * predetermined size of CHUNK_BUFFER_SIZE */
 
-#define HAVE_TOTAL_CHUNK_SIZE	1
 
 #define CHUNK_BUFFER_SIZE		32
 
-#ifdef HAVE_TOTAL_CHUNK_SIZE
 uint16_t _total_chunk_size;
-#endif
+uint16_t _frame_size;
+
 
 uint8_t _chunk_pos; 
 char chunk_buffer[ CHUNK_BUFFER_SIZE+1 ];
@@ -49,12 +50,15 @@ void gsm_sendchunk()
 	
 //		D("<>");D(chunk_buffer);D("\t");Dln(strlen( chunk_buffer ) );
 	
-#ifdef HAVE_TOTAL_CHUNK_SIZE
-		_total_chunk_size += strlen( chunk_buffer );
-#endif
+		{
+		 int i=strlen( chunk_buffer );
+		 
+		 _total_chunk_size += i;	//strlen( chunk_buffer );
+			_frame_size += i;	//strlen( chunk_buffer );
 
-		sprintf(tmp, "%02x", strlen( chunk_buffer ) );
-		gsm_sendcmd( tmp );
+			sprintf(tmp, "%02x", i	/* strlen( chunk_buffer ) */ );
+			gsm_sendcmd( tmp );
+		}
 		
 		/* CRLF */
 		gsm_sendcmdp( RCF( pCRLF ) );
@@ -164,10 +168,9 @@ bool gsm_initiateCIPRequest()
 {
 	DEF_CLEAR_TEMPBUF;
 	
-#ifdef HAVE_TOTAL_CHUNK_SIZE
 		/* zero the total bytes send counter */
 		_total_chunk_size = 0;
-#endif
+		_frame_size = 0;
 
 
 	/*
@@ -268,75 +271,87 @@ bool http_post_db_data(datablock_t &db)
   return (true);
 }
 
+void http_send_post_header()
+{
+//		gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
+		gsm_sendcmdp( F("POST /post.php HTTP/1.1\r\n") );
+		gsm_sendcmdp( F("Host: 10.0.0.1\r\n" ) );
+		gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\r\n") );
+		gsm_sendcmdp( F("Content-Type: application/json\r\n") );
+		gsm_sendcmdp( F("Transfer-Encoding: chunked\r\n") );
+	
+		gsm_sendcmdp( RCF( pCRLF ) );
+}
+
+
 bool http_send_post(unsigned long amsecs)
 {
 	datablock_t db;
 	uint16_t ii;
 	uint8_t iii;
 	
-	gsm_getBattery( ii );
-	gsm_getSignalQuality( iii );
+		gsm_getBattery( ii );
+		gsm_getSignalQuality( iii );
 
 
-	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
-		return (false);
-			
-//	gsm_sendcmdp( F("POST /data.php HTTP/1.1\n") );
-	gsm_sendcmdp( F("POST /post.php HTTP/1.1\r\n") );
-	gsm_sendcmdp( F("Host: 10.0.0.1\r\n" ) );
-	gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\r\n") );
-	gsm_sendcmdp( F("Content-Type: application/json\r\n") );
-	gsm_sendcmdp( F("Transfer-Encoding: chunked\r\n") );
-	
-	gsm_sendcmdp( RCF( pCRLF ) );
-//	gsm_sendcmdp( RCF( pLF ) );
+		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
+			return (false);
+
+
+		http_send_post_header();
 		
-	/* start emitting chunked data */
-	gsm_poststart();
+		/* start emitting chunked data */
+		gsm_poststart();
 	
-	http_post_db_preample( getNodeId() );
+		http_post_db_preample( getNodeId() );
 
-	while( mem_popDatablock( &db ) ) {
-		http_post_db_data( db );
+		while( mem_popDatablock( &db ) ) {
+			http_post_db_data( db );
 		
-		POSTSENDcomma;
-	}
-	/* so all data blocks have been send */
 	
-	/* send the final GSM block */
-	db.entryType = ENTRY_GSM;
-	//if( gsm_getBattery( ii ) ) {
-//		Serial.print("Battery level: " ); Serial.println( ii );
+			if( _frame_size > MAX_TCP_FRAME_SIZE ) {
+				/* then issue a send packet command,
+				 * and reissue AT+TCPSEND command and continue */
+				 http_post_db_postample();
+				 gsm_postdone();
+				 D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
+				 _frame_size = 0;
+				 
+				 gsm_poststart();
+				 http_post_db_preample( getNodeId() );
+				 
+				 /* now continue sending chunks normally */
+				 
+			} else {
+				POSTSENDcomma;
+			}
+		}
+		/* so all data blocks have been send */
+	
+		/* send the final GSM block */
+		db.entryType = ENTRY_GSM;
 		db.gsmVolt = ii;
-	//}
-
-	//if( gsm_getSignalQuality( iii ) ) {
-//		Serial.print("Signal quality: " ); Serial.println( iii );
 		db.gsmSig = iii;
-	//}
-						
-	db.gsmPowerDur = millis() - amsecs;
+		
+		db.gsmPowerDur = millis() - amsecs;
 
-	http_post_db_data( db );
+		http_post_db_data( db );
 	
-	http_post_db_postample();
+		http_post_db_postample();
 	
-	/* send any remaining data from the buffer */
-	gsm_postdone();
+		/* send any remaining data from the buffer */
+		gsm_postdone();
 
-#ifdef HAVE_TOTAL_CHUNK_SIZE
-	D(F("POST request send ")); D( _total_chunk_size ); Dln(F(" bytes of payload"));
-#endif
+		D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
 
-//	gsm_interactiveMode();
-	if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
-		Dln(F("http_send_post failed"));
-		return (false);
-	} else {
-		Dln(F("http_send_post success"));
-	}
+		if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
+			Dln(F("http_send_post failed"));
+			return (false);
+		} else {
+			Dln(F("http_send_post success"));
+		}
 
-  return (true);
+	return (true);
 }
 
 #endif	/* HTTP_API_POST */
