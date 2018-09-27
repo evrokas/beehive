@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include "bms.h"
 
-#define ERROR_BUFFER_LENGTH	512
+#define ERROR_BUFFER_LENGTH	128
 
 extern char __error_buffer[ ERROR_BUFFER_LENGTH ];
 extern uint16_t __error_head;

@@ -97,19 +97,19 @@ const prog_char prtcDateTime [] PROGMEM		= "rtcDateTime";
 
 #elif defined( API_NUMERIC_KEYS )
 
-//const prog_char pAPIKEY [] PROGMEM				= "1";			//"apikey";
-const prog_char pnodeId [] PROGMEM				= "0";			//"nodeId";
-const prog_char pentryType [] PROGMEM			= "1";			//"entryType";
-const prog_char pbatVolt [] PROGMEM				= "2";			//"batVolt";
-const prog_char pbhvTemp [] PROGMEM				= "3";			//"bhvTemp";
-const prog_char pbhvHumid [] PROGMEM			= "4";			//"bhvHumid";
-const prog_char pbhvWeight [] PROGMEM			= "5";			//"bhvWeight";
-const prog_char pgsmSig [] PROGMEM				= "6";			//"gsmSig";
-const prog_char pgsmVolt [] PROGMEM				= "7";			//"gsmVolt";
-const prog_char pgsmPDur [] PROGMEM				= "8";			//"gsmPDur";
-const prog_char pgpsLon [] PROGMEM				= "9";			//"gpsLon";
-const prog_char pgpsLat [] PROGMEM				= "10";			//"gpsLat";
-const prog_char prtcDateTime [] PROGMEM		= "11";			//"rtcDateTime";
+//const prog_char pAPIKEY [] PROGMEM				= "0";			//"apikey";
+const prog_char pnodeId [] PROGMEM				= "1";			//"nodeId";
+const prog_char pentryType [] PROGMEM			= "2";			//"entryType";
+const prog_char pbatVolt [] PROGMEM				= "3";			//"batVolt";
+const prog_char pbhvTemp [] PROGMEM				= "4";			//"bhvTemp";
+const prog_char pbhvHumid [] PROGMEM			= "5";			//"bhvHumid";
+const prog_char pbhvWeight [] PROGMEM			= "6";			//"bhvWeight";
+const prog_char pgsmSig [] PROGMEM				= "7";			//"gsmSig";
+const prog_char pgsmVolt [] PROGMEM				= "8";			//"gsmVolt";
+const prog_char pgsmPDur [] PROGMEM				= "9";			//"gsmPDur";
+const prog_char pgpsLon [] PROGMEM				= "10";			//"gpsLon";
+const prog_char pgpsLat [] PROGMEM				= "11";			//"gpsLat";
+const prog_char prtcDateTime [] PROGMEM		= "12";			//"rtcDateTime";
 
 #else
 

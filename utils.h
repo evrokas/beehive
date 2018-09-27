@@ -185,6 +185,7 @@ uint8_t getLogCycle();
 extern uint16_t maxMinLogCycle;
 extern uint16_t maxMinNetCycle;
 
+uint16_t getStackPointer();
 
 #ifdef __cplusplus
 } /* extern */

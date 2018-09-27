@@ -412,3 +412,18 @@ uint8_t i2c_clearBus() {
   pinMode(SCL, INPUT);
   return 0; // all ok
 }
+
+
+
+uint16_t getStackPointer()
+{
+  union {
+  	uint8_t c[2];
+  	uint16_t i;
+	} t;
+	
+	t.c[0] = SPL;
+	t.c[1] = SPH;
+	
+	return (t.i);
+}

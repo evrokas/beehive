@@ -1096,6 +1096,8 @@ void loop()
 
 		if(curSleepCycle >= maxSleepCycle) {
 			
+			D("Stack pointer: "); Dln( getStackPointer() );
+			
 #if 1			
 			/* do not reset curSleepCycle now, but leave it as is.
 			 * the reason is that one minute is 60 seconds, but with 8seconds
