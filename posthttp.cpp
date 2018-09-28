@@ -288,6 +288,7 @@ void http_send_post_header()
 
 bool http_send_post(unsigned long amsecs)
 {
+	counter_type __saved_tail_pointer;
 	datablock_t db;
 	uint16_t ii;
 	uint8_t iii;
@@ -299,7 +300,8 @@ bool http_send_post(unsigned long amsecs)
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
 			return (false);
 
-
+		__saved_tail_pointer = __tail_db;
+		
 		http_send_post_header();
 		
 		/* start emitting chunked data */
@@ -318,11 +320,17 @@ bool http_send_post(unsigned long amsecs)
 				gsm_postdone();
 				D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
 
-				if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
+				if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 60 ) ) {
 					Dln(F("http_send_post failed"));
+					
+					// rewind to old db records
+					__tail_db = __saved_tail_pointer;
 					return (false);
 				} else {
 					Dln(F("http_send_post success"));
+					
+					// store current __tail_db since previous records were sent ok
+					__saved_tail_pointer = __tail_db;
 				}
 
 
@@ -355,7 +363,7 @@ bool http_send_post(unsigned long amsecs)
 
 		D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
 
-		if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
+		if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 60 ) ) {
 			Dln(F("http_send_post failed"));
 			return (false);
 		} else {

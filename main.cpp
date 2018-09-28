@@ -1405,9 +1405,9 @@ void loop()
 				 * something fails during sending of the records,
 				 * if a failure happens, then restore the __tail_db to this
 				 * pointer, so no records are lost */
-				counter_type __saved_tail_pointer;
+//				counter_type __saved_tail_pointer;
 				
-				__saved_tail_pointer = __tail_db;
+//				__saved_tail_pointer = __tail_db;
 								
 				powerPeripherals(1, 25);
 				
@@ -1420,7 +1420,7 @@ void loop()
 						Serial.println( F("Succesfully send all data blocks with POST method!") );
 					} else {
 						/* post request failed, restore __tail_db pointer */
-						__tail_db = __saved_tail_pointer;
+//						__tail_db = __saved_tail_pointer;
 						logError( erPOSTSENDFAILED );
 						Serial.print( RCF( pError ) );
 						Serial.println( RCF( pFailedPostSend ) );
