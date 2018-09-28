@@ -18,7 +18,9 @@
 #include "mem.h"
 
 
-#define MAX_TCP_FRAME_SIZE	1400		// allow some overhead for management purposes
+#define MAX_TCP_FRAME_SIZE	(1460-300)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
+																					// allow some space around 300 bytes for overhead
+
 
 #if defined(HTTP_API_POST)
 /*
@@ -312,15 +314,24 @@ bool http_send_post(unsigned long amsecs)
 			if( _frame_size > MAX_TCP_FRAME_SIZE ) {
 				/* then issue a send packet command,
 				 * and reissue AT+TCPSEND command and continue */
-				 http_post_db_postample();
-				 gsm_postdone();
-				 D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
-				 _frame_size = 0;
+				http_post_db_postample();
+				gsm_postdone();
+				D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
+
+				if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 30 ) ) {
+					Dln(F("http_send_post failed"));
+					return (false);
+				} else {
+					Dln(F("http_send_post success"));
+				}
+
+
+				_frame_size = 0;
 				 
-				 gsm_poststart();
-				 http_post_db_preample( getNodeId() );
+				gsm_poststart();
+				http_post_db_preample( getNodeId() );
 				 
-				 /* now continue sending chunks normally */
+				/* now continue sending chunks normally */
 				 
 			} else {
 				POSTSENDcomma;
