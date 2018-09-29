@@ -36,6 +36,11 @@
 uint16_t _total_chunk_size;
 uint16_t _frame_size;
 
+/* when data are more than MAX_TCP_FRAME_SIZE bytes,
+ * all the payload is broken in chunks of MAX_TCP_FRAME_SIZE bytes,
+ * and they are send in serial using different TCP packets.
+ * chunkno is the sequential number of the TCP packet starting from 0 */
+uint8_t chunkno;
 
 uint8_t _chunk_pos; 
 char chunk_buffer[ CHUNK_BUFFER_SIZE+1 ];
@@ -217,6 +222,8 @@ bool http_post_db_preample(uint16_t nid)
 	
 		POSTSENDsp( F("action") , F("add") );
 		POSTSENDcomma;
+		POSTSENDi( F("chunkno"), chunkno );
+		POSTSENDcomma;
 		POSTSENDi( RCF( pnodeId ), getNodeId() );
 		gsm_postcmdp( F(",\"data\":[") );
 
@@ -304,6 +311,7 @@ bool http_send_post(unsigned long amsecs)
 	
 		_total_chunk_size = 0;
 		_frame_size = 0;
+		chunkno = 0;
 		
 		gsm_getBattery( ii ); Dln( ii );
 		gsm_getSignalQuality( iii ); Dln( iii );
@@ -354,14 +362,17 @@ bool http_send_post(unsigned long amsecs)
 				
 				_frame_size = 0;
 				
+				gsm_interactiveMode();
 				
-				gsm_closeTCPconnection();
-				delay(1000);
+//				gsm_closeTCPconnection();
+//				delay(1000);
 				
-				gsm_initiateTCPconnection();
-
-				if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
-					return (false);
+//				gsm_initiateTCPconnection();
+				
+				chunkno++;
+				
+//				if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
+//					return (false);
 								 
 				http_send_post_header();
 				
