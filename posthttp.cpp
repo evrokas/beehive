@@ -300,6 +300,7 @@ bool http_send_post(unsigned long amsecs)
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
 			return (false);
 
+		mem_readcounters();
 		__saved_tail_pointer = __tail_db;
 		
 		http_send_post_header();
@@ -325,6 +326,7 @@ bool http_send_post(unsigned long amsecs)
 					
 					// rewind to old db records
 					__tail_db = __saved_tail_pointer;
+					mem_storecounters();
 					return (false);
 				} else {
 					Dln(F("http_send_post success"));
@@ -365,6 +367,11 @@ bool http_send_post(unsigned long amsecs)
 
 		if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 60 ) ) {
 			Dln(F("http_send_post failed"));
+			
+			// rewind to old db records
+			__tail_db = __saved_tail_pointer;
+			mem_storecounters();
+
 			return (false);
 		} else {
 			Dln(F("http_send_post success"));
