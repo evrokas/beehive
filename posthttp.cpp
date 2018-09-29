@@ -162,6 +162,7 @@ void gsm_postdone()
 			gsm_sendchunk();
 		}
 		
+		
 		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
 //		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
 //		gsm_poststart();
@@ -197,10 +198,13 @@ bool gsm_initiateTCPconnection()
 	
 bool gsm_closeTCPconnection()
 {
-	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPCLOSE ), RCF( pOK ), 2))
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPCLOSE ), RCF( pCLOSEOK ), 10)) {
+		Dln(F("error: could not close TCP connection"));
 		return (false);
-	else
+	} else {
+		Dln(F("TCP connection closed!"));
 		return (true);
+	}
 }
 
 
@@ -285,7 +289,7 @@ void http_send_post_header()
 		gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\r\n") );
 		gsm_sendcmdp( F("Content-Type: application/json\r\n") );
 		gsm_sendcmdp( F("Transfer-Encoding: chunked\r\n") );
-		gsm_sendcmdp( F("Connection: keep-alive\r\n") );
+//		gsm_sendcmdp( F("Connection: keep-alive\r\n") );
 	
 		gsm_sendcmdp( RCF( pCRLF ) );
 }
@@ -301,10 +305,9 @@ bool http_send_post(unsigned long amsecs)
 		_total_chunk_size = 0;
 		_frame_size = 0;
 		
-		gsm_getBattery( ii );
-		gsm_getSignalQuality( iii );
-
-
+		gsm_getBattery( ii ); Dln( ii );
+		gsm_getSignalQuality( iii ); Dln( iii );
+		
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
 			return (false);
 
@@ -326,7 +329,9 @@ bool http_send_post(unsigned long amsecs)
 				/* then issue a send packet command,
 				 * and reissue AT+TCPSEND command and continue */
 				http_post_db_postample();
+
 				gsm_postdone();
+
 				D(F("POST request send ")); D( _total_chunk_size ); D("/"); D( _frame_size ); Dln(F(" bytes of payload"));
 
 				if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 60 ) ) {
@@ -335,6 +340,7 @@ bool http_send_post(unsigned long amsecs)
 					// rewind to old db records
 					__tail_db = __saved_tail_pointer;
 					mem_storecounters();
+
 					return (false);
 				} else {
 					Dln(F("http_send_post success"));
@@ -353,6 +359,9 @@ bool http_send_post(unsigned long amsecs)
 				delay(1000);
 				
 				gsm_initiateTCPconnection();
+
+				if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
+					return (false);
 								 
 				http_send_post_header();
 				

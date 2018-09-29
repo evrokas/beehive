@@ -41,6 +41,7 @@ const prog_char pATCIICRrn [] PROGMEM						= "AT+CIICR\r\n";
 const prog_char pIPGPRSACT [] PROGMEM						= "IP GPRSACT";
 const prog_char pATCIFSRrn [] PROGMEM						= "AT+CIFSR\r\n";
 const prog_char pATCIPCLOSE [] PROGMEM					= "AT+CIPCLOSE\r\n";
+const prog_char pCLOSEOK [] PROGMEM							= "CLOSE OK";
 
 const prog_char pDOT [] PROGMEM									= ".";
 const prog_char pCOMMA [] PROGMEM								= ",";

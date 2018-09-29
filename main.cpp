@@ -1401,7 +1401,8 @@ void loop()
 #elif defined( HTTP_API_POST )
 /* use POST request to send a series of data (faster...) */
 				powerPeripherals(1, 25);
-				
+
+
 				/* wireless is already up by DNS request, save some
 				 * time using this opportunity */
 				
