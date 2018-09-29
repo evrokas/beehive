@@ -173,7 +173,7 @@ bool gsm_initiateTCPconnection()
 	
 		/* zero the total bytes send counter */
 		_total_chunk_size = 0;
-		_frame_size = 0;
+//		_frame_size = 0;
 
 
 	/*
@@ -297,6 +297,8 @@ bool http_send_post(unsigned long amsecs)
 	uint16_t ii;
 	uint8_t iii;
 	
+		_frame_size = 0;
+		
 		gsm_getBattery( ii );
 		gsm_getSignalQuality( iii );
 
