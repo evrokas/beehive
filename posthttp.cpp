@@ -362,17 +362,19 @@ bool http_send_post(unsigned long amsecs)
 				
 				_frame_size = 0;
 				
-				gsm_interactiveMode();
+				gsm_relayOutput( Serial );
 				
-//				gsm_closeTCPconnection();
-//				delay(1000);
+//				gsm_interactiveMode();
 				
-//				gsm_initiateTCPconnection();
+				gsm_closeTCPconnection();
+				delay(1000);
+				
+				gsm_initiateTCPconnection();
 				
 				chunkno++;
 				
-//				if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
-//					return (false);
+				if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPSEND ), F(">"), 10))
+					return (false);
 								 
 				http_send_post_header();
 				
@@ -414,6 +416,8 @@ bool http_send_post(unsigned long amsecs)
 			return (false);
 		} else {
 			Dln(F("http_send_post success"));
+
+			gsm_relayOutput( Serial );
 		}
 
 	return (true);
