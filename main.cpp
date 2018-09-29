@@ -1421,7 +1421,7 @@ void loop()
 					Serial.println( RCF( pErrorInitiatePost ) );
 				}
 				
-				gsm_closeTCPconnection();
+//				gsm_closeTCPconnection();
 				
 				gsm_doneCIP();
 

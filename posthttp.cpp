@@ -366,8 +366,8 @@ bool http_send_post(unsigned long amsecs)
 				
 //				gsm_interactiveMode();
 				
-				gsm_closeTCPconnection();
-				delay(1000);
+//				gsm_closeTCPconnection();
+//				delay(1000);
 				
 				gsm_initiateTCPconnection();
 				
