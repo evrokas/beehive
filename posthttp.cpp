@@ -394,7 +394,7 @@ bool http_send_post(unsigned long amsecs)
 		db.entryType = ENTRY_GSM;
 		db.gsmVolt = ii;
 		db.gsmSig = iii;
-		
+		D("battey/signal:");D(db.gsmVolt);D(" / ");Dln( db.gsmVolt );
 		db.gsmPowerDur = millis() - amsecs;
 
 		http_post_db_data( db );

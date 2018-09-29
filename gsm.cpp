@@ -520,7 +520,7 @@ bool gsm_getBattery(uint16_t &bat)
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCBCrn ), RCF( pCBC ), 2))
 			return false;
 		
-		READGSM(0);
+		READGSM(1);
 		
 		c = strrchr( _tempbuf, ',' );
 		if(!c)return false;
@@ -540,7 +540,7 @@ bool gsm_getSignalQuality(uint8_t &asqual)
 		if(!gsm_sendrecvcmdtimeoutp( RCF( pATCSQrn ), RCF( pCSQ ), 2))
 			return false;
 
-  	READGSM( 0 );
+  	READGSM( 1 );
 		c = _tempbuf;
   	if(!c)return false;
 
