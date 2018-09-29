@@ -1400,27 +1400,16 @@ void loop()
 
 #elif defined( HTTP_API_POST )
 /* use POST request to send a series of data (faster...) */
-				
-				/* use this pointer to store current __tail_db in case
-				 * something fails during sending of the records,
-				 * if a failure happens, then restore the __tail_db to this
-				 * pointer, so no records are lost */
-//				counter_type __saved_tail_pointer;
-				
-//				__saved_tail_pointer = __tail_db;
-								
 				powerPeripherals(1, 25);
 				
 				/* wireless is already up by DNS request, save some
 				 * time using this opportunity */
 				
-				if(gsm_initiateCIPRequest()) {
+				if(gsm_initiateTCPconnection()) {
 					/* ready to transmit POST data */
 					if( http_send_post( mil1 ) ) {
 						Serial.println( F("Succesfully send all data blocks with POST method!") );
 					} else {
-						/* post request failed, restore __tail_db pointer */
-//						__tail_db = __saved_tail_pointer;
 						logError( erPOSTSENDFAILED );
 						Serial.print( RCF( pError ) );
 						Serial.println( RCF( pFailedPostSend ) );
@@ -1430,6 +1419,8 @@ void loop()
 					Serial.print( RCF( pErrorCouldNot ) );
 					Serial.println( RCF( pErrorInitiatePost ) );
 				}
+				
+				gsm_closeTCPconnection();
 				
 				gsm_doneCIP();
 

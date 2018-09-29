@@ -18,7 +18,8 @@
 #include "mem.h"
 
 
-#define MAX_TCP_FRAME_SIZE	(1460-450)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
+#define MAX_TCP_FRAME_SIZE		500					// for testing purposes
+//#define MAX_TCP_FRAME_SIZE	(1460-450)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
 																					// allow some space around 300 bytes for overhead
 
 
@@ -166,7 +167,7 @@ void gsm_postdone()
 //		gsm_poststart();
 }
 		
-bool gsm_initiateCIPRequest()
+bool gsm_initiateTCPconnection()
 {
 	DEF_CLEAR_TEMPBUF;
 	
@@ -190,16 +191,19 @@ bool gsm_initiateCIPRequest()
 	if(!gsm_sendrecvcmdtimeoutp( RCF( pQrn ), RCF( pCONNECT ), 2 ))
 		return false;
 	
-#if 0
-	gsm_sendcmdp( RCF( pATCIPSEND ) );	
-	
-	delay(2);	/* allow '>' character to come in */
-#endif
-	
 	/* so connection if ready to transmit useable data */
   return (true);
 }
 	
+bool gsm_closeTCPconnection()
+{
+	if(!gsm_sendrecvcmdtimeoutp( RCF( pATCIPCLOSE ), RCF( pOK ), 2))
+		return (false);
+	else
+		return (true);
+}
+
+
 bool http_post_db_preample(uint16_t nid)
 {
 	DEF_CLEAR_TEMPBUF;
@@ -339,7 +343,12 @@ bool http_send_post(unsigned long amsecs)
 				mem_stats();
 				
 				_frame_size = 0;
-				 
+				
+				
+				gsm_closeTCPconnection();
+				
+				gsm_initiateTCPconnection();
+								 
 				http_send_post_header();
 				
 				gsm_poststart();

@@ -177,7 +177,8 @@ extern "C" {
 
 #if defined( HTTP_API_POST )
 		bool http_send_post(unsigned long amsecs);
-		bool gsm_initiateCIPRequest();
+		bool gsm_initiateTCPconnection();
+		bool gsm_closeTCPconnection();
 #endif
 
     bool gsm_moduleInfo();
