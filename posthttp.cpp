@@ -18,7 +18,7 @@
 #include "mem.h"
 
 
-#define MAX_TCP_FRAME_SIZE	(1460-300)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
+#define MAX_TCP_FRAME_SIZE	(1460-450)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
 																					// allow some space around 300 bytes for overhead
 
 
