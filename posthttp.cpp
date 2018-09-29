@@ -285,7 +285,7 @@ void http_send_post_header()
 		gsm_sendcmdp( F("User-Agent: beewatch-firmware/0.1\r\n") );
 		gsm_sendcmdp( F("Content-Type: application/json\r\n") );
 		gsm_sendcmdp( F("Transfer-Encoding: chunked\r\n") );
-		gsm_sendcmdp( F("Connection: keep-alive\r\n");
+		gsm_sendcmdp( F("Connection: keep-alive\r\n") );
 	
 		gsm_sendcmdp( RCF( pCRLF ) );
 }
