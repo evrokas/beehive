@@ -161,7 +161,7 @@ void gsm_postdone()
 			gsm_sendchunk();
 		}
 		
-		gsm_sendcmdp( F("0\r\n\r\n\r\n") );		/* this marks the end of the chunks */
+		gsm_sendcmdp( F("0\r\n\r\n") );		/* this marks the end of the chunks */
 //		gsm_sendcmdp( F("0\n\n\n\n") );		/* this marks the end of the chunks */
 //		gsm_poststart();
 }
@@ -332,13 +332,18 @@ bool http_send_post(unsigned long amsecs)
 					Dln(F("http_send_post success"));
 					
 					// store current __tail_db since previous records were sent ok
+					mem_readcounters();
 					__saved_tail_pointer = __tail_db;
 				}
 
-
+				mem_stats();
+				
 				_frame_size = 0;
 				 
+				http_send_post_header();
+				
 				gsm_poststart();
+				
 				http_post_db_preample( getNodeId() );
 				 
 				/* now continue sending chunks normally */
