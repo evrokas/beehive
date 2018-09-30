@@ -366,10 +366,17 @@ bool http_send_post(unsigned long amsecs)
 				
 //				gsm_interactiveMode();
 				
-//				gsm_closeTCPconnection();
-//				delay(1000);
+				gsm_closeTCPconnection();
+				delay(1000);
 				
-				gsm_initiateTCPconnection();
+			
+				gsm_sendcmdp( F( "AT\r\n" ) );
+				gsm_relayOutput( Serial );
+				
+				if(!gsm_initiateTCPconnection()) {
+					Dln("error: could not initiate TCP connection\n"0;
+					return (false);
+				}
 				
 				chunkno++;
 				
