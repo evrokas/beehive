@@ -374,7 +374,7 @@ bool http_send_post(unsigned long amsecs)
 //				gsm_relayOutput( Serial );
 				
 				if(!gsm_initiateTCPconnection()) {
-					Dln(F("error: could not initiate TCP connection\n");
+					Dln(F("error: could not initiate TCP connection\n"));
 					return (false);
 				}
 				
