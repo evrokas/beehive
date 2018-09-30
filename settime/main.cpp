@@ -14,7 +14,7 @@ void setup()
 	/* run this code only to setup date and time */
 	powerPeripherals( 1, 1 );
 	powerRTC(1, 10);
-	setTime(0,42, 01, 4, 20, 9, 17 );
+	setTime(0,28, 14, 0, 30, 9, 18 );
 	powerPeripherals( 0, 0 );
 
 	/* stop program execution */

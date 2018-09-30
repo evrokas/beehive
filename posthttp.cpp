@@ -18,8 +18,8 @@
 #include "mem.h"
 
 
-#define MAX_TCP_FRAME_SIZE		500					// for testing purposes
-//#define MAX_TCP_FRAME_SIZE	(1460-450)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
+//#define MAX_TCP_FRAME_SIZE		500					// for testing purposes
+#define MAX_TCP_FRAME_SIZE	(1460-450)		// 1460 is the packet size of AT+CIPSEND (SIM900 manual)
 																					// allow some space around 300 bytes for overhead
 
 
@@ -370,11 +370,11 @@ bool http_send_post(unsigned long amsecs)
 				delay(1000);
 				
 			
-				gsm_sendcmdp( F( "AT\r\n" ) );
-				gsm_relayOutput( Serial );
+//				gsm_sendcmdp( F( "AT\r\n" ) );
+//				gsm_relayOutput( Serial );
 				
 				if(!gsm_initiateTCPconnection()) {
-					Dln("error: could not initiate TCP connection\n");
+					Dln(F("error: could not initiate TCP connection\n");
 					return (false);
 				}
 				
@@ -401,7 +401,7 @@ bool http_send_post(unsigned long amsecs)
 		db.entryType = ENTRY_GSM;
 		db.gsmVolt = ii;
 		db.gsmSig = iii;
-		D("battey/signal:");D(db.gsmVolt);D(" / ");Dln( db.gsmVolt );
+//		D("battey/signal:");D(db.gsmVolt);D(" / ");Dln( db.gsmVolt );
 		db.gsmPowerDur = millis() - amsecs;
 
 		http_post_db_data( db );
