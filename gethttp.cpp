@@ -245,6 +245,7 @@ bool http_send_datablock_get(datablock_t &db)
 	
 	return (true);
 }
+
 	
 bool http_send_getconf_request()
 {
@@ -307,6 +308,10 @@ bool http_send_getconf_request()
 		CLEAR_TEMPBUF;
 		READGSM( 5 );
 		Serial.print(F(">>")); Serial.println( _tempbuf );
+
+		/* response from server:
+		 * nid,log_period,net_period
+		 */
 
 		do {
 			uint16_t nid;
