@@ -175,4 +175,10 @@ extern uint32_t InternalReferenceVoltage;	// = (uint32_t)(1100);
 //#define sleepCycle_type	uint16;
 
 
+#ifdef __LOWPOWER_NO_WDT_VECT__
+//
+#endif
+
+#define WDT_RESET_FAILSAFE	0
+
 #endif	/* __BMS_H__ */

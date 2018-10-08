@@ -190,3 +190,8 @@ If en error occurs during TCP/UDP connection, it is suggested to close the conne
 with AT+CIPCLOSE and restart the connection with AT+CIPSTART. If the error still occurs,
 it is recommended to shut off the PDP with AT+CIPSHUT and restart the connection,
 if the error still persists, it is recommended to restart the module.
+
+
+02-10-2018
+After almost 400 uploads to the ATmega328P chip, a beta stage firmware is ready.
+

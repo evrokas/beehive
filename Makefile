@@ -33,7 +33,9 @@ include	$(ARDMK_DIR)/Arduino.mk
 
 CPPFLAGS	+= -DGSM_SERIAL_BAUDRATE=9600				# -DNEOSW_RX_BUFFER_SIZE=64
 CPPFLAGS	+= -DNEOSWSERIAL_EXTERNAL_PCINT
-
+CPPFLAGS	+= -D__LOWPOWER_NO_WDT_VECT__				# while compiling Lowpower library, do not
+																							# include vector fow Watchdog timeout, but
+																							# but let ourselves handle the situation
 CPPFLAGS	+= $(SRVURL)
 CPPFLAGS	+= $(SRVPORT)
 AVRDUDE_OPTS=-V -v -v

@@ -381,14 +381,37 @@ void setupLoop();
 /* setup steps of the project */
 void setup()
 {
+	Dinit;
+	Serial.begin( 9600 );
+
+#if WDT_RESET_FAILSAFE == 1
+	wdt_disable();
+#endif
+
+	if(MCUSR & (1<<WDRF)){
+		Dln(F("WATCHDOG reset"));
+  	// a watchdog reset occurred
+	}
+
+	if(MCUSR & (1<<EXTRF)){
+  	//  an external reset occurred
+  }
+
+  if(MCUSR & (1<<PORF)){
+  	Dln(F("POWERON reset"));
+  	//  a power on reset occurred
+  }
+
+#if WDT_RESET_FAILSAFE == 1
+  wdt_enable(WDTO_8S);
+#endif
+
 	/* initialize peripheral control as early as possible, in order
 	 * to turn off GSM module, which is by default turned on(!!!) */
 	setupPeripheralsControl();
 
 	delay(500);
 	
-	Dinit;
-	Serial.begin( 9600 );
 
 	Serial.println(	F("Beehive Monitoring System (c) 2015-18. All Rights reserved"));
 	Serial.println(	F("(c) Evangelos Rokas <evrokas@gmail.com>"));
@@ -484,10 +507,9 @@ ISR(PCINT1_vect)
  * to keep this as small as possible */
 void mySleep()
 {
-//	wdt_disable();
+	wdt_disable();
 
 	Serial.flush();
-
 
 	/* setup to wake on pin change on D0 (RX) */
 	cli();
@@ -511,17 +533,48 @@ void mySleep()
 	
 	Wire.setClock( 100000 );	//TWBR = 32;		// 100Khz 2152;		/* switch to 25KHz I2C interface */
 	
-	
-//	wdt_enable( WDTO_2S );
+#if WDT_RESET_FAILSAFE == 1
+	wdt_enable( WDTO_2S );
+#endif
 }
+
+
+#if WDT_RESET_FAILSAFE == 1
+
+ISR(ANALOG_COMP_vect)
+{
+	wdt_disable();
+	Dln(F("watchdog reset"));
+}
+
+#endif	/* WDT_RESET_FAILSAFE */
+
+
+/* we need the following definition only if it is not defined
+ * in LowPower.cpp (part of the LowPower library) */
+#ifdef __LOWPOWER_NO_WDT_VECT__
+ISR (WDT_vect)
+{
+  // WDIE & WDIF is cleared in hardware upon entering this ISR
+  wdt_disable();
+
+#if WDT_RESET_FAILSAFE == 1
+  ANALOG_COMP_vect();
+#endif
+
+}
+
+#endif	/* __LOWPOWER_NO_WDT_VECT__ */
+
 
 #if 0
 ISR(WDT_vect)
 {
 	Serial.println(F("watchdog reset"));
-	wdt_reset();
+	wdt_disable();
 }
 #endif
+
 
 
 uint8_t poweredGSM=0;
@@ -1013,7 +1066,6 @@ void doMaintenance()
 #endif
 
 
-
 void loop()
 {
 //  float f1, f2;
@@ -1075,7 +1127,8 @@ void loop()
 
 	
   		curSleepCycle++;
-
+  		wdt_reset();
+  		
 //  		DBGSLEEP;
 		
 #ifdef DEBUG_SLEEP_CYCLE

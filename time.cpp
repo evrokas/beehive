@@ -12,6 +12,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "bms.h"
 #include "time.h"
@@ -23,6 +24,8 @@ void clearTime(timekeeping_t &tk)
 
 bool initTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy)
 {
+//	printf("setting h:%d m:%d d:%d\n", hr, min, dy);
+	
 	if((hr >= 0) && (hr <= 23))
 		SetBit(tk.hr, hr);
 
@@ -89,4 +92,31 @@ bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_
 		} while(d != dy);
 		
 	return (false);
+}
+
+
+void printTime(timekeeping_t &tk)
+{
+  int i;
+
+  	for(i=0;i<24;i++) {
+  		PUTCHAR( (TestBit(tk.hr, i)?'1':'0') );
+  		if(i % 10 == 9)PUTCHAR(' ');
+		}
+		
+		PUTCHAR('\n');
+		
+  	for(i=0;i<60;i++) {
+  		PUTCHAR( (TestBit(tk.min, i)?'1':'0') );
+  		if(i % 10 == 9)PUTCHAR(' ');
+		}
+
+		PUTCHAR('\n');
+
+  	for(i=0;i<7;i++) {
+  		PUTCHAR( (TestBit(tk.day, i)?'1':'0') );
+  		if(i % 10 == 9)PUTCHAR(' ');
+		}
+
+		PUTCHAR('\n');
 }
