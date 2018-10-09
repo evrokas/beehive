@@ -24,22 +24,18 @@
 #define ClearBit(A,k)   ( A[(k/8)] &= ~(1 << (k%8)) )
 #define TestBit(A,k)    ( A[(k/8)] & (1 << (k%8)) )
 
-
-
-
 /* define DAYS_IN_TIME if you need to add day time keeping
  * functionality */
 #define DAYS_IN_TIME	1
+
 
 typedef struct {
 	uint8_t min[8];
 	uint8_t hr[3];
 
 #ifdef DAYS_IN_TIME
-	unsigned int day[1];
+	uint8_t day[1];
 #endif
-
-	unsigned int active:1;
 
 } timekeeping_t;
 
