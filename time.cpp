@@ -98,25 +98,64 @@ bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_
 void printTime(timekeeping_t &tk)
 {
   int i;
+  uint8_t d;
+  char ch[3], str[64];
+  
+  	memset(str, 0, sizeof(str));
+  	
 
-  	for(i=0;i<24;i++) {
+  	d = 0;
+  	for(i=23;i>=0;i--) {
+  		d<<=1;
   		PUTCHAR( (TestBit(tk.hr, i)?'1':'0') );
-  		if(i % 10 == 9)PUTCHAR(' ');
+  		d |= TestBit(tk.hr, i)?1:0;
+  		if(i % 8 == 0) {
+  			PUTCHAR(' ');PUTCHAR('<');
+  			sprintf(ch, "%02x", d);
+  			strcat(str, ch);
+  			PUTCHARX(d); d =0;
+  			PUTCHAR('>'); PUTCHAR(' ');
+			}
 		}
+
+		strcat(str, " ");
 		
 		PUTCHAR('\n');
-		
-  	for(i=0;i<60;i++) {
+
+		d=0;
+  	for(i=59;i>=0;i--) {
+  		d<<=1;
   		PUTCHAR( (TestBit(tk.min, i)?'1':'0') );
-  		if(i % 10 == 9)PUTCHAR(' ');
+  		d |= TestBit(tk.min, i)?1:0;
+  		
+  		if(i % 8 == 0) {
+  			PUTCHAR(' '); PUTCHAR('<');
+  			sprintf(ch, "%02x", d);
+  			strcat(str, ch);
+  			PUTCHARX(d); d = 0;
+  			PUTCHAR('>');PUTCHAR(' ');
+			}
 		}
 
+		strcat(str, " ");
 		PUTCHAR('\n');
 
-  	for(i=0;i<7;i++) {
+		d=0;
+  	for(i=6;i>=0;i--) {
+  		d <<= 1;
   		PUTCHAR( (TestBit(tk.day, i)?'1':'0') );
-  		if(i % 10 == 9)PUTCHAR(' ');
+  		d |= TestBit(tk.day, i)?1:0;
+  		
+  		if(i % 8 == 0) {
+  			PUTCHAR(' '); PUTCHAR('<');
+  			sprintf(ch, "%02x", d);
+  			strcat(str, ch);
+  			PUTCHARX(d); d=0;
+  			PUTCHAR('>'); PUTCHAR(' ');
+			}
 		}
 
 		PUTCHAR('\n');
+
+		printf("HEX string: %s\n", str);
 }

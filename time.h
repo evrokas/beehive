@@ -57,10 +57,12 @@ void printTime(timekeeping_t &tk);
 #ifdef LINUX_NATIVE_APP
 
 #	define	PUTCHAR(c)	putchar(c)
+# define	PUTCHARX(c)	printf("%02x", c)
 
 #else
 
 #	define	PUTCHAR(c)	Serial.write(c)
+# define	PUTCHARX(c)
 
 #endif	/* LINUX_NATIVE_APP */
 
