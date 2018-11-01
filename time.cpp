@@ -107,55 +107,167 @@ void printTime(timekeeping_t &tk)
   	d = 0;
   	for(i=23;i>=0;i--) {
   		d<<=1;
+#ifdef DEBUG
   		PUTCHAR( (TestBit(tk.hr, i)?'1':'0') );
+#endif
+
   		d |= TestBit(tk.hr, i)?1:0;
   		if(i % 8 == 0) {
+#ifdef DEBUG
   			PUTCHAR(' ');PUTCHAR('<');
+#endif
   			sprintf(ch, "%02x", d);
   			strcat(str, ch);
-  			PUTCHARX(d); d =0;
+#ifdef	DEBUG
+  			PUTCHARX(d);
   			PUTCHAR('>'); PUTCHAR(' ');
+#endif
+				d=0;
 			}
 		}
 
 		strcat(str, " ");
 		
+#ifdef DEBUG
 		PUTCHAR('\n');
+#endif
 
 		d=0;
   	for(i=59;i>=0;i--) {
   		d<<=1;
+#ifdef DEBUG
   		PUTCHAR( (TestBit(tk.min, i)?'1':'0') );
+#endif
+
   		d |= TestBit(tk.min, i)?1:0;
   		
   		if(i % 8 == 0) {
+#ifdef DEBUG
   			PUTCHAR(' '); PUTCHAR('<');
+#endif
+
   			sprintf(ch, "%02x", d);
   			strcat(str, ch);
-  			PUTCHARX(d); d = 0;
+
+#ifdef DEBUG
+  			PUTCHARX(d);
   			PUTCHAR('>');PUTCHAR(' ');
+#endif
+				d=0;
 			}
 		}
 
 		strcat(str, " ");
+
+#ifdef DEBUG
 		PUTCHAR('\n');
+#endif
 
 		d=0;
   	for(i=6;i>=0;i--) {
   		d <<= 1;
+#ifdef DEBUG
   		PUTCHAR( (TestBit(tk.day, i)?'1':'0') );
+#endif
+
   		d |= TestBit(tk.day, i)?1:0;
   		
   		if(i % 8 == 0) {
+#ifdef DEBUG
   			PUTCHAR(' '); PUTCHAR('<');
+#endif
+
   			sprintf(ch, "%02x", d);
   			strcat(str, ch);
-  			PUTCHARX(d); d=0;
+
+#ifdef DEBUG
+  			PUTCHARX(d);
   			PUTCHAR('>'); PUTCHAR(' ');
+#endif
+				d=0;
 			}
 		}
 
+#ifdef DEBUG
 		PUTCHAR('\n');
+#endif
 
 		printf("HEX string: %s\n", str);
+}
+
+/*
+ * JSON output
+ * {min: {d: [0x11, 0x22, ..., 0x88]},
+ *	hour: 0x11},
+ *	day: 0x11}
+ * }
+ */
+ 		
+void printTimeJSON(timekeeping_t &tk)
+{
+  int i;
+  uint8_t d;
+  char ch[3], str[64];
+  
+  	memset(str, 0, sizeof(str));
+  	
+  	PUTCHAR("{");
+  	PUTCHAR("\"hour\":[");
+  	
+  	
+  	d = 0;
+  	for(i=23;i>=0;i--) {
+  		d<<=1;
+#ifdef DEBUG
+  		PUTCHAR( (TestBit(tk.hr, i)?'1':'0') );
+#endif
+
+  		d |= TestBit(tk.hr, i)?1:0;
+  		if(i % 8 == 0) {
+  			PUTCHAR("{\"d\":");
+  			PUTCHAR2(d);
+				PUTCHAR("}");
+				if(i != 0)PUTCHAR(",");
+				d=0;
+			}
+		}
+
+		PUTCHAR("],\"min\":[");
+
+		d=0;
+  	for(i=59;i>=0;i--) {
+  		d<<=1;
+#ifdef DEBUG
+  		PUTCHAR( (TestBit(tk.min, i)?'1':'0') );
+#endif
+
+  		d |= TestBit(tk.min, i)?1:0;
+  		
+  		if(i % 8 == 0) {
+  			PUTCHAR("{\"d\":");
+  			PUTCHAR2(d);
+				PUTCHAR("}");
+				if(i != 0)PUTCHAR(",");
+				d=0;
+			}
+		}
+
+		PUTCHAR("],\"day\":");
+
+		d=0;
+  	for(i=6;i>=0;i--) {
+  		d <<= 1;
+#ifdef DEBUG
+  		PUTCHAR( (TestBit(tk.day, i)?'1':'0') );
+#endif
+
+  		d |= TestBit(tk.day, i)?1:0;
+  		
+  		if(i % 8 == 0) {
+  			PUTCHAR2(d);
+				d=0;
+			}
+		}
+
+		PUTCHAR("}\n");
 }

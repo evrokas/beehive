@@ -28,7 +28,6 @@ timekeeping_t tk;
  *
  */
 
-//#define DEBUG
  
 char *parsestring(timekeeping_t &tk, uint8_t atyp, char *ch)
 {
@@ -115,7 +114,7 @@ char *parsestring(timekeeping_t &tk, uint8_t atyp, char *ch)
 
 
 
-char output;			/* 'j' json, 'h' hexdecimal */
+char output;			/* 'j' json, 'x' hexdecimal */
 
 int main(int argc, char *argv[])
 {
@@ -151,11 +150,11 @@ int main(int argc, char *argv[])
 				switch(ch[1]) {
 					case 'j':	/* print out json data */
 						output = 'j';
-						printf("json output\n");
+//						printf("json output\n");
 						break;
 					case 'x': /* print out hexadecimal data */
-						output = 'h';
-						printf("hexadecimal output\n");
+						output = 'x';
+//						printf("hexadecimal output\n");
 						break;
 				}
 			} else {
@@ -163,8 +162,12 @@ int main(int argc, char *argv[])
 				ch = parsestring(tk, 1, ch);
 				ch = parsestring(tk, 2, ch);
 			
-				if(output == 'h')
-					printTime( tk );
+				switch(output) {
+					case 'x': printTime( tk ); break;
+					case 'j': printTimeJSON( tk ); break;
+				}
+				
+					
 				return 0;
 			}
 		}
