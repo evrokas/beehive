@@ -55,6 +55,7 @@ bool checkTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy = 0);
 bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_t &hh, uint8_t &mm, uint8_t &dd);
 void printTime(timekeeping_t &tk);
 void printTimeJSON(timekeeping_t &tk);
+void printTimeBinary(timekeeping_t &tk);
 
 #ifdef __cplusplus
 };	/* extern "C" */

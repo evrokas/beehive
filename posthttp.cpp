@@ -301,7 +301,12 @@ void http_send_post_header()
 		gsm_sendcmdp( RCF( pCRLF ) );
 }
 
-
+/*
+ * use:
+ *	AT+CIPRXGET=4,<cnflength> to get number of bytes received
+ *  AT+CIPRXGET=2,<id>,<reqlength>,<cnflength> ask to read <reqlength> bytes, modem responds with <cnflength> bytes
+ *  AT+CIPRXGET=3 is the same as 2 but responds with HEX bytes
+ */
 bool http_send_post(unsigned long amsecs)
 {
 	counter_type __saved_tail_pointer;
@@ -334,8 +339,8 @@ bool http_send_post(unsigned long amsecs)
 		
 	
 			if( _frame_size > MAX_TCP_FRAME_SIZE ) {
-				/* then issue a send packet command,
-				 * and reissue AT+TCPSEND command and continue */
+				/* MAX_TCP_FRAME_SIZE reached, then issue a send 
+				 * packet command, reissue AT+TCPSEND command and continue */
 				http_post_db_postample();
 
 				gsm_postdone();
@@ -345,7 +350,7 @@ bool http_send_post(unsigned long amsecs)
 				if( !gsm_sendrecvcmdtimeoutp( RCF( pCtrlZ ), RCF( pSEND ), 60 ) ) {
 					Dln(F("http_send_post failed"));
 					
-					// rewind to old db records
+					/* send has failed, restore old db tail pointer */
 					__tail_db = __saved_tail_pointer;
 					mem_storecounters();
 
@@ -423,7 +428,6 @@ bool http_send_post(unsigned long amsecs)
 			return (false);
 		} else {
 			Dln(F("http_send_post success"));
-
 			gsm_relayOutput( Serial );
 		}
 

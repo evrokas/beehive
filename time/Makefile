@@ -8,7 +8,7 @@ CXX			= g++
 CXXFLAGS= $(COMMONFLAGS) -Wall -g
 
 
-BIN = t
+BIN = gentime
 
 CFILES	= main.cpp time.cpp
 OFILES	= main.o time.o
