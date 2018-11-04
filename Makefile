@@ -47,8 +47,10 @@ pmon:
 
 
 git-upl:
-	git commit -a -m "upload commit (automatic)"
-	$(MAKE) upl
+	./mkver.sh
+	VER=`cat .upload`
+	git commit -a -m "upload commit (automatic) no. $(VER)"
+	$(MAKE) upload
 		
 
 upl:
