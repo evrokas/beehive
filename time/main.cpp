@@ -156,6 +156,9 @@ int main(int argc, char *argv[])
 						output = 'x';
 //						printf("hexadecimal output\n");
 						break;
+					case 'X':
+						output = 'X';
+						break;
 					case 'b':	/* print out binary data */
 						output = 'b';
 						break;
@@ -167,6 +170,7 @@ int main(int argc, char *argv[])
 			
 				switch(output) {
 					case 'x': printTime( tk ); break;
+					case 'X': printTime( tk, 1 ); break;
 					case 'j': printTimeJSON( tk ); break;
 					case 'b': printTimeBinary( tk ); break;
 				}

@@ -164,34 +164,51 @@ bytes of memory for each event (12 for Log, 12 for Net).
 
 25-09-2018
 Progress
-The software is progressing from alpha to beta stage. Soon it will be ready
+The software is progressing from alpha to beta stage.  Soon it will be ready
 to do a field test on real enviroment.
 
 
-* Sending data to the server via POST is ok, this reduced the time needed for
-GPRS/GSM connection A LOT (!), it now needs almost 20-30 seconds to send a chunk
-of data when it needed almost 200 seconds to send 17 records (!!!). This reduces
-a lot battery consumption and increases life capacity.
+* Sending data to the server via POST is ok, this reduced the time needed
+for GPRS/GSM connection A LOT (!), it now needs almost 20-30 seconds to send
+a chunk of data when it needed almost 200 seconds to send 17 records (!!!). 
+This reduces A LOT battery consumption and increases life capacity.
 
-* An error logging mechanism is began to be created, so errors during operations
-are stored in RAM and sent to the server at each connection (or earlier perhaps).
+* An error logging mechanism is began to be created, so errors during
+operations are stored in RAM and sent to the server at each connection (or
+earlier perhaps).
 
-* Maintenance mode is working good (but not perfect yet), you can actually execute
-various commands.
+* Maintenance mode is working good (but not perfect yet), you can actually
+execute various commands.
 
-* What is very important to implement is a fail safe mechanism that will restart the
-module when something goes wrong. In such a case logged records can be lost, but it
-is absolutely important for the module to resume normal operation.
+* What is very important to implement is a fail safe mechanism that will
+restart the module when something goes wrong.  In such a case logged records
+can be lost, but it is absolutely important for the module to resume normal
+operation.
 
 
 ** Note from the SIM900_AN_TCPIP_V100:
 Error handling:
-If en error occurs during TCP/UDP connection, it is suggested to close the connection
-with AT+CIPCLOSE and restart the connection with AT+CIPSTART. If the error still occurs,
-it is recommended to shut off the PDP with AT+CIPSHUT and restart the connection,
-if the error still persists, it is recommended to restart the module.
+
+If en error occurs during TCP/UDP connection, it is suggested to close the
+connection with AT+CIPCLOSE and restart the connection with AT+CIPSTART.  If
+the error still occurs, it is recommended to shut off the PDP with
+AT+CIPSHUT and restart the connection, if the error still persists, it is
+recommended to restart the module.
 
 
 02-10-2018
 After almost 400 uploads to the ATmega328P chip, a beta stage firmware is ready.
 
+
+04-11-2018
+The beta firmware is working good after 26 days(!) with a battery voltage
+drop of 0.25 Volt.  Life expectancy is more than 140 days now(!).
+
+There must be a way when GSM/GPRS network communication fails, to be
+repeated in a few minutes for 2 or 3 times, or re-establish connection for
+2-3 tries.  Also, the error logging system should be implemented, so the
+server knows what the hell is going on on the node.
+
+There can a REAL change in the design.  One can use an SPI/I2C SRAM (perhaps
+with battery backup?) instead of an EEPROM, since the module is always under
+power.

@@ -1,0 +1,410 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"re",
+				"resp"
+			],
+			[
+				"PRINTF",
+				"PRINTFn"
+			],
+			[
+				"n",
+				"n"
+			],
+			[
+				"gsm_sendrecvcmd",
+				"gsm_sendrecvcmdtimeoutp"
+			],
+			[
+				"err",
+				"logError"
+			],
+			[
+				"__",
+				"__error_tail"
+			],
+			[
+				"def",
+				"defined"
+			],
+			[
+				"HTT",
+				"HTTP_API_GET"
+			],
+			[
+				"HTTP_API",
+				"HTTP_API_POST"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "resp/main.cpp",
+			"settings":
+			{
+				"buffer_size": 342,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "/*\n * response.cpp - parse server response functions\n *\n * Beehive Monitoring System - BMS\n * (c) Evangelos Rokas, 2015-18\n *\n * This software is Free Software and distributed under\n * the terms of GNU General Public License.\n *\n * $version$\n */\n\n//#include <Arduino.h>\n#include <ctype.h>\n#include <string.h>\n\n#include \"bms.h\"\n#include \"response.h\"\n\n#define RESPONSE_STR_SIZE\t16\n\n#define raNONE\t\t\t\t0x0\n#define raSETNODE\t\t\t0x1\n#define raSETDATASERVER\t\t0x2\n#define raSETSERVERPORT\t\t0x3\n#define raSETAPN\t\t\t0x4\n#define raSETUSER\t\t\t0x5\n#define raSETPASS\t\t\t0x6\n#define raSETLOGPROG\t\t0x7\n#define raSETNETPROG\t\t0x8\n#define raSETAPIKEY\t\t\t0x9\n#define raSETACTIVE\t\t\t0xa\n#define raSETDST \t\t\t0xb\n#define raSETDNS\t\t\t0xc\n#define raSETRTC\t\t\t0xd\n#define raNONE1\t\t\t\t0xe\n#define raSTOP \t\t\t\t0xf\t\t/* this marks the end of command stream */\n\n#define rsINIT\t0x0\n#define rsCMD\t0x1\n#define rsPAY \t0x2\n\n#define STRTOD(_v,_s)\t_v=0;while(isdigit( *_s )) { _v=_v*10+(*_s - '0');_s++; }\n\n#ifdef LINUX_NATIVE_APP\n#include <stdio.h>\n#define PRINTF(str)\t\tprintf(\"%s\", str);\n#define PRINTFn(str)\tprintf(\"%s\\n\", str);\n#else\n#define\tPRINTF(str)\n#define PRINTFn(str)\n#endif\n\n\n/* use a bit struct to reduce RAM usage */\nstruct {\n\tuint8_t respAction:4;\t\t\t/* action codes encoded in 4 bits ==> 16 different actions */\n\tuint8_t respState:2;\t\t\t/* states are, 0=initial, 1=command, 2=payload */\n} _rv;\nchar resp[ RESPONSE_STR_SIZE ];\n\nvoid initResponseParser()\n{\n\tmemset(resp, 0, sizeof(resp));\n\t_rv.respAction = 0;\n\t_rv.respState = 0;\n}\n\n/* commands come as a stream like:\n * 1,21,3,43,15 (last number should always be 15 (= 0xf == raSTOP))\n */\n\nbool parseResponse(char ch)\n{\n\tif( ch != ',') {\n\t\t/* do not pass to next state, but add to the respStr instead */\n\t\tstrncat(resp, &ch, 1);\n\t} else {\n\t\t/* c == ',' so we must do something(!) */\n\n\t\tswitch( _rv.respState ) {\n\t\t\tcase rsINIT: { /* cmd just received, change state to CMD, and store CMD action */\n\t\t\t\tuint8_t n;\n\t\t\t\tchar *ch2=resp;\n\n\t\t\t\t\tSTRTOD(n, ch2);\t/* convert resp to n */\n\t\t\t\t\tif((n >= 0) && (n <= raSTOP)) {\n\t\t\t\t\t\t_rv.respAction = n;\n\t\t\t\t\t\t_rv.respState = rsCMD;\n\t\t\t\t\t}\n\t\t\t\t\tmemset(resp, 0, sizeof(resp));\n\t\t\t};\n\t\t\treturn (true); \n\t\t\tbreak;\n\t\t\t\n\t\t\tcase rsCMD: {\t/* payload received, so execute command with given payload */\n\t\t\t\t/* payload is in resp */\n\t\t\t\tswitch( _rv.respAction ) {\n\t\t\t\t\tcase raSETNODE: /* set node */\n\t\t\t\t\t\tPRINTF(\"(1) set node number: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak; \n\t\t\t\t\tcase raSETDATASERVER: \t/* set data server */\n\t\t\t\t\t\tPRINTF(\"(2) set data server: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETSERVERPORT:\t/* set server port */\n\t\t\t\t\t\tPRINTF(\"(3) set server port: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETAPN:\t\t/* set APN */\n\t\t\t\t\t\tPRINTF(\"(4) set APN: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETUSER:\t\t\t/* set USER */\n\t\t\t\t\t\tPRINTF(\"(5) set USER: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETPASS:\t\t\t/* set PASS */\n\t\t\t\t\t\tPRINTF(\"(6) set PASS: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETLOGPROG:\t\t/* set log sampling program */\n\t\t\t\t\t\tPRINTF(\"(7) set LOG program: \"); PRINTFn( resp );\n\t\t\t\t\t\tPRINTF( strstr(()))\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETNETPROG:\t\t/* set net sampling program */\n\t\t\t\t\t\tPRINTF(\"(8) set NET program: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETAPIKEY:\t\t/* set APIKEY */\n\t\t\t\t\t\tPRINTF(\"(9) set APIKEY: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETACTIVE:\t\t/* set ACTIVE flag, NOTE: This will disable the module */\n\t\t\t\t\t\tPRINTF(\"(a) set ACTIVE flag: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETDST:\t\t\t/* set DST flag */\n\t\t\t\t\t\tPRINTF(\"(b) set DST flag: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETDNS:\t\t\t/* set DNS flag, use DNS resolver for URLs */\n\t\t\t\t\t\tPRINTF(\"(c) set DNS flag: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSETRTC:\t\t\t/* set RTC */\n\t\t\t\t\t\tPRINTF(\"(d) set RTC: \"); PRINTFn( resp );\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase raSTOP:\t\t\t/* STOP response parsing */\n\t\t\t\t\t\tPRINTFn(\"(f) STOP\");\n\t\t\t\t\t\treturn (false);\n\t\t\t\t\t\tbreak;\n\t\t\t\tdefault:\n\t\t\t\t\treturn (false);\n\t\t\t\t}\n\t\t\t\t_rv.respState = rsINIT;\n\t\t\t\t_rv.respAction = raNONE;\n\t\t\t\tmemset(resp, 0, sizeof(resp));\n\t\t\t}; \n\t\t\treturn (true);\n\t\t\tbreak;\n\t\t}\n\t}\n  return (false);\n}\n",
+			"file": "resp/response.cpp",
+			"file_size": 4092,
+			"file_write_time": 131857635806302923,
+			"settings":
+			{
+				"buffer_size": 4118,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "resp/Makefile",
+			"settings":
+			{
+				"buffer_size": 369,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "resp/response.h",
+			"settings":
+			{
+				"buffer_size": 374,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				]
+			],
+			[
+				"Packages/Makefile/Make.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"Package Control: ",
+				"Package Control: Enable Package"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 125.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/home/evrokas/Development/beehive",
+		"/home/evrokas/Development/beehive/resp"
+	],
+	"file_history":
+	[
+		"/home/evrokas/Development/cms-test/website2.html",
+		"/home/evrokas/Development/beehive/gsm.cpp",
+		"/home/evrokas/Development/beehive/gsm.h",
+		"/home/evrokas/Development/beehive/gethttp.cpp",
+		"/home/evrokas/Development/beehive/posthttp.cpp",
+		"/home/evrokas/Development/beehive/error.h",
+		"/home/evrokas/Development/beehive/error.cpp",
+		"/home/evrokas/Development/beehive/main.cpp",
+		"/home/evrokas/Development/beehive/mem.h",
+		"/home/evrokas/Development/beehive/bms.h",
+		"/home/evrokas/Development/beehive/pstr.h",
+		"/home/evrokas/Development/beehive/get.cpp",
+		"/home/evrokas/Development/beehive/post.cpp",
+		"/home/evrokas/.config/sublime-text-3/Packages/User/ansi-build.sublime-build",
+		"/home/evrokas/.config/sublime-text-3/Packages/ANSIescape/ansi.sublime-settings",
+		"/home/evrokas/.config/sublime-text-3/Packages/User/Package Control.sublime-settings",
+		"/home/evrokas/.config/sublime-text-3/Packages/Package Control/Package Control.sublime-settings",
+		"/home/evrokas/Development/beehive/beehive.sublime-project",
+		"/home/evrokas/Development/beehive/Makefile",
+		"/var/www/html/p5/empty-example/sketch.js",
+		"/home/evrokas/Downloads/p5/empty-example/index.html"
+	],
+	"find":
+	{
+		"height": 26.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "resp/main.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 342,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								226,
+								226
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "resp/response.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4118,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3078,
+								3078
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1746.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "resp/Makefile",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 369,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Makefile/Makefile.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "resp/response.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 374,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								301,
+								301
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 26.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 139.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 108.0
+	},
+	"pinned_build_system": "Packages/Makefile/Make.sublime-build",
+	"project": "beehive.sublime-project",
+	"replace":
+	{
+		"height": 48.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

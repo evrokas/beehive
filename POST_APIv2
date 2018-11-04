@@ -1,0 +1,71 @@
+POST API Description version 2
+
+*** Send Data to the server via POST method
+
+POST /post.php HTTP/1.1
+Host: 10.0.0.1
+User-Agent: beewatch-firmware/0.1
+Content-Type: application/json
+Transfer-Encoding: chunked
+
+{
+	"action" : "add",
+	"nodeId" : "4570",
+	"data" : [
+		{
+			"entryType" : "dat",
+			"batVolt" : "4.367",
+			"bhvTemp" : "23.33",
+			"bhvHumid" : "51.15",
+			"bhvWeight" : "75.432",
+			"rtcDateTime" : "27-09-18_21:18",
+		},
+		{
+			"entryType" : "gsm",
+			"gsmSig" : "18",
+			"gsmVolt" : "3.771",
+			"gsmPDur" : "17840",
+			"rtcDateTime" : "27-09-18_21:33"
+		}
+	]
+}
+
+
+*** Request configuration data from the server via POST method
+
+POST /conf.php HTTP/1.1
+Host: 10.0.0.1
+User-Agent: beewatch-firmware/0.1
+Content-Type: application/json
+Transfer-Encoding: chunked
+
+{
+	"action" : "getconf",
+	"nodeId" : "4570",
+	
+	"log" : "12",						/* minutes per log cycle */
+	"net" : "180",					/* minuted per net cycle */
+	
+	"apn" : "internet.cyta.gr",		/* APN name  */
+	"user" : "",
+	"pass" : "",
+	"server" : "server",
+	"port" : "post"
+}
+
+
+*** Response for configuration data from the serer via POST method (reply)
+HTTP1.1 200 OK
+Date: Sat, 29 Sep 2018 20:27:00 GMT
+Serer: Apache/2.4.18 (Ubuntu)
+Vary: Accept-Encoding
+Content-Length: [blah]
+Content-Type: text/html; charset=UTF-8
+
+{
+	"apn" : "apn",
+	"user" : "user",
+	"pass" : "pass",
+	"server" : "server",
+	"port" : "port",
+	

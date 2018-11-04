@@ -95,7 +95,9 @@ bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_
 }
 
 
-void printTime(timekeeping_t &tk)
+#ifdef LINUX_NATIVE_APP
+
+void printTime(timekeeping_t &tk, uint8_t flags)
 {
   int i;
   uint8_t d;
@@ -126,7 +128,10 @@ void printTime(timekeeping_t &tk)
 			}
 		}
 
-		strcat(str, " ");
+		if(flags == 1)
+			strcat( str, ":" );
+		else
+			strcat(str, " ");
 		
 #ifdef DEBUG
 		PUTCHAR('\n');
@@ -146,7 +151,7 @@ void printTime(timekeeping_t &tk)
   			PUTCHAR(' '); PUTCHAR('<');
 #endif
 
-  			sprintf(ch, "%02x", d);
+  			sprintf(ch, "%x", d);
   			strcat(str, ch);
 
 #ifdef DEBUG
@@ -157,7 +162,10 @@ void printTime(timekeeping_t &tk)
 			}
 		}
 
-		strcat(str, " ");
+		if(flags == 1)
+			strcat( str, ":" );
+		else
+			strcat(str, " ");
 
 #ifdef DEBUG
 		PUTCHAR('\n');
@@ -321,3 +329,5 @@ void printTimeBinary(timekeeping_t &tk)
 
 		PUTCHAR("\n");
 }
+
+#endif		/* LINUX_NATIVE_APP */
