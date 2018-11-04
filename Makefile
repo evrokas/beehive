@@ -49,7 +49,7 @@ pmon:
 git-upl:
 	./mkver.sh
 	VER=`cat .upload`
-	git commit -a -m "upload commit (automatic) no. $(VER)"
+	git commit -a -m "upload commit (automatic) no. "$(VER)
 	$(MAKE) upload
 		
 
