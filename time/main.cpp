@@ -6,7 +6,7 @@
 
 
 
-#define __putchar(c)		Serial.write(c)
+#define __putchar(c)	Serial.write(c)
 #define STRTOD(_v,_s)	_v=0;while(isdigit( *_s )) { _v=_v*10+(*_s - '0');_s++; }
 
 
@@ -162,8 +162,17 @@ int main(int argc, char *argv[])
 					case 'b':	/* print out binary data */
 						output = 'b';
 						break;
+					case 's':	/* convert string to time */
+						output = 's';
+						break;
 				}
 			} else {
+				if(output == 's') {
+					initHexTime(ch, tk);
+					printTimeBinary( tk );
+					return 0;
+				}
+
 				ch = parsestring(tk, 0, ch);
 				ch = parsestring(tk, 1, ch);
 				ch = parsestring(tk, 2, ch);

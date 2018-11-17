@@ -161,4 +161,12 @@ const prog_char pErrorActivateBearer [] PROGMEM ="activate bearer profile";
 const prog_char pErrorInitiatePost [] PROGMEM = "initiate post request";
 const prog_char pFailedPostSend [] PROGMEM = "failed POST send";
 
+const prog_char pok [] PROGMEM = "ok";
+const prog_char pperror [] PROGMEM = "error";
+
+const prog_char pmodule [] PROGMEM = "module ";
+const prog_char pnot [] PROGMEM = "not ";
+const prog_char penabled [] PROGMEM = "enabled";
+const prog_char pdnslookup [] PROGMEM = "DNS lookup";
+
 #endif	/* __PSTR_H__ */

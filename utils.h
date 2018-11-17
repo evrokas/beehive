@@ -94,18 +94,36 @@
 #define URL_SIZE			24
 #define SIMPIN_SIZE			4
 #define SIMICCID_SIZE		20
+#define LOGPROG_SIZE  12
+#define NETPROG_SIZE  12
 
 #define EEPROM_MAXSTR	24		/* set to maximum length of the above */
 
-#define E_URL		1
-#define E_APN		2
-#define E_USER	3
-#define E_PASS	4
+#define E_URL				1
+#define E_APN				2
+#define E_USER			3
+#define E_PASS			4
 #define E_APIKEY		5
 #define E_SIMPIN		6
 #define E_SIMICCID	7
+#define E_LOGPROG 	8
+#define E_NETPROG 	9
 
-
+extern uint8_t	addrNodeId;
+extern uint8_t	addrAPIKEY;
+extern uint8_t	addrAPN;
+extern uint8_t	addrUSER;
+extern uint8_t	addrPASS;
+extern uint8_t	addrURL;
+extern uint8_t	addrPORT;
+extern uint8_t addrLogCycle;
+extern uint8_t addrNetCycle;
+extern uint8_t addrSIMPIN;
+extern uint8_t addrSIMICCID;
+extern uint8_t addrVCCfactor;
+extern uint8_t addrAflags;
+extern uint8_t addrLogProg;
+extern uint8_t addrNetProg;
 
 
 #ifdef __cplusplus
@@ -159,20 +177,51 @@ void eepromSetStr(uint16_t aaddr, int acnt, char *dat);
 bool transmitEEPROMstr(uint8_t ecode, Stream &strm, bool debugSerial = false);
 bool transmitEEPROMstrd(uint8_t ecode, Stream &strm);
 
-
 void initializeEEPROM();
+
+/* read Node number from EEPROM */
 uint16_t getNodeId();
+
+/* write Node number to EEPROM */
 void setNodeId(uint16_t nodeid);
+
+/* read <ecode> from EEPROM */
 char *getEEPROMstr(uint8_t ecode, char *dat);
+
+/* write <ecode> to EEPROM */
 char *setEEPROMstr(uint8_t ecode, char *dat);
+
+/* write LogCycle to EEPROM */
 void setLogCycle(uint8_t dat);
+
+/* read LogCycle from EEPROM */
 uint8_t getLogCycle();
+
+/* write NetCycle to EEPROM */
 void setNetCycle(uint8_t dat);
+
+/* read NetCycle from EEPROM */
 uint8_t getNetCycle();
+
+/* read Server port from EEPROM */
 uint16_t getServerPort();
+
+/* write Seriver port to EEPROM */
 void setServerPort( uint16_t dat );
+
+/* write VCC factor to EEPROM */
 void setVCC( float dat );
+
+/* read VCC factor from EEPROM */
 float getVCC();
+
+/* read Aflags from EEPROM */
+uint16_t getAflags();
+
+/* write Aflags to EEPROM */
+void setAflags(uint16_t dat);
+
+
 void loadVariablesFromEEPROM();
 
 uint8_t i2c_clearBus();

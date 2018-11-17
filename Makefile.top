@@ -11,8 +11,8 @@
 #
 
 
-ARDUINO_SRC_DIR		= arduino
-
+ARDUINO_SRC_DIR = arduino
+AVR_TOOLS_DIR	= /usr
 
 
 #initialize programmer params

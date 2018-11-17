@@ -52,13 +52,15 @@ extern "C" {
 void clearTime(timekeeping_t &tk);
 bool initTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy = 0);
 bool checkTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy = 0);
-bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_t &hh, uint8_t &mm, uint8_t &dd);
+bool initHexTime(char *str, timekeeping_t &tk);
+
+//bool findNextTime(timekeeping_t &tk, uint8_t hr, uint8_t min, uint8_t dy, uint8_t &hh, uint8_t &mm, uint8_t &dd);
 
 #ifdef LINUX_NATIVE_APP
 void printTime(timekeeping_t &tk, uint8_t flags = 0);
 void printTimeJSON(timekeeping_t &tk);
-void printTimeBinary(timekeeping_t &tk);
 #endif
+void printTimeBinary(timekeeping_t &tk);
 
 #ifdef __cplusplus
 };	/* extern "C" */
@@ -66,16 +68,16 @@ void printTimeBinary(timekeeping_t &tk);
 
 #ifdef LINUX_NATIVE_APP
 
-#	define	PUTCHAR(c)	printf("%s", c);
-# define	PUTCHARX(c)	printf("%02x", c)
-# define	PUTCHAR2(c)	printf("0x%02x", c)
+# define PUTCHAR(c)		printf("%s", c);
+# define PUTCHARX(c)	printf("%02x", c)
+# define PUTCHAR2(c)	printf("0x%02x", c)
 
 #else
 
-#if 0
-#	define	PUTCHAR(c)	Serial.write(c)
-# define	PUTCHARX(c) Serial.write((unsigned char)c, HEX)
-# define  PUTCHAR2(c)	Serial.write("0x"); Serial.write((unsigned char)c, HEX)
+#if 1
+# define PUTCHAR(c)		Serial.write(c)
+# define PUTCHARX(c)	Serial.write((unsigned char)c, HEX)
+# define PUTCHAR2(c)	Serial.write("0x"); Serial.write((unsigned char)c, HEX)
 #endif
 
 #endif	/* LINUX_NATIVE_APP */

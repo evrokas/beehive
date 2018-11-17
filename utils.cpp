@@ -129,7 +129,6 @@ void powerPeripherals(unsigned char onoff, unsigned char mdel)
 	switch(onoff) {
 		case 0: { /* power off */
 			//__sbi(PORTC, 0);
-
 			Dnln(2, "Per = off");
 			PORTC |= B00000001;
 			PORTB &= B10111111;
@@ -144,7 +143,6 @@ void powerPeripherals(unsigned char onoff, unsigned char mdel)
 		
 		case 1: { /* power on */
 			//__cbi(PORTC, 0);
-
 #if TURNOFF_I2C_PULLUPS_DURING_SLEEP == 1
 			twi_enable_pullups();
 			delayMicroseconds(50);
@@ -164,15 +162,11 @@ void powerPeripherals(unsigned char onoff, unsigned char mdel)
 			}
 #endif
 
-
 			break;
 		}
 	}
 	
 	delay( mdel );	/* delay for specified number of msecs */
-
-//	powerPeripherals(onoff, 0);
-//	powerRTC(onoff, mdel);
 }
 
 		
@@ -184,9 +178,6 @@ uint32_t InternalReferenceVoltage = (uint32_t)(1100);
 /* read Vcc using internal 1.1V reference */
 unsigned long readVcc()
 {
-  //float f;
-//  unsigned long f;
-  
     ADCSRA |= (1 << ADEN);
 
 	// Read 1.1V reference against AVcc
@@ -197,18 +188,14 @@ unsigned long readVcc()
 	ADCSRA |= _BV(ADSC); // Start conversion
 	while (bit_is_set(ADCSRA,ADSC)); // measuring
 
-	uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
-	uint8_t high = ADCH; // unlocks both
+  uint8_t low  = ADCL; // must read ADCL first - it then locks ADCH  
+  uint8_t high = ADCH; // unlocks both
 
 	ADCSRA ^= (1 << ADEN);
 	
-	unsigned long result = (high<<8) | low;
+  unsigned long result = (high<<8) | low;
   
-//  result = 1125300L * (4.96/5.5) / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
-//  result = 1125300L * VCC_CORRECTION / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*10
-//    f = ( ( ( VREF * InternalReferenceVoltage * 1024.0 ) / result) + 5.0);	// / 10.0;
 	result = ( (VREF * 1125300) / result) + 5.0;
-//  result = f;
   return result; // Vcc in millivolts
 }
 
@@ -219,7 +206,7 @@ void setVccFactor(float avref)
 
 float getVccFactor()
 {
-	return (VREF);
+  return (VREF);
 }
 
 #define EEPROM_SIZE	1024
@@ -238,7 +225,7 @@ uint16_t eepromGetAddr( uint8_t asize )
 
   	eepromLastAddress += asize;
   	
-	return (nsize);
+  return (nsize);
 }
 
 uint16_t eepromGetLastAddr()
@@ -249,19 +236,17 @@ uint16_t eepromGetLastAddr()
 
 uint8_t	eepromGetByte( uint16_t aaddr )
 {
-//  return ( EEPROM[ aaddr ] );
   return ( eeprom_read_byte( (uint8_t *)aaddr ) );
 }
 
 void eepromSetByte( uint16_t aaddr, uint8_t dat )
 {
-//	EEPROM[ aaddr ] = dat;
 	eeprom_write_byte( (uint8_t *)aaddr, dat );
 }
 
 uint16_t eepromGetWord( uint16_t aaddr )
 {
-	return (eepromGetByte(  aaddr ) + ((uint16_t)eepromGetByte( aaddr + 1 ) << 8) );
+  return (eepromGetByte(  aaddr ) + ((uint16_t)eepromGetByte( aaddr + 1 ) << 8) );
 }
 
 void eepromSetWord( uint16_t aaddr, uint16_t dat )
@@ -273,37 +258,38 @@ void eepromSetWord( uint16_t aaddr, uint16_t dat )
 
 uint32_t eepromGetLong( uint16_t aaddr )
 {
-	return (eepromGetWord( aaddr ) + ((uint32_t)(eepromGetWord( aaddr + 2 )) << 16) );
+  return (eepromGetWord( aaddr ) + ((uint32_t)(eepromGetWord( aaddr + 2 )) << 16) );
 }
 
 void eepromSetLong( uint16_t aaddr, uint32_t dat )
 {
-  eepromSetWord( aaddr, (dat & 0xffff) );
-  eepromSetWord( aaddr+2, (dat >> 16) & 0xffff );
+	eepromSetWord( aaddr, (dat & 0xffff) );
+	eepromSetWord( aaddr+2, (dat >> 16) & 0xffff );
 }
 
 
 float eepromGetFloat( uint16_t aaddr )
 {
-	union {
-		float f;
-		long l;
-	} f_l;
+  union {
+	float f;
+	long l;
+  } f_l;
+	
 	f_l.l = eepromGetLong( aaddr );
 	
-	return (f_l.f);
+  return (f_l.f);
 }
 
 void eepromSetFloat( uint16_t aaddr, float dat )
 {
-	union {
-		float f;
-		long l;
-	} f_l;
+  union {
+	float f;
+	long l;
+  } f_l;
 
 	f_l.f = dat;
 	
-  eepromSetLong( aaddr, f_l.l );
+ 	eepromSetLong( aaddr, f_l.l );
 } 
 
 char eepromGetChar( uint16_t aaddr )
@@ -330,10 +316,9 @@ void eepromSetStr(uint16_t aaddr, int acnt, char *dat)
   int aa;
 
 	for(aa=0;aa<acnt;aa++) {
-  	eepromSetChar( aaddr + aa, *dat++);
+  		eepromSetChar( aaddr + aa, *dat++);
 	}
 }
-
 
 
 
@@ -350,11 +335,11 @@ void eepromSetStr(uint16_t aaddr, int acnt, char *dat)
  */
 uint8_t i2c_clearBus() {
 #if defined(TWCR) && defined(TWEN)
-  TWCR &= ~(_BV(TWEN)); //Disable the Atmel 2-Wire interface so we can control the SDA and SCL pins directly
+	TWCR &= ~(_BV(TWEN)); //Disable the Atmel 2-Wire interface so we can control the SDA and SCL pins directly
 #endif
 
-  pinMode(SDA, INPUT_PULLUP); // Make SDA (data) and SCL (clock) pins Inputs with pullup.
-  pinMode(SCL, INPUT_PULLUP);
+	pinMode(SDA, INPUT_PULLUP); // Make SDA (data) and SCL (clock) pins Inputs with pullup.
+	pinMode(SCL, INPUT_PULLUP);
 
 //  delay(2500);  // Wait 2.5 secs. This is strictly only necessary on the first power
   // up of the DS3231 module to allow it to initialize properly,
@@ -363,53 +348,59 @@ uint8_t i2c_clearBus() {
   // before existing sketch confuses the IDE by sending Serial data.
 
   boolean SCL_LOW = (digitalRead(SCL) == LOW); // Check is SCL is Low.
-  if (SCL_LOW) { //If it is held low Arduno cannot become the I2C master. 
-    return 1; //I2C bus error. Could not clear SCL clock line held low
-  }
+	if (SCL_LOW) { //If it is held low Arduno cannot become the I2C master. 
+	  return 1; //I2C bus error. Could not clear SCL clock line held low
+	}
 
   boolean SDA_LOW = (digitalRead(SDA) == LOW);  // vi. Check SDA input.
   int clockCount = 20; // > 2x9 clock
 
-  if(SDA_LOW)Serial.println(F("I2C SDA Low") );
+	if(SDA_LOW)Serial.println(F("I2C SDA Low") );
 
-  while (SDA_LOW && (clockCount > 0)) { //  vii. If SDA is Low,
-    clockCount--;
-  // Note: I2C bus is open collector so do NOT drive SCL or SDA high.
-    pinMode(SCL, INPUT); // release SCL pullup so that when made output it will be LOW
-    pinMode(SCL, OUTPUT); // then clock SCL Low
-    delayMicroseconds(10); //  for >5uS
-    pinMode(SCL, INPUT); // release SCL LOW
-    pinMode(SCL, INPUT_PULLUP); // turn on pullup resistors again
-    // do not force high as slave may be holding it low for clock stretching.
-    delayMicroseconds(10); //  for >5uS
-    // The >5uS is so that even the slowest I2C devices are handled.
-    SCL_LOW = (digitalRead(SCL) == LOW); // Check if SCL is Low.
-    int counter = 20;
-    while (SCL_LOW && (counter > 0)) {  //  loop waiting for SCL to become High only wait 2sec.
-      counter--;
-      delay(100);
-      SCL_LOW = (digitalRead(SCL) == LOW);
-    }
-    if (SCL_LOW) { // still low after 2 sec error
-      return 2; // I2C bus error. Could not clear. SCL clock line held low by slave clock stretch for >2sec
-    }
-    SDA_LOW = (digitalRead(SDA) == LOW); //   and check SDA input again and loop
-  }
-  if (SDA_LOW) { // still low
-    return 3; // I2C bus error. Could not clear. SDA data line held low
-  }
+	while (SDA_LOW && (clockCount > 0)) { //  vii. If SDA is Low,
+		clockCount--;
+		// Note: I2C bus is open collector so do NOT drive SCL or SDA high.
+		pinMode(SCL, INPUT); // release SCL pullup so that when made output it will be LOW
+		pinMode(SCL, OUTPUT); // then clock SCL Low
+		delayMicroseconds(10); //  for >5uS
+		pinMode(SCL, INPUT); // release SCL LOW
+		pinMode(SCL, INPUT_PULLUP); // turn on pullup resistors again
+		// do not force high as slave may be holding it low for clock stretching.
+		delayMicroseconds(10); //  for >5uS
+		// The >5uS is so that even the slowest I2C devices are handled.
+		SCL_LOW = (digitalRead(SCL) == LOW); // Check if SCL is Low.
+		
+		int counter = 20;
+		while (SCL_LOW && (counter > 0)) {  //  loop waiting for SCL to become High only wait 2sec.
+			counter--;
+			delay(100);
+			SCL_LOW = (digitalRead(SCL) == LOW);
+		}
+		
+		if (SCL_LOW) { // still low after 2 sec error
+		  return 2; // I2C bus error. Could not clear. SCL clock line held low by slave clock stretch for >2sec
+		}
+		
+		SDA_LOW = (digitalRead(SDA) == LOW); //   and check SDA input again and loop
+	}
 
-  // else pull SDA line low for Start or Repeated Start
-  pinMode(SDA, INPUT); // remove pullup.
-  pinMode(SDA, OUTPUT);  // and then make it LOW i.e. send an I2C Start or Repeated start control.
-  // When there is only one I2C master a Start or Repeat Start has the same function as a Stop and clears the bus.
-  /// A Repeat Start is a Start occurring after a Start with no intervening Stop.
-  delayMicroseconds(10); // wait >5uS
-  pinMode(SDA, INPUT); // remove output low
-  pinMode(SDA, INPUT_PULLUP); // and make SDA high i.e. send I2C STOP control.
-  delayMicroseconds(10); // x. wait >5uS
-  pinMode(SDA, INPUT); // and reset pins as tri-state inputs which is the default state on reset
-  pinMode(SCL, INPUT);
+	if (SDA_LOW) { // still low
+	  return 3; // I2C bus error. Could not clear. SDA data line held low
+	}
+
+	// else pull SDA line low for Start or Repeated Start
+	pinMode(SDA, INPUT); // remove pullup.
+	pinMode(SDA, OUTPUT);  // and then make it LOW i.e. send an I2C Start or Repeated start control.
+	
+	// When there is only one I2C master a Start or Repeat Start has the same function as a Stop and clears the bus.
+	/// A Repeat Start is a Start occurring after a Start with no intervening Stop.
+	delayMicroseconds(10); // wait >5uS
+	pinMode(SDA, INPUT); // remove output low
+	pinMode(SDA, INPUT_PULLUP); // and make SDA high i.e. send I2C STOP control.
+	delayMicroseconds(10); // x. wait >5uS
+	pinMode(SDA, INPUT); // and reset pins as tri-state inputs which is the default state on reset
+	pinMode(SCL, INPUT);
+
   return 0; // all ok
 }
 
@@ -427,3 +418,140 @@ uint16_t getStackPointer()
 	
 	return (t.i);
 }
+
+
+uint16_t getNodeId()
+{
+  return ( eepromGetWord( addrNodeId ) );
+}
+
+void setNodeId(uint16_t nodeid)
+{
+	eepromSetWord( addrNodeId, nodeid );
+}
+
+uint16_t getAflags()
+{
+	return ( eepromGetWord( addrAflags ) );
+}
+
+void setAflags(uint16_t dat)
+{
+	eepromSetWord( addrAflags, dat);
+}
+
+
+char *getEEPROMstr(uint8_t ecode, char *dat)
+{
+	switch( ecode ) {
+		case E_URL: eepromGetStr(addrURL, URL_SIZE, dat); break;
+		case E_APN: eepromGetStr(addrAPN, APN_SIZE, dat); break;
+		case E_USER: eepromGetStr(addrUSER, USER_SIZE, dat); break;
+		case E_PASS: eepromGetStr(addrPASS, PASS_SIZE, dat); break;
+		case E_APIKEY: eepromGetStr(addrAPIKEY, APIKEY_SIZE, dat); break;
+		case E_SIMPIN: eepromGetStr(addrSIMPIN, SIMPIN_SIZE, dat); break;
+		case E_SIMICCID: eepromGetStr(addrSIMICCID, SIMICCID_SIZE, dat); break;
+		case E_LOGPROG: eepromGetStr(addrLogProg, LOGPROG_SIZE, dat); break;
+		case E_NETPROG: eepromGetStr(addrNetProg, NETPROG_SIZE, dat); break;
+	default:
+		/* if wrong ecode then return fail */
+		return NULL;
+	}
+	return dat;
+}
+
+char *setEEPROMstr(uint8_t ecode, char *dat)
+{
+	switch( ecode ) {
+		case E_URL: eepromSetStr(addrURL, URL_SIZE, dat); break;
+		case E_APN: eepromSetStr(addrAPN, APN_SIZE, dat); break;
+		case E_USER: eepromSetStr(addrUSER, USER_SIZE, dat); break;
+		case E_PASS: eepromSetStr(addrPASS, PASS_SIZE, dat); break;
+		case E_APIKEY: eepromSetStr(addrAPIKEY, APIKEY_SIZE, dat); break;
+		case E_SIMPIN: eepromSetStr(addrSIMPIN, SIMPIN_SIZE, dat); break;
+		case E_SIMICCID: eepromSetStr(addrSIMICCID, SIMICCID_SIZE, dat); break;
+		case E_LOGPROG: eepromSetStr(addrLogProg, LOGPROG_SIZE, dat); break;
+		case E_NETPROG: eepromSetStr(addrNetProg, NETPROG_SIZE, dat); break;
+	default:
+		/* if wrong ecode, then return fail */
+		return NULL;
+	}
+	return dat;
+}
+
+bool transmitEEPROMstr(uint8_t ecode, Stream &strm, bool debugSerial)
+{
+	uint8_t i,m, sta;
+	char c;
+	
+	switch( ecode ) {
+		case E_URL: m = URL_SIZE; sta = addrURL; break;
+		case E_APN: m = APN_SIZE; sta = addrAPN; break;
+		case E_USER: m = USER_SIZE; sta = addrUSER; break;
+		case E_PASS: m = PASS_SIZE; sta = addrPASS; break;
+		case E_APIKEY: m = APIKEY_SIZE; sta = addrAPIKEY; break;
+		case E_SIMPIN: m = SIMPIN_SIZE; sta = addrSIMPIN; break;
+		case E_SIMICCID: m = SIMICCID_SIZE; sta = addrSIMICCID; break;
+		case E_LOGPROG: m = LOGPROG_SIZE; sta = addrLogProg; break;
+		case E_NETPROG: m = NETPROG_SIZE; sta = addrNetProg; break;
+		default: return (false);	//m = 0; break;
+	}
+	
+	for(i=0;i<m;i++) {
+		c = eepromGetByte( sta + i );
+		if(c == 0)break;	/* end of string */
+
+		switch( ecode ) {
+			case E_LOGPROG:
+			case E_NETPROG: strm.print(c, BIN); break;
+		default: strm.write(c);
+		}
+
+		if( debugSerial )
+			Serial.write(c);
+	}
+
+	return (true);
+}
+
+
+void setLogCycle(uint8_t dat)
+{
+	eepromSetByte( addrLogCycle, dat );
+}
+
+uint8_t getLogCycle()
+{
+	return( eepromGetByte( addrLogCycle ) );
+}
+
+void setNetCycle(uint8_t dat)
+{
+	eepromSetByte( addrNetCycle, dat );
+}
+
+uint8_t getNetCycle()
+{
+  return( eepromGetByte( addrNetCycle ) );
+}
+
+uint16_t getServerPort()
+{
+	return ( eepromGetWord( addrPORT ) );
+}
+
+void setServerPort( uint16_t dat )
+{
+	eepromSetWord( addrPORT, dat );
+}
+
+void setVCC( float dat )
+{
+	eepromSetFloat( addrVCCfactor, dat );
+}
+
+float getVCC()
+{
+  return (eepromGetFloat( addrVCCfactor ));
+}
+

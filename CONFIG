@@ -21,94 +21,93 @@ Maintanance mode
 In maintanance mode: (each command is followed by \r)
 
 In use:
-[uraswiklnpdvteXEPDUVTHCGBQRFAO]
+[uraswiklnpdvbcXEPDUVTHCGBQRFAO]
 
 
-u?								get data server URL
+u?						get data server URL
 u<server url>			set URL of data server to <server url>
 *
 
-r?								get data server PORT
-r<server port>		set PORT of data server to <server port>
+r?						get data server PORT
+r<server port>			set PORT of data server to <server port>
 *
 
-a?								get APN
-a<APN>						set APN to <APN>
+a?						get APN
+a<APN>					set APN to <APN>
 *
 
-s?								get USER
-s<USER>						set USER to <USER>
+s?						get USER
+s<USER>					set USER to <USER>
 *
 
-w?								get PASS
-w<PASS>						set PASS to <PASS>
+w?						get PASS
+w<PASS>					set PASS to <PASS>
 *
 
-i?								get NODE_ID of node
-i<nodeid>					set node NODE_ID to <nodeid>
+i?						get NODE_ID of node
+i<nodeid>				set node NODE_ID to <nodeid>
 *
 
-k?								get APIKEY of node
-k<apikey>					set APIKEY to <apikey>
+k?						get APIKEY of node
+k<apikey>				set APIKEY to <apikey>
 *
 
-l?								get logging frequency
+l?						get logging frequency
 l<log freq>				set logging frequency	(default: 5 per hour)
 *
 
-n?								get networking frequency
+n?						get networking frequency
 n<net freq>				set networking frequency (default: 1 per hour)
 *
 
-t?								get logging primming interval
-t<log prim>				set logging primming interval
+b?						show log program
+b<log_prog>				set log program
 
-e?								get networking primming interval
-e<net prim>				set networking primming interval
+c?						show net program
+c<net_prog>				set net program
 
-
-p?								get SIM pin
-p<pin>						set SIM pin to <pin>
+p?						get SIM pin
+p<pin>					set SIM pin to <pin>
 *
 
-*d?								get SIM CIID
-*d*								read SIM CIID and display
-d+								read SIM CIID and store it in EEPROM
-*d<ciid>					set SIM CIID to <ciid>
+*d?						get SIM CIID
+*d*						read SIM CIID and display
+d+						read SIM CIID and store it in EEPROM
+*d<ciid>				set SIM CIID to <ciid>
 
 
-*v?								get VCC correction factor
+*v?						get VCC correction factor
 *v<vcc-corr>			set VCC correction factor
 
 
 
 
-*X								exit maintanance mode and resume
-*E								reset counter to initial values
+*X						exit maintanance mode and resume
+*E						reset counter to initial values
 
-*P								dump sleep counter
-*D								dump data variables __head_db and __tail_db
-*U								flush data variables (actually set __tail_db equal to __head_db)
+*P						dump sleep counter
+*D						dump data variables __head_db and __tail_db
+*U						flush data variables (actually set __tail_db equal to __head_db)
 
-*V								dump cpu voltage
-*T								dump temperature
-*H								dump humidity
-*C								dump clock time
-*G#								power GSM module, # == 0 off, # == 1 on
-*B								dump GSM battery
-*Q								dump GSM signal quality
-R#								when # == 0, deregister GSM module from network,
-									if # == 1, register GSM module to network
-R?								get GSM module registration
+*V						dump cpu voltage
+*T						dump temperature
+*H						dump humidity
+*C						dump clock time
+*G#						power GSM module, # == 0 off, # == 1 on
+*B						dump GSM battery
+*Q						dump GSM signal quality
+R#						when # == 0, deregister GSM module from network,
+						if # == 1, register GSM module to network
+R?						get GSM module registration
 
-F									dump Firmware string (git version)
-An#								n == ?,		show current configuration
-									n == a, 	activation, when # == 1, activate the module (logging and network function)
-														when # == 0, deactivate the module, put it in sleep mode
-									n == l,		DNS lookup, when # == 1 perform DNS lookup
-														when # == 0, do not perform DNS lookup
-									n == d,		DST, daylight savings time flag
-*O								dump data pointers (tail and head)
+F						dump Firmware string (git version)
+An#						n == ?,		show current configuration
+						n == a, 	activation, when # == 1, activate the module (logging and network function)
+												when # == 0, deactivate the module, put it in sleep mode
+						n == l,		DNS lookup, when # == 1 perform DNS lookup
+												when # == 0, do not perform DNS lookup
+						n == d,		DST, daylight savings time flag
+*O						dump data pointers (tail and head)
 
 
 
